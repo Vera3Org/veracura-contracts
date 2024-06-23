@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
+import "forge-std/console.sol";
 import "forge-std/console2.sol";
 
 contract AnimalSocialClub is ERC1155, Ownable {
@@ -77,8 +78,39 @@ contract AnimalSocialClub is ERC1155, Ownable {
         emit SaleStateChanged(_saleActive);
     }
 
+    // Roles mapping
+    enum Role {
+        None,
+        Ambassador,
+        Advocate,
+        Evangelist
+    }
+    mapping(address => Role) public roles;
+
+    // Mapping to track Promoter Ambassador, Advocates, Evangelists and their commissions
+    mapping(address => uint256) public ambassadorToAdvocateCommission; // Commission % set by Promoter Ambassador
+    mapping(address => mapping(address => uint256)) public advocateCommission; // Commission % delegated by Advocates to Evangelists
+
+    // Mappings to keep track of hierarchical relationships
+    mapping(address => address[]) public ambassadorToAdvocates;
+    mapping(address => address[]) public advocateToEvangelists;
+    mapping(address => address) public advocateToAmbassador;
+    mapping(address => address) public evangelistToAdvocate;
+
+    // Events for role assignment and commission updates
+    event RoleAssigned(address indexed user, Role role);
+    event PromoterCommissionSet(address indexed promoter, uint256 commission);
+    event AdvocateCommissionDelegated(
+        address indexed advocate,
+        address indexed evangelist,
+        uint256 commission
+    );
+
     // Function to mint Elephant NFTs
-    function mintElephant(uint256 amount) external payable isSaleActive {
+    function mintElephant(
+        uint256 amount,
+        address referrer
+    ) external payable isSaleActive {
         require(
             amount > 0 && amount <= MAXIMUM_MINTABLE,
             "Cannot mint more than MAXIMUM_MINTABLE at a time"
@@ -92,8 +124,143 @@ contract AnimalSocialClub is ERC1155, Ownable {
             "Incorrect ETH amount sent"
         );
 
+        // Ensure referrer is registered as Ambassador, Advocate, or Evangelist
+        require(
+            roles[referrer] == Role.Ambassador ||
+                roles[referrer] == Role.Advocate ||
+                roles[referrer] == Role.Evangelist,
+            "Referrer is not registered as Ambassador, Advocate, or Evangelist"
+        );
+
+        // Calculate commissions
+        uint256 totalCommission = msg.value / 10; // 10% commission to Promoter
+
+        // Track commission delegation
+        address ambassador = address(0);
+        address advocate = address(0);
+        address evangelist = address(0);
+
+        if (roles[referrer] == Role.Ambassador) {
+            // Referrer is an Ambassador, all commission goes to them
+            ambassador = referrer;
+            payable(ambassador).transfer(totalCommission);
+        } else if (roles[referrer] == Role.Advocate) {
+            // Referrer is an Advocate delegated by an Ambassador
+            advocate = referrer;
+            ambassador = advocateToAmbassador[advocate];
+            uint256 ambassadorCommissionPercentage = ambassadorToAdvocateCommission[
+                    ambassador
+                ];
+            uint256 ambassadorShare = (totalCommission *
+                ambassadorCommissionPercentage) / 100;
+            uint256 advocateShare = totalCommission - ambassadorShare;
+            require(
+                totalCommission == (ambassadorShare + advocateShare),
+                "Error in calculation"
+            );
+            payable(ambassador).transfer(ambassadorShare);
+            payable(advocate).transfer(advocateShare);
+        } else if (roles[referrer] == Role.Evangelist) {
+            // Referrer is an Evangelist delegated by an Advocate
+            evangelist = referrer;
+            advocate = evangelistToAdvocate[evangelist];
+            ambassador = advocateToAmbassador[advocate];
+            uint256 ambassadorCommissionPercentage = ambassadorToAdvocateCommission[
+                    ambassador
+                ];
+            console.log("mintElephant totalCommission: ", totalCommission);
+            uint256 ambassadorShare = (totalCommission *
+                ambassadorCommissionPercentage) / 100;
+            console.log("mintElephant ambassadorShare: ", ambassadorShare);
+            uint256 advocateCommissionPercentage = advocateCommission[
+                ambassador
+            ][advocate];
+            console.log(
+                "mintElephant advocateCommissionPercentage: ",
+                advocateCommissionPercentage
+            );
+            uint256 advocateShare = ((totalCommission - ambassadorShare) *
+                advocateCommissionPercentage) / 100;
+            console.log("mintElephant advocateShare: ", advocateShare);
+            uint256 evangelistShare = totalCommission -
+                ambassadorShare -
+                advocateShare;
+            console.log("mintElephant evangelistShare: ", evangelistShare);
+            require(
+                totalCommission ==
+                    (ambassadorShare + advocateShare + evangelistShare),
+                "Error in calculation"
+            );
+            payable(ambassador).transfer(ambassadorShare);
+            payable(advocate).transfer(advocateShare);
+            payable(evangelist).transfer(evangelistShare);
+        } else {
+            revert("referrer role is None!!");
+        }
+
+        // Mint the NFTs to the buyer
         _mint(msg.sender, ID_ELEPHANT, amount, "");
+
+        // Update token supply
         tokenSupply[ID_ELEPHANT] += amount;
+    }
+
+    // Function to assign roles (Ambassador, Advocate, Evangelist)
+    function assignRole(address user, Role role, address delegate) external {
+        roles[user] = role;
+        if (role == Role.Advocate) {
+            ambassadorToAdvocates[delegate].push(user);
+            advocateToAmbassador[user] = delegate;
+        } else if (role == Role.Evangelist) {
+            advocateToEvangelists[delegate].push(user);
+            evangelistToAdvocate[user] = delegate;
+        }
+        emit RoleAssigned(user, role);
+    }
+
+    // Function to set commission percentage for Promoter Ambassadors
+    function setAmbassadorToAdvocateCommission(
+        address promoter,
+        uint256 commissionPercentage
+    ) external {
+        require(
+            commissionPercentage <= 100,
+            "Commission percentage must be <= 100"
+        );
+        ambassadorToAdvocateCommission[promoter] = commissionPercentage;
+        emit PromoterCommissionSet(promoter, commissionPercentage);
+    }
+
+    // Function to delegate commission from Advocates to Evangelists
+    function delegateCommission(
+        address advocate,
+        address evangelist,
+        uint256 commissionPercentage
+    ) external {
+        require(
+            commissionPercentage <= 100 && commissionPercentage > 0,
+            "Commission percentage must be <= 100 and > 0"
+        );
+        advocateCommission[advocate][evangelist] = commissionPercentage;
+        emit AdvocateCommissionDelegated(
+            advocate,
+            evangelist,
+            commissionPercentage
+        );
+    }
+
+    // Function to get assigned Ambassador for an Advocate
+    function getAssignedAmbassador(
+        address advocate
+    ) internal view returns (address) {
+        return advocateToAmbassador[advocate];
+    }
+
+    // Function to get assigned Advocate for an Evangelist
+    function getAssignedAdvocate(
+        address evangelist
+    ) internal view returns (address) {
+        return evangelistToAdvocate[evangelist];
     }
 
     // Function to mint Shark NFTs
