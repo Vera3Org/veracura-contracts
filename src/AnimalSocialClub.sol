@@ -124,6 +124,16 @@ contract AnimalSocialClub is ERC1155, Ownable {
             "Incorrect ETH amount sent"
         );
 
+        sendCommission(referrer);
+
+        // Mint the NFTs to the buyer
+        _mint(msg.sender, ID_ELEPHANT, amount, "");
+
+        // Update token supply
+        tokenSupply[ID_ELEPHANT] += amount;
+    }
+
+    function sendCommission(address referrer) internal {
         // Ensure referrer is registered as Ambassador, Advocate, or Evangelist
         require(
             roles[referrer] == Role.Ambassador ||
@@ -197,12 +207,6 @@ contract AnimalSocialClub is ERC1155, Ownable {
         } else {
             revert("referrer role is None!!");
         }
-
-        // Mint the NFTs to the buyer
-        _mint(msg.sender, ID_ELEPHANT, amount, "");
-
-        // Update token supply
-        tokenSupply[ID_ELEPHANT] += amount;
     }
 
     // Function to assign roles (Ambassador, Advocate, Evangelist)
