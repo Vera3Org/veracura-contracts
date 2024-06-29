@@ -28,16 +28,16 @@ contract AnimalSocialClubTest is Test {
 
         // Assign roles
         asc.assignRole(
-            ambassador,
+            address(0),
             AnimalSocialClub.Role.Ambassador,
-            address(0)
+            ambassador
         );
-        asc.assignRole(advocate, AnimalSocialClub.Role.Advocate, ambassador);
-        asc.assignRole(evangelist, AnimalSocialClub.Role.Evangelist, advocate);
+        asc.assignRole(ambassador, AnimalSocialClub.Role.Advocate, advocate);
+        asc.assignRole(advocate, AnimalSocialClub.Role.Evangelist, evangelist);
 
         // Set commissions
-        asc.setAmbassadorToAdvocateCommission(ambassador, 30); // 30% for Ambassador
-        asc.delegateCommission(advocate, evangelist, 50); // 50% for Advocate
+        asc.setAmbassadorToAdvocateCommission(ambassador, 50); // 50% for this Ambassador
+        asc.setAdvocateToEvangelistCommission(advocate, 50); // 50% for this Advocate
 
         asc.setSaleActive(true);
         vm.stopPrank();
@@ -49,6 +49,9 @@ contract AnimalSocialClubTest is Test {
     }
 
     function testMintElephant() public {
+        uint256 ambassadorInitialBalance = ambassador.balance;
+        uint256 initalSupply = asc.tokenSupply(asc.ID_ELEPHANT());
+
         vm.prank(owner);
         asc.setSaleActive(true);
         vm.prank(user);
@@ -59,8 +62,21 @@ contract AnimalSocialClubTest is Test {
         vm.prank(user);
         asc.mintElephant{value: 0.1 ether}(1, ambassador);
 
-        assertEq(asc.balanceOf(user, asc.ID_ELEPHANT()), 3);
-        assertEq(asc.tokenSupply(asc.ID_ELEPHANT()), 3);
+        assertEq(
+            asc.balanceOf(user, asc.ID_ELEPHANT()),
+            3,
+            "Balance of user doesnt match expectation"
+        );
+        assertEq(
+            asc.tokenSupply(asc.ID_ELEPHANT()),
+            initalSupply + 3,
+            "Token supply doesnt match expectation"
+        );
+        assertEq(
+            ambassador.balance,
+            ambassadorInitialBalance + 0.03 ether,
+            "Ambassador did not get proper commission"
+        );
     }
 
     function testWithdrawFunds() public {
@@ -121,69 +137,50 @@ contract AnimalSocialClubTest is Test {
         asc.mintElephant{value: asc.ELEPHANT_PRICE()}(1, advocate);
         vm.stopPrank();
 
-        uint256 ambassadorBalance = ambassador.balance;
-        uint256 advocateBalance = advocate.balance;
         uint256 totalCommission = (asc.ELEPHANT_PRICE() * 10) / 100;
-        uint256 expectedAmbassadorCommission = (totalCommission * 30) / 100;
+        uint256 expectedAmbassadorCommission = (totalCommission * 50) / 100;
         uint256 expectedAdvocateCommission = totalCommission -
             expectedAmbassadorCommission;
 
         assertEq(
-            ambassadorBalance,
+            ambassador.balance,
             expectedAmbassadorCommission,
             "Ambassador commission is incorrect when Advocate is referrer"
         );
         assertEq(
-            advocateBalance,
+            advocate.balance,
             expectedAdvocateCommission,
             "Advocate commission is incorrect when they are referrer"
         );
     }
 
     function testEvangelistReferrer() public {
-        // Buyer mints an Elephant with Evangelist as referrer
+        // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1 ether);
         vm.startPrank(buyer);
         asc.mintElephant{value: asc.ELEPHANT_PRICE()}(1, evangelist);
         vm.stopPrank();
 
-        uint256 ambassadorBalance = ambassador.balance;
-        console.log("ambassadorBalance: ", ambassadorBalance);
-        uint256 advocateBalance = advocate.balance;
-        console.log("advocateBalance: ", advocateBalance);
-        uint256 evangelistBalance = evangelist.balance;
-        console.log("evangelistBalance: ", evangelistBalance);
         uint256 totalCommission = (asc.ELEPHANT_PRICE() * 10) / 100;
-        console.log("totalCommission: ", totalCommission);
-        uint256 expectedAmbassadorCommission = (totalCommission * 30) / 100;
-        console.log(
-            "expectedAmbassadorCommission: ",
-            expectedAmbassadorCommission
-        );
-        uint256 remainingCommission = totalCommission -
+        uint256 expectedAmbassadorCommission = (totalCommission * 50) / 100;
+        uint256 expectedAdvocateCommission = totalCommission -
             expectedAmbassadorCommission;
-        console.log("remainingCommission: ", remainingCommission);
-        uint256 expectedAdvocateCommission = (remainingCommission * 50) / 100;
-        console.log("expectedAdvocateCommission: ", expectedAdvocateCommission);
-        uint256 expectedEvangelistCommission = remainingCommission -
-            expectedAdvocateCommission;
-        console.log(
-            "expectedEvangelistCommission: ",
-            expectedEvangelistCommission
-        );
+        uint256 expectedEvangelistCommission = (expectedAdvocateCommission *
+            50) / 100;
+        expectedAdvocateCommission -= expectedEvangelistCommission;
 
         assertEq(
-            ambassadorBalance,
+            ambassador.balance,
             expectedAmbassadorCommission,
             "Ambassador commission is incorrect when Evangelist is referrer"
         );
         assertEq(
-            advocateBalance,
+            advocate.balance,
             expectedAdvocateCommission,
             "Advocate commission is incorrect when Evangelist is referrer"
         );
         assertEq(
-            evangelistBalance,
+            evangelist.balance,
             expectedEvangelistCommission,
             "Evangelist commission is incorrect when they are referrer"
         );
