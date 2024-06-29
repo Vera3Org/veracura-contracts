@@ -12,7 +12,6 @@ contract AnimalSocialClub is ERC1155, Ownable {
     using Strings for uint256;
 
     // Token ID constants
-    uint256 public constant ID_RESERVED = 0;
     uint256 public constant ID_ELEPHANT = 1;
     uint256 public constant ID_SHARK = 2;
     uint256 public constant ID_EAGLE = 3;
@@ -57,8 +56,8 @@ contract AnimalSocialClub is ERC1155, Ownable {
         ascAddress = _ascAddress;
 
         // Mint reserved tokens for the team
-        _mint(msg.sender, ID_RESERVED, TOTAL_RESERVED, "");
-        tokenSupply[ID_RESERVED] = TOTAL_RESERVED;
+        _mint(msg.sender, ID_ELEPHANT, TOTAL_RESERVED, "");
+        tokenSupply[ID_ELEPHANT] = TOTAL_RESERVED;
     }
 
     // Modifier to check if sale is active

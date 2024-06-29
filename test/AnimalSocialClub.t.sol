@@ -18,12 +18,6 @@ contract AnimalSocialClubTest is Test {
     address evangelist;
     address buyer;
 
-    // function setUp() public {
-    //     vm.startPrank(owner);
-    //     asc = new AnimalSocialClub("ipfs://baseURI/", vera3Address, ascAddress);
-    //     vm.stopPrank();
-    // }
-
     function setUp() public {
         vm.startPrank(owner);
         asc = new AnimalSocialClub("ipfs://baseURI/", vera3Address, ascAddress);
@@ -50,8 +44,8 @@ contract AnimalSocialClubTest is Test {
     }
 
     function testReservedTokens() public view {
-        assertEq(asc.uri(asc.ID_RESERVED()), "ipfs://baseURI/0.json");
-        assertEq(asc.tokenSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
+        assertEq(asc.uri(asc.ID_ELEPHANT()), "ipfs://baseURI/1.json");
+        assertEq(asc.tokenSupply(asc.ID_ELEPHANT()), asc.TOTAL_RESERVED()); // 250 reserved tokens
     }
 
     function testMintElephant() public {
