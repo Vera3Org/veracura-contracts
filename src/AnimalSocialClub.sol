@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -482,13 +482,13 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
             "Bid must be at least the starting price"
         );
 
+        highestBidder[i] = msg.sender;
+        highestBid[i] = msg.value;
+
         if (highestBidder[i] != address(0)) {
             // Refund the previous highest bidder
             payable(highestBidder[i]).transfer(highestBid[i]);
         }
-
-        highestBidder[i] = msg.sender;
-        highestBid[i] = msg.value;
     }
 
     function endAuction(uint256 i) external nonReentrant onlyOwner {
