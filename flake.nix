@@ -23,6 +23,8 @@
             # ... any other dependencies we need
             solc
             nil
+
+            slither-analyzer
           ];
 
           # Decorative prompt override so we know when we're in a dev shell

@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "forge-std/console.sol";
-import "forge-std/console2.sol";
+// import "forge-std/console.sol";
+// import "forge-std/console2.sol";
 
-contract AnimalSocialClub is ERC1155, Ownable {
+contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
     using Strings for uint256;
 
     // Token ID constants
@@ -97,6 +98,10 @@ contract AnimalSocialClub is ERC1155, Ownable {
         address _vera3Address,
         address _ascAddress
     ) Ownable(_vera3Address) ERC1155(baseURI) {
+        require(
+            _vera3Address != address(0) && _ascAddress != address(0),
+            "One or more invalid addresses"
+        );
         // Set the beneficiary addresses
         vera3Address = _vera3Address;
         ascAddress = _ascAddress;
@@ -179,7 +184,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
     }
 
     // Function to set the base URI for the metadata
-    function setBaseURI(string memory baseURI) external onlyOwner {
+    function setBaseURI(string memory baseURI) external nonReentrant onlyOwner {
         _setURI(baseURI);
     }
 
@@ -203,7 +208,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
     function mintElephant(
         uint256 amount,
         address referrer
-    ) external payable isSaleActive {
+    ) external payable nonReentrant isSaleActive {
         checkReferrer(referrer);
         require(
             amount > 0 && amount <= MAXIMUM_MINTABLE,
@@ -218,19 +223,19 @@ contract AnimalSocialClub is ERC1155, Ownable {
             "Incorrect ETH amount sent"
         );
 
-        sendCommission(referrer);
+        // Update token supply
+        tokenSupply[ID_ELEPHANT] += amount;
 
         // Mint the NFTs to the buyer
         _mint(msg.sender, ID_ELEPHANT, amount, "");
 
-        // Update token supply
-        tokenSupply[ID_ELEPHANT] += amount;
+        sendCommission(referrer);
     }
 
     function mintShark(
         uint256 amount,
         address referrer
-    ) external payable isSaleActive {
+    ) external payable nonReentrant isSaleActive {
         checkReferrer(referrer);
         require(
             amount > 0 && amount <= MAXIMUM_MINTABLE,
@@ -242,17 +247,17 @@ contract AnimalSocialClub is ERC1155, Ownable {
         );
         require(msg.value == amount * SHARK_PRICE, "Incorrect ETH amount sent");
 
-        sendCommission(referrer);
-
-        _mint(msg.sender, ID_SHARK, amount, "");
         tokenSupply[ID_SHARK] += amount;
+        _mint(msg.sender, ID_SHARK, amount, "");
+
+        sendCommission(referrer);
     }
 
     // Function to mint EAGLE NFTs
     function mintEagle(
         uint256 amount,
         address referrer
-    ) external payable isSaleActive {
+    ) external payable nonReentrant isSaleActive {
         checkReferrer(referrer);
         require(
             amount > 0 && amount <= MAXIMUM_MINTABLE,
@@ -264,28 +269,28 @@ contract AnimalSocialClub is ERC1155, Ownable {
         );
         require(msg.value == amount * EAGLE_PRICE, "Incorrect ETH amount sent");
 
-        sendCommission(referrer);
-
-        _mint(msg.sender, ID_EAGLE, amount, "");
         tokenSupply[ID_EAGLE] += amount;
+        _mint(msg.sender, ID_EAGLE, amount, "");
+
+        sendCommission(referrer);
     }
 
     // Function to withdraw funds to respective beneficiaries
-    function withdrawFunds() external onlyOwner {
-        console2.log("Hello");
+    function withdrawFunds() external nonReentrant onlyOwner {
+        // console2.log("Hello");
         uint256 balance = address(this).balance;
-        console2.log("got balance");
+        // console2.log("got balance");
         require(balance > 0, "No funds to withdraw");
 
         uint256 vera3Share = (balance * 30) / 100;
         uint256 ascShare = (balance * 70) / 100;
-        console2.log("Vera3share: ", vera3Share);
-        console2.log("Asc3share: ", ascShare);
+        // console2.log("Vera3share: ", vera3Share);
+        // console2.log("Asc3share: ", ascShare);
 
         payable(vera3Address).transfer(vera3Share);
-        console2.log("transfered veraShare %d to vera3", vera3Share);
+        // console2.log("transfered veraShare %d to vera3", vera3Share);
         payable(ascAddress).transfer(ascShare);
-        console2.log("transfered ascShare %d to asc", ascShare);
+        // console2.log("transfered ascShare %d to asc", ascShare);
     }
 
     function sendCommission(address referrer) internal {
@@ -303,6 +308,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
             // Referrer is an Ambassador, all commission goes to them
             ambassador = referrer;
             payable(ambassador).transfer(totalCommission);
+            return;
         } else if (roles[referrer] == Role.Advocate) {
             // Referrer is an Advocate delegated by an Ambassador
             advocate = referrer;
@@ -314,6 +320,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
             ambassador = ambassador_;
             payable(ambassador).transfer(ambassadorShare);
             payable(advocate).transfer(advocateShare);
+            return;
         } else if (roles[referrer] == Role.Evangelist) {
             evangelist = referrer;
             (
@@ -329,6 +336,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
             payable(ambassador).transfer(ambassadorShare);
             payable(advocate).transfer(advocateShare);
             payable(evangelist).transfer(evangelistShare);
+            return;
         } else {
             revert("referrer role is None!!");
         }
@@ -425,13 +433,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
     // Override URI function to return token-specific metadata
     function uri(uint256 tokenId) public view override returns (string memory) {
         return
-            string(
-                abi.encodePacked(
-                    super.uri(tokenId),
-                    tokenId.toString(),
-                    ".json"
-                )
-            );
+            string(abi.encode(super.uri(tokenId), tokenId.toString(), ".json"));
     }
 
     // Function to ensure contract can receive Ether
@@ -458,7 +460,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
         auctionStarted = true;
     }
 
-    function placeBid(uint256 i) external payable {
+    function placeBid(uint256 i) external payable nonReentrant {
         require(i < TOTAL_TIGER, "Invalid card ID");
         require(auctionStarted, "Auction not yet started");
         require(
@@ -483,7 +485,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
         highestBid[i] = msg.value;
     }
 
-    function endAuction(uint256 i) external onlyOwner {
+    function endAuction(uint256 i) external nonReentrant onlyOwner {
         require(i < TOTAL_TIGER, "Invalid card ID");
         require(auctionStarted, "Auction not yet started");
         require(!auctionEnded, "Auction already ended");
@@ -491,16 +493,15 @@ contract AnimalSocialClub is ERC1155, Ownable {
             block.timestamp >= auctionEndTime,
             "Auction end time not reached yet"
         );
+        // Mark auction as ended
+        auctionEnded = true;
 
         // Mint Super VIP NFTs to the highest bidder
         _mint(highestBidder[i], ID_TIGER, 1, "");
-
-        // Mark auction as ended
-        auctionEnded = true;
     }
 
     // Allow the contract owner to withdraw the highest bid after the auction ends
-    function withdrawHighestBid(uint256 i) external onlyOwner {
+    function withdrawHighestBid(uint256 i) external nonReentrant onlyOwner {
         require(i < TOTAL_TIGER, "Invalid i");
         require(auctionStarted, "Auction not yet started");
         require(auctionEnded, "Auction has not ended yet");
