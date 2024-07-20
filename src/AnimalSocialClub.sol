@@ -16,6 +16,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
     uint256 public constant ID_SHARK = 2;
     uint256 public constant ID_EAGLE = 3;
     uint256 public constant ID_TIGER = 4;
+    uint256 public constant ID_RESERVED = 5;
 
     // Token Prices
     uint256 public constant ELEPHANT_PRICE = 0.1 ether;
@@ -61,7 +62,13 @@ contract AnimalSocialClub is ERC1155, Ownable {
     mapping(address => Role) public roles;
 
     // Mappings to keep track of hierarchical relationships
+    /**
+     *  CAUTION: one advocate must be only associated to a single ambassador.
+     *  adding to ambassadorToAdvocates must check the user is not already an advocate
+     */
+    // each key is an ambassador's address, and the value is the list of its advocates
     mapping(address => address[]) public ambassadorToAdvocates;
+    // inverted ambassadorToAdvocates: given an advocate, obtain its corresponing advocate
     mapping(address => address) public advocateToAmbassador;
 
     mapping(address => address[]) public advocateToEvangelists;
@@ -95,8 +102,8 @@ contract AnimalSocialClub is ERC1155, Ownable {
         ascAddress = _ascAddress;
 
         // Mint reserved tokens for the team
-        _mint(msg.sender, ID_ELEPHANT, TOTAL_RESERVED, "");
-        tokenSupply[ID_ELEPHANT] = TOTAL_RESERVED;
+        _mint(msg.sender, ID_RESERVED, TOTAL_RESERVED, "");
+        tokenSupply[ID_RESERVED] = TOTAL_RESERVED;
     }
 
     modifier onlyAmbassador() {
@@ -126,7 +133,14 @@ contract AnimalSocialClub is ERC1155, Ownable {
         _;
     }
 
-    // reviewed
+    /**
+     * Updates the hierarchy of roles.
+     * E.g. an Ambassador `user` adds a `delegate` with `role` Advocate to his/her group.
+     * args:
+     *   - user: the upper level in the hierarchy. Unused when contract owner assigns an Ambassador role.
+     *   - role: the role which the `delegate` will have.
+     *   - delegate: the lower level in the hierarchy.
+     */
     function assignRole(address user, Role role, address delegate) external {
         bool isAuthorized = msg.sender == owner();
 
@@ -139,7 +153,8 @@ contract AnimalSocialClub is ERC1155, Ownable {
                 roles[user] == Role.Ambassador,
                 "user is not an Ambassador and cannot delegate an Advocate"
             );
-            isAuthorized = true;
+            // One advocate can add an ambassador only for themselves, not others. Only admin is allowed to everything
+            isAuthorized = isAuthorized || user == msg.sender;
             // add advocate to the list of the corresponding ambassador
             ambassadorToAdvocates[user].push(delegate);
             // reverse the many-to-one mapping
@@ -149,7 +164,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
                 roles[user] == Role.Advocate,
                 "user is not an Advocate and cannot delegate an Evangelist"
             );
-            isAuthorized = true;
+            isAuthorized = isAuthorized || user == msg.sender;
             advocateToEvangelists[user].push(delegate);
             evangelistToAdvocate[delegate] = user;
         } else if (role == Role.None) {
@@ -174,6 +189,7 @@ contract AnimalSocialClub is ERC1155, Ownable {
         emit SaleStateChanged(_saleActive);
     }
 
+    // Ensure referrer is registered as Ambassador, Advocate
     function checkReferrer(address referrer) internal view {
         require(
             roles[referrer] == Role.Ambassador ||
@@ -274,13 +290,6 @@ contract AnimalSocialClub is ERC1155, Ownable {
 
     function sendCommission(address referrer) internal {
         checkReferrer(referrer);
-        // Ensure referrer is registered as Ambassador, Advocate
-        require(
-            roles[referrer] == Role.Ambassador ||
-                roles[referrer] == Role.Advocate ||
-                roles[referrer] == Role.Evangelist,
-            "Referrer is not registered as Ambassador, Advocate or Evangelist"
-        );
 
         // Calculate commissions
         uint256 totalCommission = msg.value / 10; // 10% commission to Promoter
@@ -297,47 +306,26 @@ contract AnimalSocialClub is ERC1155, Ownable {
         } else if (roles[referrer] == Role.Advocate) {
             // Referrer is an Advocate delegated by an Ambassador
             advocate = referrer;
-            ambassador = advocateToAmbassador[advocate];
-            uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
-                ambassador
-            ];
-            uint256 advocateShare = (totalCommission * advocateCommissionPct) /
-                100;
-            uint256 ambassadorShare = totalCommission - advocateShare;
-            require(
-                totalCommission == (ambassadorShare + advocateShare),
-                "Error in calculation for advocate: shares don't add up"
-            );
+            (
+                address ambassador_,
+                uint ambassadorShare,
+                uint advocateShare
+            ) = getAdvocateShare(advocate, totalCommission);
+            ambassador = ambassador_;
             payable(ambassador).transfer(ambassadorShare);
             payable(advocate).transfer(advocateShare);
         } else if (roles[referrer] == Role.Evangelist) {
             evangelist = referrer;
-            advocate = evangelistToAdvocate[evangelist];
-            ambassador = advocateToAmbassador[advocate];
-            // get share % for advocate & evangelist
-            uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
-                ambassador
-            ];
-            uint256 evangelistCommissionPct = advocateToEvangelistCommission[
-                advocate
-            ];
+            (
+                address ambassador_,
+                address advocate_,
+                uint ambassadorShare,
+                uint advocateShare,
+                uint evangelistShare
+            ) = getEvangelistShare(evangelist, totalCommission);
 
-            // calculate advocate & evangelist share in coins
-            uint256 advocateShare = (totalCommission * advocateCommissionPct) /
-                100;
-            uint256 ambassadorShare = totalCommission - advocateShare;
-
-            // the evangelist takes a piece of the advocate's share
-            uint256 evangelistShare = (advocateShare *
-                evangelistCommissionPct) / 100;
-            advocateShare -= evangelistShare;
-
-            require(
-                totalCommission ==
-                    (ambassadorShare + advocateShare + evangelistShare),
-                "Error in calculation for evangelist: shares don't add up"
-            );
-
+            ambassador = ambassador_;
+            advocate = advocate_;
             payable(ambassador).transfer(ambassadorShare);
             payable(advocate).transfer(advocateShare);
             payable(evangelist).transfer(evangelistShare);
@@ -378,6 +366,60 @@ contract AnimalSocialClub is ERC1155, Ownable {
         );
         advocateToEvangelistCommission[advocate] = commissionPercentage;
         emit AdvocateCommissionSet(advocate, commissionPercentage);
+    }
+
+    function getAdvocateShare(
+        address advocate,
+        uint256 totalCommission
+    ) internal view returns (address, uint256, uint256) {
+        address ambassador = advocateToAmbassador[advocate];
+        uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
+            ambassador
+        ];
+        uint256 advocateShare = (totalCommission * advocateCommissionPct) / 100;
+        uint256 ambassadorShare = totalCommission - advocateShare;
+        require(
+            totalCommission == (ambassadorShare + advocateShare),
+            "Error in calculation for advocate: shares don't add up"
+        );
+        return (ambassador, ambassadorShare, advocateShare);
+    }
+
+    function getEvangelistShare(
+        address evangelist,
+        uint256 totalCommission
+    ) internal view returns (address, address, uint256, uint256, uint256) {
+        address advocate = evangelistToAdvocate[evangelist];
+        address ambassador = advocateToAmbassador[advocate];
+        // get share % for advocate & evangelist
+        uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
+            ambassador
+        ];
+        uint256 evangelistCommissionPct = advocateToEvangelistCommission[
+            advocate
+        ];
+
+        // calculate advocate & evangelist share in coins
+        uint256 advocateShare = (totalCommission * advocateCommissionPct) / 100;
+        uint256 ambassadorShare = totalCommission - advocateShare;
+
+        // the evangelist takes a piece of the advocate's share
+        uint256 evangelistShare = (advocateShare * evangelistCommissionPct) /
+            100;
+        advocateShare -= evangelistShare;
+
+        require(
+            totalCommission ==
+                (ambassadorShare + advocateShare + evangelistShare),
+            "Error in calculation for evangelist: shares don't add up"
+        );
+        return (
+            ambassador,
+            advocate,
+            ambassadorShare,
+            advocateShare,
+            evangelistShare
+        );
     }
 
     // Override URI function to return token-specific metadata
