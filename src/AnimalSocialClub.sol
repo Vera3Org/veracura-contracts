@@ -433,7 +433,13 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
     // Override URI function to return token-specific metadata
     function uri(uint256 tokenId) public view override returns (string memory) {
         return
-            string(abi.encode(super.uri(tokenId), tokenId.toString(), ".json"));
+            string(
+                abi.encodePacked(
+                    super.uri(tokenId),
+                    tokenId.toString(),
+                    ".json"
+                )
+            );
     }
 
     // Function to ensure contract can receive Ether
