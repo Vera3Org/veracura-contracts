@@ -177,6 +177,7 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
             advocateToEvangelists[user].push(delegate);
             evangelistToAdvocate[delegate] = user;
         } else if (role == Role.None) {
+            // TODO discuss whether ambassador/advocate can remove ppl below them
             require(
                 msg.sender == owner(),
                 "only the owner can assign arbitrary roles"
@@ -525,5 +526,91 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
         highestBid[i] = 0;
         highestBidder[i] = address(0);
         payable(owner()).transfer(amount);
+    }
+
+    function tokenSalePrice(uint256 tokenId) public pure returns (uint256) {
+        if (tokenId == ID_EAGLE) {
+            return EAGLE_PRICE;
+        } else if (tokenId == ID_SHARK) {
+            return SHARK_PRICE;
+        } else if (tokenId == ID_ELEPHANT) {
+            return ELEPHANT_PRICE;
+        } else {
+            revert("Invalid token ID");
+        }
+    }
+
+    //////////////////////////////////////////////////////////////
+    /////// WAITLIST
+    //////////////////////////////////////////////////////////////
+    uint256 public constant WAITLIST_DISCOUNT_PCT = 5;
+    bool public isLaunched = false;
+
+    mapping(address => mapping(uint256 => bool)) public waitlist;
+    mapping(address => mapping(uint256 => bool)) public waitlistClaimed;
+
+    event WaitlistJoined(address indexed user, uint256 tokenId);
+    event WaitlistClaimed(address indexed user, uint256 tokenId);
+
+    /**
+     * Returns how much the user has to deposit in order to reserve a place in the waitlist.
+     * @param tokenId the token ID for which to get the necessary deposit amount for waitlist
+     */
+    function getWaitlistDepositAmount(
+        uint256 tokenId
+    ) public pure returns (uint256) {
+        uint256 waitlist_deposit = 0;
+        if (tokenId == ID_EAGLE) {
+            waitlist_deposit = EAGLE_PRICE;
+        } else if (tokenId == ID_SHARK) {
+            waitlist_deposit = SHARK_PRICE;
+        } else if (tokenId == ID_ELEPHANT) {
+            waitlist_deposit = ELEPHANT_PRICE;
+        } else {
+            revert("Invalid token ID");
+        }
+        return waitlist_deposit / 2;
+    }
+
+    function joinWaitlist(uint256 tokenId) external payable {
+        require(!isLaunched, "Sale has already launched");
+        require(tokenId < 4, "Invalid token ID"); // RESERVED and TIGER are excluded from waitlist
+        uint256 waitlist_deposit = getWaitlistDepositAmount(tokenId);
+        require(msg.value == waitlist_deposit, "Incorrect deposit amount");
+        require(
+            !waitlist[msg.sender][tokenId],
+            "Already on waitlist for this token"
+        );
+
+        waitlist[msg.sender][tokenId] = true;
+        emit WaitlistJoined(msg.sender, tokenId);
+    }
+
+    function claimWaitlist(uint256 tokenId) external payable nonReentrant {
+        require(isLaunched, "Sale has not launched yet");
+        require(
+            waitlist[msg.sender][tokenId],
+            "Not on waitlist for this token"
+        );
+        require(
+            !waitlistClaimed[msg.sender][tokenId],
+            "Waitlist already claimed"
+        );
+
+        uint256 waitlist_deposit = getWaitlistDepositAmount(tokenId);
+
+        uint256 remainingPrice = tokenSalePrice(tokenId) - waitlist_deposit;
+        uint256 discount = (remainingPrice * WAITLIST_DISCOUNT_PCT) / 100;
+        uint256 finalPrice = remainingPrice - discount;
+
+        require(msg.value == finalPrice, "Incorrect payment amount");
+
+        waitlistClaimed[msg.sender][tokenId] = true;
+        _mint(msg.sender, tokenId, 1, "");
+        emit WaitlistClaimed(msg.sender, tokenId);
+    }
+
+    function launch() external onlyOwner {
+        isLaunched = true;
     }
 }
