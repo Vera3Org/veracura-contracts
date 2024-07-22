@@ -63,10 +63,6 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
     mapping(address => Role) public roles;
 
     // Mappings to keep track of hierarchical relationships
-    /**
-     *  CAUTION: one advocate must be only associated to a single ambassador.
-     *  adding to ambassadorToAdvocates must check the user is not already an advocate
-     */
     // each key is an ambassador's address, and the value is the list of its advocates
     mapping(address => address[]) public ambassadorToAdvocates;
     // inverted ambassadorToAdvocates: given an advocate, obtain its corresponing advocate
@@ -158,6 +154,10 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
                 roles[user] == Role.Ambassador,
                 "user is not an Ambassador and cannot delegate an Advocate"
             );
+            require(
+                advocateToAmbassador[delegate] == address(0),
+                "delegate is already an ambassador for someone else"
+            );
             // One advocate can add an ambassador only for themselves, not others. Only admin is allowed to everything
             isAuthorized = isAuthorized || user == msg.sender;
             // add advocate to the list of the corresponding ambassador
@@ -168,6 +168,10 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
             require(
                 roles[user] == Role.Advocate,
                 "user is not an Advocate and cannot delegate an Evangelist"
+            );
+            require(
+                evangelistToAdvocate[delegate] == address(0),
+                "delegate is already an advocate for someone else"
             );
             isAuthorized = isAuthorized || user == msg.sender;
             advocateToEvangelists[user].push(delegate);
