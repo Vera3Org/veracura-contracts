@@ -49,6 +49,7 @@ contract AnimalSocialClubTest is Test {
     }
 
     function testMintElephant(uint howMany) public {
+        vm.assume(howMany < 10+asc.TOTAL_ELEPHANT());
         uint256 ambassadorInitialBalance = ambassador.balance;
         uint256 initialSupply = asc.tokenSupply(asc.ID_ELEPHANT());
 
