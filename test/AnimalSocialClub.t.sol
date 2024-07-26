@@ -48,33 +48,38 @@ contract AnimalSocialClubTest is Test {
         assertEq(asc.tokenSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
     }
 
-    function testMintElephant() public {
+    function testMintElephant(uint howMany) public {
         uint256 ambassadorInitialBalance = ambassador.balance;
-        uint256 initalSupply = asc.tokenSupply(asc.ID_ELEPHANT());
+        uint256 initialSupply = asc.tokenSupply(asc.ID_ELEPHANT());
 
         vm.prank(owner);
         asc.setSaleActive(true);
-        vm.prank(user);
-        vm.deal(user, 2 ether);
-        asc.mintElephant{value: 0.1 ether}(1, ambassador);
-        vm.prank(user);
-        asc.mintElephant{value: 0.1 ether}(1, ambassador);
-        vm.prank(user);
-        asc.mintElephant{value: 0.1 ether}(1, ambassador);
+        vm.deal(user, 2000000000000 ether);
+        vm.startPrank(user);
+        for (uint i = 0; i < howMany; i++) {
+            if (i >= asc.TOTAL_ELEPHANT()) {
+                emit log("i is greater than TOTAL_ELEPHANT");
+                vm.expectRevert();
+            }
+            asc.mintElephant{value: 0.1 ether}(1, ambassador);
+        }
+        vm.stopPrank();
+
+        howMany = howMany >= asc.TOTAL_ELEPHANT() ? asc.TOTAL_ELEPHANT() : howMany;
 
         assertEq(
             asc.balanceOf(user, asc.ID_ELEPHANT()),
-            3,
+            howMany,
             "Balance of user doesnt match expectation"
         );
         assertEq(
             asc.tokenSupply(asc.ID_ELEPHANT()),
-            initalSupply + 3,
+            initialSupply + howMany,
             "Token supply doesnt match expectation"
         );
         assertEq(
             ambassador.balance,
-            ambassadorInitialBalance + 0.03 ether,
+            ambassadorInitialBalance + (howMany * 0.01 ether),
             "Ambassador did not get proper commission"
         );
     }
