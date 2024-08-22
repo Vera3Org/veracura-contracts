@@ -42,7 +42,7 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
     bool public saleActive = false;
 
     // Tracking token supply
-    mapping(uint256 => uint256) public tokenSupply;
+    mapping(uint256 => uint256) public currentSupply;
 
     // Events
     event SaleStateChanged(bool active);
@@ -94,6 +94,7 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
         address _vera3Address,
         address _ascAddress
     ) Ownable(_vera3Address) ERC1155(baseURI) {
+        require(msg.sender == _vera3Address, "sender must be admin");
         require(
             _vera3Address != address(0) && _ascAddress != address(0),
             "One or more invalid addresses"
@@ -104,7 +105,7 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
 
         // Mint reserved tokens for the team
         _mint(msg.sender, ID_RESERVED, TOTAL_RESERVED, "");
-        tokenSupply[ID_RESERVED] = TOTAL_RESERVED;
+        currentSupply[ID_RESERVED] = TOTAL_RESERVED;
     }
 
     modifier onlyAmbassador() {
@@ -132,6 +133,24 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
     modifier isSaleActive() {
         require(saleActive, "Sale is not active");
         _;
+    }
+
+    function totalSupplyOf(uint tokenId) public pure returns (uint) {
+        if (tokenId == ID_EAGLE) {
+            return TOTAL_EAGLE;
+        } else if (tokenId == ID_ELEPHANT) {
+            return TOTAL_ELEPHANT;
+        } else if (tokenId == ID_SHARK) {
+            return TOTAL_SHARK;
+        } else if (tokenId == ID_EAGLE) {
+            return TOTAL_EAGLE;
+        } else if (tokenId == ID_TIGER) {
+            return TOTAL_TIGER;
+        } else if (tokenId == ID_RESERVED) {
+            return TOTAL_RESERVED;
+        } else {
+            revert("tokenId not valid");
+        }
     }
 
     /**
@@ -220,7 +239,7 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
             "Cannot mint more than MAXIMUM_MINTABLE at a time"
         );
         require(
-            tokenSupply[ID_ELEPHANT] + amount <= TOTAL_ELEPHANT,
+            currentSupply[ID_ELEPHANT] + amount <= TOTAL_ELEPHANT,
             "Exceeds total supply of Elephant tokens"
         );
         require(
@@ -229,7 +248,7 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
         );
 
         // Update token supply
-        tokenSupply[ID_ELEPHANT] += amount;
+        currentSupply[ID_ELEPHANT] += amount;
 
         // Mint the NFTs to the buyer
         _mint(msg.sender, ID_ELEPHANT, amount, "");
@@ -247,12 +266,12 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
             "Cannot mint more than MAXIMUM_MINTABLE at a time"
         );
         require(
-            tokenSupply[ID_SHARK] + amount <= TOTAL_SHARK,
+            currentSupply[ID_SHARK] + amount <= TOTAL_SHARK,
             "Exceeds total supply of Shark tokens"
         );
         require(msg.value == amount * SHARK_PRICE, "Incorrect ETH amount sent");
 
-        tokenSupply[ID_SHARK] += amount;
+        currentSupply[ID_SHARK] += amount;
         _mint(msg.sender, ID_SHARK, amount, "");
 
         sendCommission(referrer);
@@ -269,12 +288,12 @@ contract AnimalSocialClub is ERC1155, Ownable, ReentrancyGuard {
             "Cannot mint more than MAXIMUM_MINTABLE at a time"
         );
         require(
-            tokenSupply[ID_EAGLE] + amount <= TOTAL_EAGLE,
+            currentSupply[ID_EAGLE] + amount <= TOTAL_EAGLE,
             "Exceeds total supply of EAGLE tokens"
         );
         require(msg.value == amount * EAGLE_PRICE, "Incorrect ETH amount sent");
 
-        tokenSupply[ID_EAGLE] += amount;
+        currentSupply[ID_EAGLE] += amount;
         _mint(msg.sender, ID_EAGLE, amount, "");
 
         sendCommission(referrer);
