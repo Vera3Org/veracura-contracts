@@ -29,11 +29,19 @@ contract AnimalSocialClubTest is Test {
         // Assign roles
         asc.assignRole(
             address(0),
-            AnimalSocialClub.Role.Ambassador,
+            Vera3DistributionModel.Role.Ambassador,
             ambassador
         );
-        asc.assignRole(ambassador, AnimalSocialClub.Role.Advocate, advocate);
-        asc.assignRole(advocate, AnimalSocialClub.Role.Evangelist, evangelist);
+        asc.assignRole(
+            ambassador,
+            Vera3DistributionModel.Role.Advocate,
+            advocate
+        );
+        asc.assignRole(
+            advocate,
+            Vera3DistributionModel.Role.Evangelist,
+            evangelist
+        );
 
         // Set commissions
         asc.setAmbassadorToAdvocateCommission(ambassador, 50); // 50% for this Ambassador
@@ -45,13 +53,13 @@ contract AnimalSocialClubTest is Test {
 
     function testReservedTokens() public view {
         assertEq(asc.uri(asc.ID_RESERVED()), "ipfs://baseURI/5.json");
-        assertEq(asc.tokenSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
+        assertEq(asc.currentSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
     }
 
     function testMintElephant(uint howMany) public {
-        vm.assume(howMany < 10+asc.TOTAL_ELEPHANT());
+        vm.assume(howMany < 10 + asc.TOTAL_ELEPHANT());
         uint256 ambassadorInitialBalance = ambassador.balance;
-        uint256 initialSupply = asc.tokenSupply(asc.ID_ELEPHANT());
+        uint256 initialSupply = asc.currentSupply(asc.ID_ELEPHANT());
 
         vm.prank(owner);
         asc.setSaleActive(true);
@@ -66,7 +74,9 @@ contract AnimalSocialClubTest is Test {
         }
         vm.stopPrank();
 
-        howMany = howMany >= asc.TOTAL_ELEPHANT() ? asc.TOTAL_ELEPHANT() : howMany;
+        howMany = howMany >= asc.TOTAL_ELEPHANT()
+            ? asc.TOTAL_ELEPHANT()
+            : howMany;
 
         assertEq(
             asc.balanceOf(user, asc.ID_ELEPHANT()),
@@ -74,7 +84,7 @@ contract AnimalSocialClubTest is Test {
             "Balance of user doesnt match expectation"
         );
         assertEq(
-            asc.tokenSupply(asc.ID_ELEPHANT()),
+            asc.currentSupply(asc.ID_ELEPHANT()),
             initialSupply + howMany,
             "Token supply doesnt match expectation"
         );
