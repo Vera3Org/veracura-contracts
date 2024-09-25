@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../src/AnimalSocialClub.sol";
+import "../src/AnimalSocialClubERC1155.sol";
 import "forge-std/console2.sol";
 
 contract AnimalSocialClubTest is Test {
-    AnimalSocialClub public asc;
+    AnimalSocialClubERC1155 public asc;
     address public vera3Address = address(0xd3d3d3d3d3); // Dummy Vera3 address
     address public ascAddress = address(0xa1a1a1a1a1); // Dummy ASC address
 
@@ -20,7 +20,11 @@ contract AnimalSocialClubTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        asc = new AnimalSocialClub("ipfs://baseURI/", vera3Address, ascAddress);
+        asc = new AnimalSocialClubERC1155(
+            "ipfs://baseURI/",
+            vera3Address,
+            ascAddress
+        );
         ambassador = vm.addr(1);
         advocate = vm.addr(2);
         evangelist = vm.addr(3);

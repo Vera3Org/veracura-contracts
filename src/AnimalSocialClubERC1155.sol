@@ -10,7 +10,7 @@ import "src/Vera3DistributionModel.sol";
 // import "forge-std/console.sol";
 // import "forge-std/console2.sol";
 
-contract AnimalSocialClub is
+contract AnimalSocialClubERC1155 is
     ERC1155,
     Ownable,
     ReentrancyGuard,
