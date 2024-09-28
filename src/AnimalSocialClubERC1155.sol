@@ -57,7 +57,9 @@ contract AnimalSocialClubERC1155 is
     constructor(
         string memory baseURI,
         address _vera3Address,
-        address _ascAddress
+        address _ascAddress,
+        address[] memory waitlistedUserAddresses,
+        uint256[] memory waitlistedUserTokenTypes
     ) Ownable(_vera3Address) ERC1155(baseURI) {
         require(msg.sender == _vera3Address, "sender must be admin");
         require(
@@ -71,6 +73,12 @@ contract AnimalSocialClubERC1155 is
         // Mint reserved tokens for the team
         _mint(msg.sender, ID_RESERVED, TOTAL_RESERVED, "");
         currentSupply[ID_RESERVED] = TOTAL_RESERVED;
+
+        for (uint i = 0; i < waitlistedUserAddresses.length; i++) {
+            address user = waitlistedUserAddresses[i];
+            uint tokenId = waitlistedUserTokenTypes[i];
+            waitlist[user][tokenId] = true;
+        }
     }
 
     // Modifier to check if sale is active
@@ -334,42 +342,45 @@ contract AnimalSocialClubERC1155 is
         return waitlist_deposit / 2;
     }
 
-    function joinWaitlist(uint256 tokenId) external payable {
+    function joinWaitlist(uint256 tokenType) external payable {
         require(!isLaunched, "Sale has already launched");
-        require(tokenId < 4, "Invalid token ID"); // RESERVED and TIGER are excluded from waitlist
-        uint256 waitlist_deposit = getWaitlistDepositAmount(tokenId);
+        require(
+            tokenType < 4 && tokenType > 0,
+            "Invalid token type: only ELEPHANT(1), SHARK(2), EAGLE(3)"
+        ); // RESERVED and TIGER are excluded from waitlist
+        uint256 waitlist_deposit = getWaitlistDepositAmount(tokenType);
         require(msg.value == waitlist_deposit, "Incorrect deposit amount");
         require(
-            !waitlist[msg.sender][tokenId],
+            !waitlist[msg.sender][tokenType],
             "Already on waitlist for this token"
         );
 
-        waitlist[msg.sender][tokenId] = true;
-        emit WaitlistJoined(msg.sender, tokenId);
+        waitlist[msg.sender][tokenType] = true;
+        emit WaitlistJoined(msg.sender, tokenType);
     }
 
-    function claimWaitlist(uint256 tokenId) external payable nonReentrant {
+    function claimWaitlist(uint256 tokenType) external payable nonReentrant {
         require(isLaunched, "Sale has not launched yet");
         require(
-            waitlist[msg.sender][tokenId],
+            waitlist[msg.sender][tokenType],
             "Not on waitlist for this token"
         );
         require(
-            !waitlistClaimed[msg.sender][tokenId],
+            !waitlistClaimed[msg.sender][tokenType],
             "Waitlist already claimed"
         );
 
-        uint256 waitlist_deposit = getWaitlistDepositAmount(tokenId);
+        uint256 waitlist_deposit = getWaitlistDepositAmount(tokenType);
 
-        uint256 remainingPrice = tokenSalePrice(tokenId) - waitlist_deposit;
+        uint256 remainingPrice = tokenSalePrice(tokenType) - waitlist_deposit;
         uint256 discount = (remainingPrice * WAITLIST_DISCOUNT_PCT) / 100;
         uint256 finalPrice = remainingPrice - discount;
 
         require(msg.value == finalPrice, "Incorrect payment amount");
 
-        waitlistClaimed[msg.sender][tokenId] = true;
-        _mint(msg.sender, tokenId, 1, "");
-        emit WaitlistClaimed(msg.sender, tokenId);
+        waitlistClaimed[msg.sender][tokenType] = true;
+        _mint(msg.sender, tokenType, 1, "");
+        emit WaitlistClaimed(msg.sender, tokenType);
     }
 
     function launch() external onlyOwner {

@@ -18,12 +18,20 @@ contract AnimalSocialClubTest is Test {
     address evangelist;
     address buyer;
 
+    address[] public waitlistedAddresses = [
+        address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f),
+        address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720)
+    ];
+    uint256[] public waitlistedIDs = [1, 2];
+
     function setUp() public {
         vm.startPrank(owner);
         asc = new AnimalSocialClubERC1155(
             "ipfs://baseURI/",
             vera3Address,
-            ascAddress
+            ascAddress,
+            waitlistedAddresses,
+            waitlistedIDs
         );
         ambassador = vm.addr(1);
         advocate = vm.addr(2);
