@@ -26,8 +26,8 @@ contract AnimalSocialClubERC721 is
     uint256 public constant MAXIMUM_MINTABLE = 1;
 
     // Addresses for funds allocation
-    address public vera3Address;
-    address public ascAddress;
+    address public adminAddress;
+    address public treasuryAddress;
     ASC721Manager public manager;
 
     // Sale status
@@ -44,18 +44,18 @@ contract AnimalSocialClubERC721 is
         string memory symbol,
         uint _totalSupply,
         uint _mint_price,
-        address _vera3Address,
-        address _ascAddress,
-        address _manager
-    ) Ownable(_vera3Address) ERC721(name, symbol) {
-        require(msg.sender == _vera3Address, "sender must be admin");
+        address _adminAddress,
+        address _treasuryAddress,
+        ASC721Manager _manager
+    ) Ownable(_adminAddress) ERC721(name, symbol) {
+        // require(msg.sender == _adminAddress, "sender must be admin");
         require(
-            _vera3Address != address(0) && _ascAddress != address(0),
+            _adminAddress != address(0) && _treasuryAddress != address(0),
             "One or more invalid addresses"
         );
         // Set the beneficiary addresses
-        vera3Address = _vera3Address;
-        ascAddress = _ascAddress;
+        adminAddress = _adminAddress;
+        treasuryAddress = _treasuryAddress;
         TOTAL_SUPPLY = _totalSupply;
         PRICE = _mint_price;
         manager = ASC721Manager(_manager);
@@ -78,8 +78,11 @@ contract AnimalSocialClubERC721 is
     }
 
     // Function to mint NFTs
-    function mint(address referrer) external payable nonReentrant isSaleActive {
-        require(!isASCMember(msg.sender), "Only one membership per address");
+    function mint(
+        address to,
+        address referrer
+    ) external payable nonReentrant isSaleActive {
+        require(!isASCMember(to), "Only one membership per address");
         super.checkReferrer(referrer);
         require(
             currentSupply + 1 <= TOTAL_SUPPLY,
@@ -91,7 +94,7 @@ contract AnimalSocialClubERC721 is
         currentSupply += 1;
 
         // Mint the NFTs to the buyer
-        _safeMint(msg.sender, currentSupply);
+        _safeMint(to, currentSupply);
 
         sendCommission(referrer);
     }
@@ -101,16 +104,11 @@ contract AnimalSocialClubERC721 is
         // console2.log("Hello");
         uint256 balance = address(this).balance;
         // console2.log("got balance");
-        require(balance > 0, "No funds to withdraw");
+        // require(balance > 0, "No funds to withdraw");
 
-        uint256 vera3Share = (balance * 30) / 100;
-        uint256 ascShare = (balance * 70) / 100;
-        // console2.log("Vera3share: ", vera3Share);
-        // console2.log("Asc3share: ", ascShare);
-
-        payable(vera3Address).transfer(vera3Share);
-        // console2.log("transfered veraShare %d to vera3", vera3Share);
-        payable(ascAddress).transfer(ascShare);
+        if (balance > 0) {
+            payable(treasuryAddress).transfer(balance);
+        }
         // console2.log("transfered ascShare %d to asc", ascShare);
     }
 

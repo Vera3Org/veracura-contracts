@@ -2,6 +2,7 @@
 pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "forge-std/console.sol";
 
 abstract contract Vera3DistributionModel is Ownable {
     // Errors
@@ -222,12 +223,17 @@ abstract contract Vera3DistributionModel is Ownable {
      *   - delegate: the lower level in the hierarchy.
      */
     function assignRole(address user, Role role, address delegate) external {
+        console.log(
+            "Vera3DistributionModel.assignRole msg.sender: ",
+            msg.sender,
+            " tx.origin: ",
+            tx.origin
+        );
         bool isAuthorized = msg.sender == owner();
 
         if (role == Role.Ambassador) {
             // here `user` is the owner, and `delegate` is the advocate
             // only the owner can set an advocate
-            isAuthorized = true;
         } else if (role == Role.Advocate) {
             require(
                 roles[user] == Role.Ambassador,
