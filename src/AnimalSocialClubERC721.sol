@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "src/Vera3DistributionModel.sol";
+import "src/ASC721Manager.sol";
 
 // import "forge-std/console.sol";
 // import "forge-std/console2.sol";
@@ -27,6 +28,7 @@ contract AnimalSocialClubERC721 is
     // Addresses for funds allocation
     address public vera3Address;
     address public ascAddress;
+    ASC721Manager public manager;
 
     // Sale status
     bool public saleActive = false;
@@ -37,14 +39,14 @@ contract AnimalSocialClubERC721 is
     // Events
     event SaleStateChanged(bool active);
 
-    // Constructor initializing the ERC-1155 contract with a base URI and beneficiary addresses
     constructor(
         string memory name,
         string memory symbol,
         uint _totalSupply,
         uint _mint_price,
         address _vera3Address,
-        address _ascAddress
+        address _ascAddress,
+        address _manager
     ) Ownable(_vera3Address) ERC721(name, symbol) {
         require(msg.sender == _vera3Address, "sender must be admin");
         require(
@@ -56,6 +58,7 @@ contract AnimalSocialClubERC721 is
         ascAddress = _ascAddress;
         TOTAL_SUPPLY = _totalSupply;
         PRICE = _mint_price;
+        manager = ASC721Manager(_manager);
     }
 
     // Modifier to check if sale is active
@@ -70,12 +73,17 @@ contract AnimalSocialClubERC721 is
         emit SaleStateChanged(_saleActive);
     }
 
-    // Function to mint Elephant NFTs
+    function isASCMember(address a) public view returns (bool) {
+        return manager.isMember(a);
+    }
+
+    // Function to mint NFTs
     function mint(address referrer) external payable nonReentrant isSaleActive {
+        require(!isASCMember(msg.sender), "Only one membership per address");
         super.checkReferrer(referrer);
         require(
             currentSupply + 1 <= TOTAL_SUPPLY,
-            "Exceeds total supply of Elephant tokens"
+            "Exceeds total supply of tokens"
         );
         require(msg.value == PRICE, "Incorrect ETH amount sent");
 
