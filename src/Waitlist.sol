@@ -14,8 +14,7 @@ import "src/ASC721Manager.sol";
 // import "forge-std/console2.sol";
 
 contract ASCWaitlist is Ownable, ReentrancyGuard, Pausable {
-    IEthereumFeeProxy public constant ETHEREUM_FEE_PROXY =
-        IEthereumFeeProxy(0xd9C3889eB8DA6ce449bfFE3cd194d08A436e96f2);
+    IEthereumFeeProxy public immutable ETHEREUM_FEE_PROXY;
 
     address payable public immutable TREASURY;
     // Token ID constants
@@ -42,7 +41,11 @@ contract ASCWaitlist is Ownable, ReentrancyGuard, Pausable {
     mapping(address => uint256[]) waitlist;
     address[] public waitlistAddresses;
 
-    constructor(address payable treasury) Ownable(msg.sender) {
+    constructor(
+        IEthereumFeeProxy feeProxy,
+        address payable treasury
+    ) Ownable(msg.sender) {
+        ETHEREUM_FEE_PROXY = feeProxy;
         TREASURY = treasury;
     }
 
