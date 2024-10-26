@@ -4,6 +4,7 @@ pragma solidity ^0.8.26;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "src/Vera3DistributionModel.sol";
 import "@requestnetwork/advanced-logic/src/contracts/interfaces/EthereumFeeProxy.sol";
@@ -12,7 +13,7 @@ import "src/ASC721Manager.sol";
 // import "forge-std/console.sol";
 // import "forge-std/console2.sol";
 
-contract ASCWaitlist is Ownable, ReentrancyGuard {
+contract ASCWaitlist is Ownable, ReentrancyGuard, Pausable {
     IEthereumFeeProxy public constant ETHEREUM_FEE_PROXY =
         IEthereumFeeProxy(0xd9C3889eB8DA6ce449bfFE3cd194d08A436e96f2);
 
@@ -99,5 +100,13 @@ contract ASCWaitlist is Ownable, ReentrancyGuard {
             0,
             payable(address(0))
         );
+    }
+
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
     }
 }
