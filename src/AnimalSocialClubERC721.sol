@@ -26,9 +26,9 @@ contract AnimalSocialClubERC721 is
     uint256 public constant MAXIMUM_MINTABLE = 1;
 
     // Addresses for funds allocation
-    address public adminAddress;
-    address public treasuryAddress;
-    ASC721Manager public manager;
+    address public immutable adminAddress;
+    address public immutable treasuryAddress;
+    ASC721Manager public immutable manager;
 
     // Sale status
     bool public saleActive = false;

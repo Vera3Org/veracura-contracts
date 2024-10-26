@@ -11,13 +11,13 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     using Strings for uint256;
 
     // Addresses for funds allocation
-    address public adminAddress;
-    address public treasuryAddress;
+    address public immutable adminAddress;
+    address public immutable treasuryAddress;
 
-    AnimalSocialClubERC721 public elephant;
-    AnimalSocialClubERC721 public tiger;
-    AnimalSocialClubERC721 public shark;
-    AnimalSocialClubERC721 public eagle;
+    AnimalSocialClubERC721 public immutable elephant;
+    AnimalSocialClubERC721 public immutable tiger;
+    AnimalSocialClubERC721 public immutable shark;
+    AnimalSocialClubERC721 public immutable eagle;
 
     AnimalSocialClubERC721[] public contracts;
 
@@ -77,7 +77,8 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     }
 
     function isMember(address a) public view returns (bool) {
-        for (uint i = 0; i < contracts.length; i++) {
+        uint len = contracts.length; // gas optimization
+        for (uint i = 0; i < len; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             if (tier.balanceOf(a) != 0) {
                 return true;

@@ -192,12 +192,13 @@ abstract contract Vera3DistributionModel is Ownable {
         ];
 
         // calculate advocate & evangelist share in coins
-        uint256 advocateShare = (totalCommission * advocateCommissionPct) / 100;
+        uint256 advocateShare100 = (totalCommission * advocateCommissionPct);
+        uint256 advocateShare = advocateShare100 / 100;
         uint256 ambassadorShare = totalCommission - advocateShare;
 
         // the evangelist takes a piece of the advocate's share
-        uint256 evangelistShare = (advocateShare * evangelistCommissionPct) /
-            100;
+        uint256 evangelistShare = (advocateShare100 * evangelistCommissionPct) /
+            10000;
         advocateShare -= evangelistShare;
 
         require(
