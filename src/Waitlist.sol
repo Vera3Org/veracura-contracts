@@ -45,6 +45,7 @@ contract ASCWaitlist is Ownable, ReentrancyGuard, Pausable {
         IEthereumFeeProxy feeProxy,
         address payable treasury
     ) Ownable(msg.sender) {
+        require(treasury != address(0), "Address cannot be zero");
         ETHEREUM_FEE_PROXY = feeProxy;
         TREASURY = treasury;
     }
@@ -103,6 +104,10 @@ contract ASCWaitlist is Ownable, ReentrancyGuard, Pausable {
             0,
             payable(address(0))
         );
+    }
+
+    function withdraw() public onlyOwner {
+        payable(msg.sender).transfer(address(this).balance);
     }
 
     function pause() public onlyOwner {
