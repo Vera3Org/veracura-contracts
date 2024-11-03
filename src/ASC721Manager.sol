@@ -80,6 +80,7 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
         uint len = contracts.length; // gas optimization
         for (uint i = 0; i < len; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
+            // slither-disable-next-line calls-loop
             if (tier.balanceOf(a) != 0) {
                 return true;
             }
@@ -94,6 +95,7 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     function withdrawFunds() external nonReentrant onlyOwner {
         // console2.log("Hello");
         for (uint i = 0; i < contracts.length; i++) {
+            // slither-disable-next-line calls-loop
             contracts[i].withdrawFunds();
         }
 
@@ -120,6 +122,7 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
         );
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
+            // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).assignRole(upper, role, delegate);
         }
     }
@@ -130,6 +133,7 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     ) external {
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
+            // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(
                 delegate,
                 percentage
@@ -143,6 +147,7 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     ) external {
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
+            // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(
                 delegate,
                 percentage
@@ -153,6 +158,7 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     function setSaleActive(bool isSaleActive) external {
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
+            // slither-disable-next-line calls-loop
             tier.setSaleActive(isSaleActive);
         }
     }
