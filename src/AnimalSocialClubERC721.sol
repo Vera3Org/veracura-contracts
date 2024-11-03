@@ -77,7 +77,7 @@ contract AnimalSocialClubERC721 is
         return manager.isMember(a);
     }
 
-    // Function to mint NFTs
+    // Function to mint NFTs. `referrer` is optional.
     function mint(
         address to,
         address referrer

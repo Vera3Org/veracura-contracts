@@ -70,7 +70,8 @@ abstract contract Vera3DistributionModel is Ownable {
     // Ensure referrer is registered as Ambassador, Advocate
     function checkReferrer(address referrer) public view {
         require(
-            roles[referrer] == Role.Ambassador ||
+            referrer == address(0) ||
+                roles[referrer] == Role.Ambassador ||
                 roles[referrer] == Role.Advocate ||
                 roles[referrer] == Role.Evangelist,
             "referrer must be a valid Ambassador, Advocate or Evangelist"
@@ -78,6 +79,9 @@ abstract contract Vera3DistributionModel is Ownable {
     }
 
     function sendCommission(address referrer) internal {
+        if (referrer == address(0)) {
+            return;
+        }
         checkReferrer(referrer);
 
         // Calculate commissions
