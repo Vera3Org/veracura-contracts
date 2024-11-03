@@ -25,6 +25,11 @@ contract AnimalSocialClubTest is Test {
     uint256[] public waitlistedIDs = [1, 2];
 
     function setUp() public {
+        ambassador = vm.addr(1);
+        advocate = vm.addr(2);
+        evangelist = vm.addr(3);
+        buyer = vm.addr(4);
+
         vm.startPrank(adminAddress);
         asc = new ASC721Manager(
             adminAddress,
@@ -32,11 +37,9 @@ contract AnimalSocialClubTest is Test {
             // waitlistedAddresses,
             // waitlistedIDs
         );
+        asc.setKYC(buyer, true);
+        asc.setKYC(user, true);
         vm.stopPrank();
-        ambassador = vm.addr(1);
-        advocate = vm.addr(2);
-        evangelist = vm.addr(3);
-        buyer = vm.addr(4);
 
         console.log("asc.adminAddress: ", asc.adminAddress());
         console.log(

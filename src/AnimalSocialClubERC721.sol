@@ -83,6 +83,7 @@ contract AnimalSocialClubERC721 is
         address referrer
     ) external payable nonReentrant isSaleActive {
         require(!isASCMember(to), "Only one membership per address");
+        require(manager.hasKYC(to), "Destination address without KYC!");
         super.checkReferrer(referrer);
         require(
             currentSupply + 1 <= TOTAL_SUPPLY,

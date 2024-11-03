@@ -2,13 +2,19 @@
 pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "src/AnimalSocialClubERC721.sol";
 import "src/Vera3DistributionModel.sol";
 
-contract ASC721Manager is Ownable, ReentrancyGuard {
+contract ASC721Manager is AccessControl, ReentrancyGuard {
     using Strings for uint256;
+
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    error CallerNotAdmin(address caller);
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    error CallerNotOperator(address caller);
 
     // Addresses for funds allocation
     address public immutable adminAddress;
@@ -19,17 +25,27 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     AnimalSocialClubERC721 public immutable shark;
     AnimalSocialClubERC721 public immutable eagle;
 
+    mapping(address => bool) private _hasKYC;
+
     AnimalSocialClubERC721[] public contracts;
 
     constructor(
         address _adminAddress,
         address _treasuryAddress
-    ) Ownable(_adminAddress) {
+    ) AccessControl() {
         require(msg.sender == _adminAddress, "sender must be admin");
         require(
             _adminAddress != address(0) && _treasuryAddress != address(0),
             "One or more invalid addresses"
         );
+
+        require(
+            _grantRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            "could not grant role"
+        );
+        require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
+        require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
+
         // Set the beneficiary addresses
         adminAddress = _adminAddress;
         treasuryAddress = _treasuryAddress;
@@ -76,6 +92,18 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
         contracts.push(tiger);
     }
 
+    function setOperator(address a) public onlyRole(ADMIN_ROLE) {
+        require(_grantRole(OPERATOR_ROLE, a), "role not granted");
+    }
+
+    function hasKYC(address a) public view returns (bool) {
+        return _hasKYC[a];
+    }
+
+    function setKYC(address a, bool val) public onlyRole(OPERATOR_ROLE) {
+        _hasKYC[a] = val;
+    }
+
     function isMember(address a) public view returns (bool) {
         uint len = contracts.length; // gas optimization
         for (uint i = 0; i < len; i++) {
@@ -92,7 +120,7 @@ contract ASC721Manager is Ownable, ReentrancyGuard {
     receive() external payable {}
 
     // Function to withdraw funds to respective beneficiaries
-    function withdrawFunds() external nonReentrant onlyOwner {
+    function withdrawFunds() external nonReentrant onlyRole(ADMIN_ROLE) {
         // console2.log("Hello");
         for (uint i = 0; i < contracts.length; i++) {
             // slither-disable-next-line calls-loop
