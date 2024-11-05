@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import "@requestnetwork/advanced-logic/src/contracts/interfaces/EthereumFeeProxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "forge-std/console.sol";
 
@@ -35,6 +36,8 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     // commission that one advocate gives to their evangelists.
     mapping(address => uint256) public advocateToEvangelistCommission;
 
+    IEthereumFeeProxy public ETHEREUM_FEE_PROXY; // TODO initialize with address
+
     // Events for role assignment and commission updates
     event RoleAssigned(address indexed user, Role role);
     event AmbassadorCommissionSet(
@@ -67,22 +70,31 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         _;
     }
 
+    function isReferrer(address referrer) public view returns (bool) {
+        return
+            roles[referrer] == Role.Ambassador ||
+            roles[referrer] == Role.Advocate ||
+            roles[referrer] == Role.Evangelist;
+    }
+
     // Ensure referrer is registered as Ambassador, Advocate
-    function checkReferrer(address referrer) public view {
+    function requireReferrer(address referrer) public view {
         require(
-            referrer == address(0) ||
-                roles[referrer] == Role.Ambassador ||
-                roles[referrer] == Role.Advocate ||
-                roles[referrer] == Role.Evangelist,
+            isReferrer(referrer),
             "referrer must be a valid Ambassador, Advocate or Evangelist"
         );
     }
 
-    function sendCommission(address referrer) internal {
+    function sendCommission(
+        address referrer,
+        bytes calldata ambassadorReference,
+        bytes calldata advocateReference,
+        bytes calldata evangelistReference
+    ) internal {
         if (referrer == address(0)) {
             return;
         }
-        checkReferrer(referrer);
+        requireReferrer(referrer);
 
         // Calculate commissions
         uint256 totalCommission = msg.value / 10; // 10% commission to Promoter
@@ -95,7 +107,11 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         if (roles[referrer] == Role.Ambassador) {
             // Referrer is an Ambassador, all commission goes to them
             ambassador = referrer;
-            payable(ambassador).transfer(totalCommission);
+            // payable(ambassador).transfer(totalCommission);
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
+                value: totalCommission
+            }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
+
             return;
         } else if (roles[referrer] == Role.Advocate) {
             // Referrer is an Advocate delegated by an Ambassador
@@ -106,8 +122,14 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
                 uint advocateShare
             ) = getAdvocateShare(advocate, totalCommission);
             ambassador = ambassador_;
-            payable(ambassador).transfer(ambassadorShare);
-            payable(advocate).transfer(advocateShare);
+            // payable(ambassador).transfer(ambassadorShare);
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
+                value: ambassadorShare
+            }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
+            // payable(advocate).transfer(advocateShare);
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
+                value: advocateShare
+            }(payable(advocate), advocateReference, 0, payable(address(0)));
             return;
         } else if (roles[referrer] == Role.Evangelist) {
             evangelist = referrer;
@@ -121,9 +143,18 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
             ambassador = ambassador_;
             advocate = advocate_;
-            payable(ambassador).transfer(ambassadorShare);
-            payable(advocate).transfer(advocateShare);
-            payable(evangelist).transfer(evangelistShare);
+            // payable(ambassador).transfer(ambassadorShare);
+            // payable(advocate).transfer(advocateShare);
+            // payable(evangelist).transfer(evangelistShare);
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
+                value: ambassadorShare
+            }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
+                value: advocateShare
+            }(payable(advocate), advocateReference, 0, payable(address(0)));
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
+                value: evangelistShare
+            }(payable(evangelist), evangelistReference, 0, payable(address(0)));
             return;
         } else {
             revert("referrer role is None!!");

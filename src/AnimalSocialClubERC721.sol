@@ -6,6 +6,9 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
+import "@requestnetwork/advanced-logic/src/contracts/interfaces/EthereumFeeProxy.sol";
+
 import "src/Vera3DistributionModel.sol";
 import "src/ASC721Manager.sol";
 
@@ -84,11 +87,14 @@ contract AnimalSocialClubERC721 is
     // Function to mint NFTs. `referrer` is optional.
     function mint(
         address to,
-        address referrer
+        address referrer,
+        bytes calldata ambassadorReference,
+        bytes calldata advocateReference,
+        bytes calldata evangelistReference
     ) external payable nonReentrant isSaleActive {
         require(!isASCMember(to), "Only one membership per address");
         require(manager.hasKYC(to), "Destination address without KYC!");
-        super.checkReferrer(referrer);
+        super.requireReferrer(referrer);
         require(
             currentSupply + 1 <= TOTAL_SUPPLY,
             "Exceeds total supply of tokens"
@@ -101,7 +107,35 @@ contract AnimalSocialClubERC721 is
         // Mint the NFTs to the buyer
         _safeMint(to, currentSupply);
 
-        sendCommission(referrer);
+        sendCommission(
+            referrer,
+            ambassadorReference,
+            advocateReference,
+            evangelistReference
+        );
+    }
+
+    function doit(
+        address donor,
+        address referrer,
+        bytes calldata donorReference,
+        bytes calldata ambassadorReference,
+        bytes calldata advocateReference,
+        bytes calldata evangelistReference
+    ) external payable nonReentrant isSaleActive {
+        this.mint(
+            donor,
+            referrer,
+            ambassadorReference,
+            advocateReference,
+            evangelistReference
+        );
+        ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
+            payable(manager.treasuryAddress()),
+            donorReference,
+            0,
+            payable(address(0))
+        );
     }
 
     // Function to withdraw funds to respective beneficiaries
@@ -255,13 +289,4 @@ contract AnimalSocialClubERC721 is
     function launch() external onlyOwner {
         isLaunched = true;
     }
-
-    /**
-        LOTTERY
-        Requirement: 
-         - there is a list `lotteryParticipants`, which is 
-           made up of all owners of standard & premium tiers.
-         - enough random bytes to choose 9 VIP and 1 Super VIP winners
-         - Use Chainlink VRF "Direct Funding" method since this is a sporadic req
-     */
 }
