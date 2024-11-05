@@ -7,3 +7,6 @@
 [submodule "lib/requestNetwork"]
 	path = lib/requestNetwork
 	url = https://github.com/RequestNetwork/requestNetwork
+[submodule "lib/openzeppelin-foundry-upgrades"]
+	path = lib/openzeppelin-foundry-upgrades
+	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
