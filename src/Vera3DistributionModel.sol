@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "forge-std/console.sol";
 
-abstract contract Vera3DistributionModel is Ownable {
+abstract contract Vera3DistributionModel is OwnableUpgradeable {
     // Errors
     error NotAnAmbassador(address account);
     error NotAnAdvocate(address account);

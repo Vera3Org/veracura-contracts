@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "src/Vera3DistributionModel.sol";
 import "src/ASC721Manager.sol";
 
@@ -12,26 +13,27 @@ import "src/ASC721Manager.sol";
 // import "forge-std/console2.sol";
 
 contract AnimalSocialClubERC721 is
-    ERC721,
-    Ownable,
-    ReentrancyGuard,
+    Initializable,
+    ERC721Upgradeable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
     Vera3DistributionModel
 {
     using Strings for uint256;
 
-    uint256 public immutable TOTAL_SUPPLY;
-    uint256 public immutable PRICE;
+    uint256 public TOTAL_SUPPLY;
+    uint256 public PRICE;
 
     // can mint 1 at a time
     uint256 public constant MAXIMUM_MINTABLE = 1;
 
     // Addresses for funds allocation
-    address public immutable adminAddress;
-    address public immutable treasuryAddress;
-    ASC721Manager public immutable manager;
+    address public adminAddress;
+    address public treasuryAddress;
+    ASC721Manager public manager;
 
     // Sale status
-    bool public saleActive = false;
+    bool public saleActive;
 
     // Tracking token supply
     uint public currentSupply;
@@ -39,7 +41,7 @@ contract AnimalSocialClubERC721 is
     // Events
     event SaleStateChanged(bool active);
 
-    constructor(
+    function initialize(
         string memory name,
         string memory symbol,
         uint _totalSupply,
@@ -47,7 +49,9 @@ contract AnimalSocialClubERC721 is
         address _adminAddress,
         address _treasuryAddress,
         ASC721Manager _manager
-    ) Ownable(_adminAddress) ERC721(name, symbol) {
+    ) public initializer {
+        __Ownable_init(_adminAddress);
+        __ERC721_init(name, symbol);
         // require(msg.sender == _adminAddress, "sender must be admin");
         require(
             _adminAddress != address(0) && _treasuryAddress != address(0),
@@ -121,8 +125,8 @@ contract AnimalSocialClubERC721 is
     /////////////////////////////////////////////////////////////////
     address[] public highestBidder;
     uint256[] public highestBid;
-    bool public auctionStarted = false;
-    bool public auctionEnded = false;
+    bool public auctionStarted;
+    bool public auctionEnded;
     uint256 public auctionEndTime;
     uint256 public constant startingPrice = 2 ether;
     uint256 public constant minBidIncrement = 0.1 ether;
@@ -198,7 +202,7 @@ contract AnimalSocialClubERC721 is
     /////// WAITLIST
     //////////////////////////////////////////////////////////////
     uint256 public constant WAITLIST_DISCOUNT_PCT = 5;
-    bool public isLaunched = false;
+    bool public isLaunched;
 
     // keep track of who's on waitlist
     mapping(address => bool) public waitlist;

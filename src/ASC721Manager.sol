@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -50,44 +52,90 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         adminAddress = _adminAddress;
         treasuryAddress = _treasuryAddress;
 
-        elephant = new AnimalSocialClubERC721(
-            "Animal Social Club Elephant Membership",
-            "ASC.Elephant",
-            9000,
-            0.1 ether,
-            address(this),
-            treasuryAddress,
-            this
+        address _elephant = Upgrades.deployUUPSProxy(
+            "AnimalSocialClubERC721.sol",
+            abi.encodeCall(
+                AnimalSocialClubERC721.initialize,
+                (
+                    "Animal Social Club Elephant Membership",
+                    "ASC.Elephant",
+                    9000,
+                    0.1 ether,
+                    address(this),
+                    treasuryAddress,
+                    this
+                )
+            )
         );
+        elephant = AnimalSocialClubERC721(payable(_elephant));
+        // elephant = new AnimalSocialClubERC721(
+        //     "Animal Social Club Elephant Membership",
+        //     "ASC.Elephant",
+        //     9000,
+        //     0.1 ether,
+        //     address(this),
+        //     treasuryAddress,
+        //     this
+        // );
         contracts.push(elephant);
-        shark = new AnimalSocialClubERC721(
-            "Animal Social Club Shark Membership",
-            "ASC.Shark",
-            520,
-            0.5 ether,
-            address(this),
-            treasuryAddress,
-            this
+        shark = AnimalSocialClubERC721(
+            payable(
+                Upgrades.deployUUPSProxy(
+                    "AnimalSocialClubERC721.sol",
+                    abi.encodeCall(
+                        AnimalSocialClubERC721.initialize,
+                        (
+                            "Animal Social Club Shark Membership",
+                            "ASC.Shark",
+                            520,
+                            0.5 ether,
+                            address(this),
+                            treasuryAddress,
+                            this
+                        )
+                    )
+                )
+            )
         );
         contracts.push(shark);
-        eagle = new AnimalSocialClubERC721(
-            "Animal Social Club Eagle Membership",
-            "ASC.Eagle",
-            200,
-            1 ether,
-            address(this),
-            treasuryAddress,
-            this
+        eagle = AnimalSocialClubERC721(
+            payable(
+                Upgrades.deployUUPSProxy(
+                    "AnimalSocialClubERC721.sol",
+                    abi.encodeCall(
+                        AnimalSocialClubERC721.initialize,
+                        (
+                            "Animal Social Club Eagle Membership",
+                            "ASC.Eagle",
+                            200,
+                            1 ether,
+                            address(this),
+                            treasuryAddress,
+                            this
+                        )
+                    )
+                )
+            )
         );
         contracts.push(eagle);
-        tiger = new AnimalSocialClubERC721(
-            "Animal Social Club Tiger Membership",
-            "ASC.Tiger",
-            30,
-            2 ether,
-            address(this),
-            treasuryAddress,
-            this
+        tiger = AnimalSocialClubERC721(
+            payable(
+                Upgrades.deployUUPSProxy(
+                    "AnimalSocialClubERC721.sol",
+                    abi.encodeCall(
+                        AnimalSocialClubERC721.initialize,
+                        (
+                            "Animal Social Club Tiger Membership",
+                            "ASC.Tiger",
+                            30,
+                            2 ether,
+                            address(this),
+                            treasuryAddress,
+                            this
+                        )
+                    )
+                )
+            )
         );
         contracts.push(tiger);
     }
