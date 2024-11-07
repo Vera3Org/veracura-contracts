@@ -178,6 +178,14 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         }
     }
 
+    function adminMint(
+        address to,
+        uint tier
+    ) external nonReentrant onlyRole(ADMIN_ROLE) {
+        require(tier < contracts.length);
+        AnimalSocialClubERC721(contracts[tier]).adminMint(to);
+    }
+
     // each of these methods will call the corresponding one on each erc721 contract
 
     function assignRole(
