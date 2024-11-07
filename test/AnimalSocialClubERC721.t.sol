@@ -94,7 +94,7 @@ contract AnimalSocialClubTest is Test {
                 emit log("must have only one membership per address");
                 vm.expectRevert();
             }
-            elephant.mint{value: 0.1 ether}(user, ambassador);
+            elephant.mintWithDonationETH{value: 0.1 ether}(user, ambassador);
             if (i > 0) {
                 return;
             }
@@ -131,7 +131,7 @@ contract AnimalSocialClubTest is Test {
         // user mints elephant
         vm.prank(user);
         vm.deal(user, 2 ether);
-        asc.elephant().mint{value: 0.1 ether}(user, ambassador);
+        asc.elephant().mintWithDonationETH{value: 0.1 ether}(user, ambassador);
 
         uint256 initialTreasuryBalance = treasuryAddress.balance;
 
@@ -155,7 +155,10 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Ambassador as referrer
         vm.deal(buyer, 1 ether);
         vm.startPrank(buyer);
-        asc.elephant().mint{value: asc.elephant().PRICE()}(buyer, ambassador);
+        asc.elephant().mintWithDonationETH{value: asc.elephant().PRICE()}(
+            buyer,
+            ambassador
+        );
         vm.stopPrank();
 
         uint256 ambassadorBalance = ambassador.balance;
@@ -172,7 +175,10 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1 ether);
         vm.startPrank(buyer);
-        asc.elephant().mint{value: asc.elephant().PRICE()}(buyer, advocate);
+        asc.elephant().mintWithDonationETH{value: asc.elephant().PRICE()}(
+            buyer,
+            advocate
+        );
         vm.stopPrank();
 
         uint256 totalCommission = (asc.elephant().PRICE() * 10) / 100;
@@ -196,7 +202,10 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1 ether);
         vm.startPrank(buyer);
-        asc.elephant().mint{value: asc.elephant().PRICE()}(buyer, evangelist);
+        asc.elephant().mintWithDonationETH{value: asc.elephant().PRICE()}(
+            buyer,
+            evangelist
+        );
         vm.stopPrank();
 
         uint256 totalCommission = (asc.elephant().PRICE() * 10) / 100;

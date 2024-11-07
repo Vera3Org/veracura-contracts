@@ -85,7 +85,7 @@ contract AnimalSocialClubERC721 is
     }
 
     // Function to mint NFTs. `referrer` is optional.
-    function mint(
+    function mintWithDonationETH(
         address to,
         address referrer
     ) external payable nonReentrant isSaleActive {
