@@ -242,6 +242,19 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         }
     }
 
+    function addToWaitlist(
+        uint tier,
+        uint tokenId,
+        uint waitlist_deposit,
+        address user
+    ) external payable onlyRole(ADMIN_ROLE) nonReentrant {
+        require(
+            tier < contracts.length,
+            "Invalid tier: can be Elephant (1), Shark (2), Eagle (3), Tiger (4)"
+        );
+        contracts[tier].addToWaitlist(tokenId, waitlist_deposit, user);
+    }
+
     // Function to ensure contract can receive Ether
     receive() external payable {}
 }
