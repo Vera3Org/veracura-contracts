@@ -234,7 +234,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         }
     }
 
-    function setSaleActive(bool isSaleActive) external {
+    function setSaleActive(bool isSaleActive) external onlyRole(ADMIN_ROLE) {
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
