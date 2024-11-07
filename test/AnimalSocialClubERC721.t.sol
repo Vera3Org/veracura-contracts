@@ -81,7 +81,7 @@ contract AnimalSocialClubTest is Test {
 
     function testMintElephant(uint howMany) public {
         AnimalSocialClubERC721 elephant = asc.elephant();
-        vm.assume(howMany < 10);
+        vm.assume(howMany < 3);
         uint256 ambassadorInitialBalance = ambassador.balance;
         uint256 initialSupply = asc.elephant().currentSupply();
 

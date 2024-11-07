@@ -52,31 +52,26 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         adminAddress = _adminAddress;
         treasuryAddress = _treasuryAddress;
 
-        address _elephant = Upgrades.deployUUPSProxy(
-            "AnimalSocialClubERC721.sol",
-            abi.encodeCall(
-                AnimalSocialClubERC721.initialize,
-                (
-                    "Animal Social Club Elephant Membership",
-                    "ASC.Elephant",
-                    9000,
-                    0.1 ether,
-                    address(this),
-                    treasuryAddress,
-                    this
+        elephant = AnimalSocialClubERC721(
+            payable(
+                Upgrades.deployUUPSProxy(
+                    "AnimalSocialClubERC721.sol",
+                    abi.encodeCall(
+                        AnimalSocialClubERC721.initialize,
+                        (
+                            "Animal Social Club Elephant Membership",
+                            "ASC.Elephant",
+                            9000,
+                            0.1 ether,
+                            address(this),
+                            treasuryAddress,
+                            this,
+                            0
+                        )
+                    )
                 )
             )
         );
-        elephant = AnimalSocialClubERC721(payable(_elephant));
-        // elephant = new AnimalSocialClubERC721(
-        //     "Animal Social Club Elephant Membership",
-        //     "ASC.Elephant",
-        //     9000,
-        //     0.1 ether,
-        //     address(this),
-        //     treasuryAddress,
-        //     this
-        // );
         contracts.push(elephant);
         shark = AnimalSocialClubERC721(
             payable(
@@ -91,7 +86,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             0.5 ether,
                             address(this),
                             treasuryAddress,
-                            this
+                            this,
+                            0
                         )
                     )
                 )
@@ -111,7 +107,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             1 ether,
                             address(this),
                             treasuryAddress,
-                            this
+                            this,
+                            9 // 9 eagle reserved for lottery
                         )
                     )
                 )
@@ -131,7 +128,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             2 ether,
                             address(this),
                             treasuryAddress,
-                            this
+                            this,
+                            1 // 1 tiger reserved for lottery
                         )
                     )
                 )
