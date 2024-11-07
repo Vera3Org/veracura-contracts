@@ -162,9 +162,6 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         return false;
     }
 
-    // Function to ensure contract can receive Ether
-    receive() external payable {}
-
     // Function to withdraw funds to respective beneficiaries
     function withdrawFunds() external nonReentrant onlyRole(ADMIN_ROLE) {
         // console2.log("Hello");
@@ -236,4 +233,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
             tier.setSaleActive(isSaleActive);
         }
     }
+
+    // Function to ensure contract can receive Ether
+    receive() external payable {}
 }
