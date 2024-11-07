@@ -234,12 +234,25 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         }
     }
 
-    function setSaleActive(bool isSaleActive) external {
+    function setSaleActive(bool isSaleActive) external onlyRole(ADMIN_ROLE) {
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             tier.setSaleActive(isSaleActive);
         }
+    }
+
+    function addToWaitlist(
+        uint tier,
+        uint tokenId,
+        uint waitlist_deposit,
+        address user
+    ) external payable onlyRole(ADMIN_ROLE) nonReentrant {
+        require(
+            tier < contracts.length,
+            "Invalid tier: can be Elephant (1), Shark (2), Eagle (3), Tiger (4)"
+        );
+        contracts[tier].addToWaitlist(tokenId, waitlist_deposit, user);
     }
 
     // Function to ensure contract can receive Ether

@@ -277,29 +277,28 @@ contract AnimalSocialClubERC721 is
     mapping(address => bool) public waitlist;
     // keep track of which specific tokenId the address is waitlisted for
     mapping(address => uint) public waitlistId;
+    // keep track of how much deposit was made for waitlist
+    mapping(address => uint) public waitlistDeposited;
     // keep track of who's claimed their waitlisted item
     mapping(address => bool) public waitlistClaimed;
 
     event WaitlistJoined(address indexed user);
     event WaitlistClaimed(address indexed user);
 
-    /**
-     * Returns how much the user has to deposit in order to reserve a place in the waitlist.
-     */
-    function getWaitlistDepositAmount() public view returns (uint256) {
-        uint256 waitlist_deposit = PRICE;
-        return waitlist_deposit / 2;
-    }
-
-    function joinWaitlist(uint tokenId) external payable {
+    function addToWaitlist(
+        uint tokenId,
+        uint waitlist_deposit,
+        address user
+    ) external payable onlyOwner nonReentrant {
         require(!isLaunched, "Sale has already launched");
-        uint256 waitlist_deposit = getWaitlistDepositAmount();
-        require(msg.value == waitlist_deposit, "Incorrect deposit amount");
-        require(!waitlist[msg.sender], "Already on waitlist for this token");
+        require(!waitlist[user], "Already on waitlist for this token");
+        require(waitlist_deposit <= PRICE, "deposit amount is more than price");
 
-        waitlist[msg.sender] = true;
-        waitlistId[msg.sender] = tokenId;
-        emit WaitlistJoined(msg.sender);
+        waitlistDeposited[user] += waitlist_deposit;
+
+        waitlist[user] = true;
+        waitlistId[user] = tokenId;
+        emit WaitlistJoined(user);
     }
 
     function claimWaitlist() external payable nonReentrant {
@@ -307,7 +306,7 @@ contract AnimalSocialClubERC721 is
         require(waitlist[msg.sender], "Not on waitlist for this token");
         require(!waitlistClaimed[msg.sender], "Waitlist already claimed");
 
-        uint256 waitlist_deposit = getWaitlistDepositAmount();
+        uint256 waitlist_deposit = waitlistDeposited[msg.sender];
 
         uint256 remainingPrice = PRICE - waitlist_deposit;
         uint256 discount = (remainingPrice * WAITLIST_DISCOUNT_PCT) / 100;
@@ -321,7 +320,7 @@ contract AnimalSocialClubERC721 is
         emit WaitlistClaimed(msg.sender);
     }
 
-    function launch() external onlyOwner {
+    function launch() external onlyOwner nonReentrant {
         isLaunched = true;
     }
 }
