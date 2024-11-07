@@ -23,6 +23,7 @@ contract AnimalSocialClubERC721 is
 
     uint256 public TOTAL_SUPPLY;
     uint256 public PRICE;
+    uint256 public NUMBER_RESERVED;
 
     // can mint 1 at a time
     uint256 public constant MAXIMUM_MINTABLE = 1;
@@ -48,7 +49,8 @@ contract AnimalSocialClubERC721 is
         uint _mint_price,
         address _adminAddress,
         address _treasuryAddress,
-        ASC721Manager _manager
+        ASC721Manager _manager,
+        uint num_reserved
     ) public initializer {
         __Ownable_init(_adminAddress);
         __ERC721_init(name, symbol);
@@ -63,6 +65,7 @@ contract AnimalSocialClubERC721 is
         TOTAL_SUPPLY = _totalSupply;
         PRICE = _mint_price;
         manager = ASC721Manager(_manager);
+        NUMBER_RESERVED = num_reserved;
     }
 
     // Modifier to check if sale is active
@@ -92,6 +95,10 @@ contract AnimalSocialClubERC721 is
         require(
             currentSupply + 1 <= TOTAL_SUPPLY,
             "Exceeds total supply of tokens"
+        );
+        require(
+            currentSupply + 1 <= (TOTAL_SUPPLY - NUMBER_RESERVED),
+            "No more tokens: the remainder is reserved for lottery"
         );
         require(msg.value == PRICE, "Incorrect ETH amount sent");
 
