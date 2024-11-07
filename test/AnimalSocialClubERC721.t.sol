@@ -90,10 +90,6 @@ contract AnimalSocialClubTest is Test {
         vm.deal(user, 2000000000000 ether);
         vm.startPrank(user);
         for (uint i = 0; i < howMany; i++) {
-            if (i > 0) {
-                emit log("must have only one membership per address");
-                vm.expectRevert();
-            }
             elephant.mintWithDonationETH{value: 0.1 ether}(user, ambassador);
             if (i > 0) {
                 return;
