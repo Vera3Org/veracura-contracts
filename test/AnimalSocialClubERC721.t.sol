@@ -56,19 +56,19 @@ contract AnimalSocialClubTest is Test {
         // Assign roles
         vm.startPrank(adminAddress);
         asc.assignRole(
-            address(0),
+            payable(address(0)),
             Vera3DistributionModel.Role.Ambassador,
-            ambassador
+            payable(ambassador)
         );
         asc.assignRole(
-            ambassador,
+            payable(ambassador),
             Vera3DistributionModel.Role.Advocate,
-            advocate
+            payable(advocate)
         );
         asc.assignRole(
-            advocate,
+            payable(advocate),
             Vera3DistributionModel.Role.Evangelist,
-            evangelist
+            payable(evangelist)
         );
 
         // Set commissions

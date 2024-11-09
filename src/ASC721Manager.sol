@@ -273,9 +273,9 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     // each of these methods will call the corresponding one on each erc721 contract
 
     function assignRole(
-        address upper,
+        address payable upper,
         Vera3DistributionModel.Role role,
-        address delegate
+        address payable delegate
     ) external {
         console.log(
             "ASC721Manager.assignRole msg.sender: ",

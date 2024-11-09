@@ -24,12 +24,12 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     // Mappings to keep track of hierarchical relationships
     // each key is an ambassador's address, and the value is the list of its advocates
-    mapping(address => address[]) public ambassadorToAdvocates;
+    mapping(address => address payable[]) public ambassadorToAdvocates;
     // inverted ambassadorToAdvocates: given an advocate, obtain its corresponing advocate
-    mapping(address => address) public advocateToAmbassador;
+    mapping(address => address payable) public advocateToAmbassador;
 
-    mapping(address => address[]) public advocateToEvangelists;
-    mapping(address => address) public evangelistToAdvocate;
+    mapping(address => address payable[]) public advocateToEvangelists;
+    mapping(address => address payable) public evangelistToAdvocate;
 
     // Mapping to track Promoter Ambassador, Advocates, and their commissions
     // commission that one ambassador gives to their advocates. 10 means 10% to advocate, rest to ambassador
@@ -92,6 +92,10 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         );
     }
 
+    function calculateCommission(uint amt) internal pure returns (uint) {
+        return amt / 10;
+    }
+
     function sendCommission(
         address referrer,
         bytes calldata ambassadorReference,
@@ -103,33 +107,25 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         }
         requireReferrer(referrer);
 
-        // Calculate commissions
-        uint256 totalCommission = msg.value / 10; // 10% commission to Promoter
-
-        // Track commission delegation
-        address ambassador = address(0);
-        address advocate = address(0);
-        address evangelist = address(0);
-
         if (roles[referrer] == Role.Ambassador) {
             // Referrer is an Ambassador, all commission goes to them
-            ambassador = referrer;
+            address ambassador = referrer;
             // payable(ambassador).transfer(totalCommission);
             console.log("Using Ethereum fee proxy");
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
-                value: totalCommission
+                value: calculateCommission(msg.value)
             }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
 
             return;
         } else if (roles[referrer] == Role.Advocate) {
             // Referrer is an Advocate delegated by an Ambassador
-            advocate = referrer;
+            address advocate = referrer;
             (
-                address ambassador_,
+                address ambassador,
                 uint ambassadorShare,
                 uint advocateShare
-            ) = getAdvocateShare(advocate, totalCommission);
-            ambassador = ambassador_;
+            ) = getAdvocateShare(advocate, calculateCommission(msg.value));
+            // ambassador = ambassador_;
             // payable(ambassador).transfer(ambassadorShare);
             console.log("Using Ethereum fee proxy");
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
@@ -141,21 +137,15 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             }(payable(advocate), advocateReference, 0, payable(address(0)));
             return;
         } else if (roles[referrer] == Role.Evangelist) {
-            evangelist = referrer;
+            address evangelist = referrer;
             (
-                address ambassador_,
-                address advocate_,
+                address payable ambassador,
+                address payable advocate,
                 uint ambassadorShare,
                 uint advocateShare,
                 uint evangelistShare
-            ) = getEvangelistShare(evangelist, totalCommission);
+            ) = getEvangelistShare(evangelist, calculateCommission(msg.value));
 
-            ambassador = ambassador_;
-            advocate = advocate_;
-            // payable(ambassador).transfer(ambassadorShare);
-            // payable(advocate).transfer(advocateShare);
-            // payable(evangelist).transfer(evangelistShare);
-            console.log("Using Ethereum fee proxy");
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
                 value: ambassadorShare
             }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
@@ -225,9 +215,13 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     function getEvangelistShare(
         address evangelist,
         uint256 totalCommission
-    ) internal view returns (address, address, uint256, uint256, uint256) {
-        address advocate = evangelistToAdvocate[evangelist];
-        address ambassador = advocateToAmbassador[advocate];
+    )
+        internal
+        view
+        returns (address payable, address payable, uint256, uint256, uint256)
+    {
+        address payable advocate = evangelistToAdvocate[evangelist];
+        address payable ambassador = advocateToAmbassador[advocate];
         // get share % for advocate & evangelist
         uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
             ambassador
@@ -268,7 +262,11 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
      *   - role: the role which the `delegate` will have.
      *   - delegate: the lower level in the hierarchy.
      */
-    function assignRole(address user, Role role, address delegate) external {
+    function assignRole(
+        address payable user,
+        Role role,
+        address payable delegate
+    ) external {
         console.log(
             "Vera3DistributionModel.assignRole msg.sender: ",
             msg.sender,
