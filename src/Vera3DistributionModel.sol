@@ -37,7 +37,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     // commission that one advocate gives to their evangelists.
     mapping(address => uint256) public advocateToEvangelistCommission;
 
-    IEthereumFeeProxy public ETHEREUM_FEE_PROXY; // TODO initialize with address
+    IEthereumFeeProxy public ETHEREUM_FEE_PROXY;
 
     // Events for role assignment and commission updates
     event RoleAssigned(address indexed user, Role role);

@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/AnimalSocialClubERC721.sol";
 import "forge-std/console.sol";
 import "src/ASC721Manager.sol";
+import "../src/DummyEthFeeProxy.sol";
 
 contract AnimalSocialClubTest is Test {
     ASC721Manager public asc;
@@ -17,7 +18,7 @@ contract AnimalSocialClubTest is Test {
     address advocate;
     address evangelist;
     address buyer;
-    address ethFeeProxy;
+    EthereumFeeProxy ethFeeProxy;
 
     address[] public waitlistedAddresses = [
         address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f),
@@ -30,13 +31,14 @@ contract AnimalSocialClubTest is Test {
         advocate = vm.addr(2);
         evangelist = vm.addr(3);
         buyer = vm.addr(4);
-        ethFeeProxy = address(0xA52672A2aC57263d599284a75585Cc7771363A05); // base sepolia testnet address
+        // ethFeeProxy = address(0xA52672A2aC57263d599284a75585Cc7771363A05); // base sepolia testnet address
+        ethFeeProxy = new EthereumFeeProxy();
 
         vm.startPrank(adminAddress);
         asc = new ASC721Manager(
             adminAddress,
             treasuryAddress,
-            ethFeeProxy
+            address(ethFeeProxy)
             // waitlistedAddresses,
             // waitlistedIDs
         );
