@@ -37,6 +37,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
 
     AnimalSocialClubERC721[] public contracts;
 
+    mapping(address => bool) isEarlyBacker;
+
     constructor(
         address _adminAddress,
         address _treasuryAddress,
@@ -149,7 +151,18 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         contracts.push(tiger);
     }
 
+    function setEarlyBacker(
+        address it,
+        bool _is
+    ) external onlyRole(ADMIN_ROLE) {
+        isEarlyBacker[it] = _is;
+    }
+
     function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 10 elephants, 2 sharks
         for (uint i = 0; i < 10; i++) {
             elephant.adminMint(dest);
@@ -160,6 +173,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     }
 
     function adminPackCryptoTucan(address dest) external onlyRole(ADMIN_ROLE) {
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 25 elephants, 2 sharks, 1 eagle
         for (uint i = 0; i < 25; i++) {
             elephant.adminMint(dest);
@@ -172,6 +189,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     }
 
     function adminPackJaguareth(address dest) external onlyRole(ADMIN_ROLE) {
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 75 elephants, 9 sharks, 3 eagle
         for (uint i = 0; i < 75; i++) {
             elephant.adminMint(dest);
@@ -185,6 +206,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     }
 
     function adminPackWhale(address dest) external onlyRole(ADMIN_ROLE) {
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 150 elephants, 16 sharks, 7 eagle
         for (uint i = 0; i < 150; i++) {
             elephant.adminMint(dest);
