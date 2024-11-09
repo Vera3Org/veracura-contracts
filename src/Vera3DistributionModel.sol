@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import "@requestnetwork/advanced-logic/src/contracts/interfaces/EthereumFeeProxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "forge-std/console.sol";
 
 abstract contract Vera3DistributionModel is OwnableUpgradeable {
@@ -48,6 +49,12 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         address indexed advocate,
         uint256 commission_pct
     );
+
+    function __Vera3DistributionModel_init(
+        address ethFeeProxy
+    ) internal onlyInitializing {
+        ETHEREUM_FEE_PROXY = IEthereumFeeProxy(ethFeeProxy);
+    }
 
     modifier onlyAmbassador() {
         if (roles[msg.sender] != Role.Ambassador) {
@@ -108,6 +115,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             // Referrer is an Ambassador, all commission goes to them
             ambassador = referrer;
             // payable(ambassador).transfer(totalCommission);
+            console.log("Using Ethereum fee proxy");
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
                 value: totalCommission
             }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
@@ -123,6 +131,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             ) = getAdvocateShare(advocate, totalCommission);
             ambassador = ambassador_;
             // payable(ambassador).transfer(ambassadorShare);
+            console.log("Using Ethereum fee proxy");
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
                 value: ambassadorShare
             }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
@@ -146,6 +155,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             // payable(ambassador).transfer(ambassadorShare);
             // payable(advocate).transfer(advocateShare);
             // payable(evangelist).transfer(evangelistShare);
+            console.log("Using Ethereum fee proxy");
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
                 value: ambassadorShare
             }(payable(ambassador), ambassadorReference, 0, payable(address(0)));

@@ -33,7 +33,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
 
     constructor(
         address _adminAddress,
-        address _treasuryAddress
+        address _treasuryAddress,
+        address ethFeeProxy
     ) AccessControl() {
         require(msg.sender == _adminAddress, "sender must be admin");
         require(
@@ -66,7 +67,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             address(this),
                             treasuryAddress,
                             this,
-                            0
+                            0,
+                            ethFeeProxy
                         )
                     )
                 )
@@ -87,7 +89,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             address(this),
                             treasuryAddress,
                             this,
-                            0
+                            0,
+                            ethFeeProxy
                         )
                     )
                 )
@@ -108,7 +111,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             address(this),
                             treasuryAddress,
                             this,
-                            9 // 9 eagle reserved for lottery
+                            9, // 9 eagle reserved for lottery
+                            ethFeeProxy
                         )
                     )
                 )
@@ -129,7 +133,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             address(this),
                             treasuryAddress,
                             this,
-                            1 // 1 tiger reserved for lottery
+                            1, // 1 tiger reserved for lottery
+                            ethFeeProxy
                         )
                     )
                 )

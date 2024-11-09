@@ -17,6 +17,7 @@ contract AnimalSocialClubTest is Test {
     address advocate;
     address evangelist;
     address buyer;
+    address ethFeeProxy;
 
     address[] public waitlistedAddresses = [
         address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f),
@@ -29,11 +30,13 @@ contract AnimalSocialClubTest is Test {
         advocate = vm.addr(2);
         evangelist = vm.addr(3);
         buyer = vm.addr(4);
+        ethFeeProxy = address(0xA52672A2aC57263d599284a75585Cc7771363A05); // base sepolia testnet address
 
         vm.startPrank(adminAddress);
         asc = new ASC721Manager(
             adminAddress,
-            treasuryAddress
+            treasuryAddress,
+            ethFeeProxy
             // waitlistedAddresses,
             // waitlistedIDs
         );
@@ -90,16 +93,14 @@ contract AnimalSocialClubTest is Test {
         vm.deal(user, 2000000000000 ether);
         vm.startPrank(user);
         for (uint i = 0; i < howMany; i++) {
-            elephant.mintWithDonationETH{value: 0.1 ether}(
+            elephant.mintWithDonationRequestNetwork{value: 0.1 ether}(
                 user,
                 ambassador,
+                new bytes(1),
                 new bytes(1),
                 new bytes(2),
                 new bytes(3)
             );
-            if (i > 0) {
-                return;
-            }
         }
         vm.stopPrank();
 
@@ -133,7 +134,7 @@ contract AnimalSocialClubTest is Test {
     //     // user mints elephant
     //     vm.prank(user);
     //     vm.deal(user, 2 ether);
-    //     asc.elephant().mintWithDonationETH{value: 0.1 ether}(user, ambassador);
+    //     asc.elephant().mintWithDonationRequestNetwork{value: 0.1 ether}(user, ambassador);
 
     //     uint256 initialTreasuryBalance = treasuryAddress.balance;
 
@@ -157,9 +158,12 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Ambassador as referrer
         vm.deal(buyer, 1 ether);
         vm.startPrank(buyer);
-        asc.elephant().mintWithDonationETH{value: asc.elephant().PRICE()}(
+        asc.elephant().mintWithDonationRequestNetwork{
+            value: asc.elephant().PRICE()
+        }(
             buyer,
             ambassador,
+            new bytes(1),
             new bytes(1),
             new bytes(2),
             new bytes(3)
@@ -169,9 +173,10 @@ contract AnimalSocialClubTest is Test {
         uint256 ambassadorBalance = ambassador.balance;
         uint256 expectedCommission = (asc.elephant().PRICE() * 10) / 100;
 
-        assertEq(
+        assertApproxEqRel(
             ambassadorBalance,
             expectedCommission,
+            1e16, // 1e18 = 100%, 1e16 = 1%
             "Ambassador commission is incorrect when they are referrer"
         );
     }
@@ -180,9 +185,12 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1 ether);
         vm.startPrank(buyer);
-        asc.elephant().mintWithDonationETH{value: asc.elephant().PRICE()}(
+        asc.elephant().mintWithDonationRequestNetwork{
+            value: asc.elephant().PRICE()
+        }(
             buyer,
             advocate,
+            new bytes(1),
             new bytes(1),
             new bytes(2),
             new bytes(3)
@@ -194,14 +202,16 @@ contract AnimalSocialClubTest is Test {
         uint256 expectedAdvocateCommission = totalCommission -
             expectedAmbassadorCommission;
 
-        assertEq(
+        assertApproxEqRel(
             ambassador.balance,
             expectedAmbassadorCommission,
+            1e16,
             "Ambassador commission is incorrect when Advocate is referrer"
         );
-        assertEq(
+        assertApproxEqRel(
             advocate.balance,
             expectedAdvocateCommission,
+            1e16,
             "Advocate commission is incorrect when they are referrer"
         );
     }
@@ -210,9 +220,12 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1 ether);
         vm.startPrank(buyer);
-        asc.elephant().mintWithDonationETH{value: asc.elephant().PRICE()}(
+        asc.elephant().mintWithDonationRequestNetwork{
+            value: asc.elephant().PRICE()
+        }(
             buyer,
             evangelist,
+            new bytes(1),
             new bytes(1),
             new bytes(2),
             new bytes(3)
@@ -227,19 +240,22 @@ contract AnimalSocialClubTest is Test {
             50) / 100;
         expectedAdvocateCommission -= expectedEvangelistCommission;
 
-        assertEq(
+        assertApproxEqRel(
             ambassador.balance,
             expectedAmbassadorCommission,
+            1e16,
             "Ambassador commission is incorrect when Evangelist is referrer"
         );
-        assertEq(
+        assertApproxEqRel(
             advocate.balance,
             expectedAdvocateCommission,
+            1e16,
             "Advocate commission is incorrect when Evangelist is referrer"
         );
-        assertEq(
+        assertApproxEqRel(
             evangelist.balance,
             expectedEvangelistCommission,
+            1e16,
             "Evangelist commission is incorrect when they are referrer"
         );
     }

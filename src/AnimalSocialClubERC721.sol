@@ -45,6 +45,11 @@ contract AnimalSocialClubERC721 is
     // Events
     event SaleStateChanged(bool active);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         string memory name,
         string memory symbol,
@@ -53,10 +58,13 @@ contract AnimalSocialClubERC721 is
         address _adminAddress,
         address _treasuryAddress,
         ASC721Manager _manager,
-        uint num_reserved
+        uint num_reserved,
+        address ethFeeProxy
     ) public initializer {
         __Ownable_init(_adminAddress);
         __ERC721_init(name, symbol);
+        __ReentrancyGuard_init();
+        __Vera3DistributionModel_init(ethFeeProxy);
         // require(msg.sender == _adminAddress, "sender must be admin");
         require(
             _adminAddress != address(0) && _treasuryAddress != address(0),
@@ -116,9 +124,10 @@ contract AnimalSocialClubERC721 is
     }
 
     // Function to mint NFTs. `referrer` is optional.
-    function mintWithDonationETH(
+    function mintWithDonationRequestNetwork(
         address to,
         address referrer,
+        bytes calldata donorReference,
         bytes calldata ambassadorReference,
         bytes calldata advocateReference,
         bytes calldata evangelistReference
@@ -139,38 +148,24 @@ contract AnimalSocialClubERC721 is
         // Update token supply
         currentSupply += 1;
 
+        console.log("minting");
         // Mint the NFTs to the buyer
         _safeMint(to, currentSupply);
+        console.log("minted");
 
-        sendCommission(
-            referrer,
-            ambassadorReference,
-            advocateReference,
-            evangelistReference
-        );
-    }
-
-    function doit(
-        address donor,
-        address referrer,
-        bytes calldata donorReference,
-        bytes calldata ambassadorReference,
-        bytes calldata advocateReference,
-        bytes calldata evangelistReference
-    ) external payable nonReentrant isSaleActive {
-        this.mintWithDonationETH(
-            donor,
-            referrer,
-            ambassadorReference,
-            advocateReference,
-            evangelistReference
-        );
         ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
             payable(manager.treasuryAddress()),
             donorReference,
             0,
             payable(address(0))
         );
+        sendCommission(
+            referrer,
+            ambassadorReference,
+            advocateReference,
+            evangelistReference
+        );
+        console.log("commission sent");
     }
 
     // Function to withdraw funds to respective beneficiaries
