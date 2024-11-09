@@ -27,6 +27,12 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     AnimalSocialClubERC721 public immutable shark;
     AnimalSocialClubERC721 public immutable eagle;
 
+    uint public constant ELEPHANT_ID = 0;
+    uint public constant TIGER_ID = 1;
+    uint public constant SHARK_ID = 2;
+    uint public constant EAGLE_ID = 3;
+    // uint public constant RESERVED_ID = 0;
+
     mapping(address => bool) private _hasKYC;
 
     AnimalSocialClubERC721[] public contracts;
@@ -141,6 +147,54 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
             )
         );
         contracts.push(tiger);
+    }
+
+    function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
+        // 10 elephants, 2 sharks
+        for (uint i = 0; i < 10; i++) {
+            elephant.adminMint(dest);
+        }
+
+        shark.adminMint(dest);
+        shark.adminMint(dest);
+    }
+
+    function adminPackCryptoTucan(address dest) external onlyRole(ADMIN_ROLE) {
+        // 25 elephants, 2 sharks, 1 eagle
+        for (uint i = 0; i < 25; i++) {
+            elephant.adminMint(dest);
+        }
+
+        shark.adminMint(dest);
+        shark.adminMint(dest);
+
+        eagle.adminMint(dest);
+    }
+
+    function adminPackJaguareth(address dest) external onlyRole(ADMIN_ROLE) {
+        // 75 elephants, 9 sharks, 3 eagle
+        for (uint i = 0; i < 75; i++) {
+            elephant.adminMint(dest);
+        }
+        for (uint i = 0; i < 9; i++) {
+            shark.adminMint(dest);
+        }
+        eagle.adminMint(dest);
+        eagle.adminMint(dest);
+        eagle.adminMint(dest);
+    }
+
+    function adminPackWhale(address dest) external onlyRole(ADMIN_ROLE) {
+        // 150 elephants, 16 sharks, 7 eagle
+        for (uint i = 0; i < 150; i++) {
+            elephant.adminMint(dest);
+        }
+        for (uint i = 0; i < 16; i++) {
+            shark.adminMint(dest);
+        }
+        for (uint i = 0; i < 7; i++) {
+            eagle.adminMint(dest);
+        }
     }
 
     function setOperator(address a) public onlyRole(ADMIN_ROLE) {
