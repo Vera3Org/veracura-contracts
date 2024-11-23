@@ -108,7 +108,7 @@ contract AnimalSocialClubERC721 is
         );
         require(
             currentSupply + 1 <= (TOTAL_SUPPLY - NUMBER_RESERVED),
-            "No more tokens: the remainder is reserved for lottery"
+            "No more tokens: the remainder is reserved"
         );
 
         // check is commented bc payment might be made elsewhere
