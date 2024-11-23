@@ -77,7 +77,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             treasuryAddress,
                             this,
                             0,
-                            ethFeeProxy
+                            ethFeeProxy,
+                            ELEPHANT_ID
                         )
                     )
                 )
@@ -99,7 +100,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             treasuryAddress,
                             this,
                             0,
-                            ethFeeProxy
+                            ethFeeProxy,
+                            SHARK_ID
                         )
                     )
                 )
@@ -121,7 +123,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             treasuryAddress,
                             this,
                             9, // 9 eagle reserved for lottery
-                            ethFeeProxy
+                            ethFeeProxy,
+                            EAGLE_ID
                         )
                     )
                 )
@@ -143,7 +146,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             treasuryAddress,
                             this,
                             1, // 1 tiger reserved for lottery
-                            ethFeeProxy
+                            ethFeeProxy,
+                            TIGER_ID
                         )
                     )
                 )
@@ -165,7 +169,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             treasuryAddress,
                             this,
                             0, // 1 stakeholder reserved for lottery
-                            ethFeeProxy
+                            ethFeeProxy,
+                            STAKEHOLDER_ID
                         )
                     )
                 )

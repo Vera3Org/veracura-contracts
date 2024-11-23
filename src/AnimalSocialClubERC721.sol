@@ -28,6 +28,7 @@ contract AnimalSocialClubERC721 is
     uint256 public TOTAL_SUPPLY;
     uint256 public PRICE;
     uint256 public NUMBER_RESERVED;
+    uint256 public TIER_ID;
 
     // can mint 1 at a time
     uint256 public constant MAXIMUM_MINTABLE = 1;
@@ -57,7 +58,8 @@ contract AnimalSocialClubERC721 is
         address _treasuryAddress,
         ASC721Manager _manager,
         uint num_reserved,
-        address ethFeeProxy
+        address ethFeeProxy,
+        uint tier_id
     ) public initializer {
         __Ownable_init(_adminAddress);
         __ERC721_init(name, symbol);
@@ -75,6 +77,7 @@ contract AnimalSocialClubERC721 is
         PRICE = _mint_price;
         manager = ASC721Manager(_manager);
         NUMBER_RESERVED = num_reserved;
+        TIER_ID = tier_id;
     }
 
     // Modifier to check if sale is active
@@ -96,7 +99,7 @@ contract AnimalSocialClubERC721 is
     // Function to mint NFTs. `referrer` is optional.
     function adminMint(
         address to
-    ) external payable nonReentrant isSaleActive onlyOwner {
+    ) external nonReentrant isSaleActive onlyOwner {
         // it's on the admin to add kyc or kyb
         require(manager.hasKYC(to), "Destination address without KYC!");
         require(
@@ -123,6 +126,10 @@ contract AnimalSocialClubERC721 is
     ) external payable nonReentrant isSaleActive {
         // require(!isASCMember(to), "Only one membership per address");
         require(manager.hasKYC(to), "Destination address without KYC!");
+        require(
+            TIER_ID != manager.STAKEHOLDER_ID(),
+            "Stakeholder memberships not minted with donation"
+        );
         super.requireReferrer(referrer);
         require(
             totalSupply() + 1 < TOTAL_SUPPLY - waitlisted.length,
@@ -173,6 +180,11 @@ contract AnimalSocialClubERC721 is
     ///////// TIGER Auction things
     /////////////////////////////////////////////////////////////////
 
+    modifier onlyTiger() {
+        require(TIER_ID == manager.TIGER_ID(), "Only tiger supports this");
+        _;
+    }
+
     // address & amount of current highest bid
     address[] public highestBidder;
     uint256[] public highestBid;
@@ -186,7 +198,7 @@ contract AnimalSocialClubERC721 is
     // minimum step to increment highest bid
     uint256 public constant minBidIncrement = 0.1 ether;
 
-    function startAuction() external onlyOwner {
+    function startAuction() external onlyOwner onlyTiger {
         require(!auctionStarted, "Auction already started");
         require(
             !auctionEnded && block.timestamp <= auctionEndTime,
@@ -203,7 +215,7 @@ contract AnimalSocialClubERC721 is
      * this bid becomes the new highest bid, and the previous one
      * gets transfered back to the previous user.
      */
-    function placeBid(uint256 tokenId) external payable nonReentrant {
+    function placeBid(uint256 tokenId) external payable nonReentrant onlyTiger {
         require(tokenId < TOTAL_SUPPLY, "tokenId is too high");
         require(tokenId > TOTAL_SUPPLY - NUMBER_RESERVED, "tokenId is too low");
         require(auctionStarted, "Auction not yet started");
@@ -229,7 +241,7 @@ contract AnimalSocialClubERC721 is
         }
     }
 
-    function endAuction(uint256 i) external nonReentrant onlyOwner {
+    function endAuction(uint256 i) external nonReentrant onlyOwner onlyTiger {
         require(i < TOTAL_SUPPLY, "Invalid card ID");
         require(auctionStarted, "Auction not yet started");
         require(!auctionEnded, "Auction already ended");
@@ -245,7 +257,9 @@ contract AnimalSocialClubERC721 is
     }
 
     // Allow the contract owner to withdraw the highest bid after the auction ends
-    function withdrawHighestBid(uint256 i) external nonReentrant onlyOwner {
+    function withdrawHighestBid(
+        uint256 i
+    ) external nonReentrant onlyOwner onlyTiger {
         require(i < TOTAL_SUPPLY, "Invalid i");
         require(auctionStarted, "Auction not yet started");
         require(auctionEnded, "Auction has not ended yet");
