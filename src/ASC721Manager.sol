@@ -145,7 +145,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             address(this),
                             treasuryAddress,
                             this,
-                            1, // 1 tiger reserved for lottery
+                            11, // 1 tiger reserved for lottery, 10 tigers in auction
                             ethFeeProxy,
                             TIGER_ID
                         )
