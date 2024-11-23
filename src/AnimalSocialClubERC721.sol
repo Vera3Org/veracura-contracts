@@ -99,9 +99,8 @@ contract AnimalSocialClubERC721 is
     function adminMint(
         address to
     ) external payable nonReentrant isSaleActive onlyOwner {
-        // it's on the admin to check kyc or kyb
-        // require(manager.hasKYC(to), "Destination address without KYC!");
-        // super.checkReferrer(referrer);
+        // it's on the admin to add kyc or kyb
+        require(manager.hasKYC(to), "Destination address without KYC!");
         require(
             currentSupply + 1 <= TOTAL_SUPPLY,
             "Exceeds total supply of tokens"
@@ -111,16 +110,11 @@ contract AnimalSocialClubERC721 is
             "No more tokens: the remainder is reserved"
         );
 
-        // check is commented bc payment might be made elsewhere
-        // require(msg.value == PRICE, "Incorrect ETH amount sent");
-
         // Update token supply
         currentSupply += 1;
 
         // Mint the NFTs to the buyer
         _safeMint(to, currentSupply);
-
-        // sendCommission(referrer);
     }
 
     // Function to mint NFTs. `referrer` is optional.
