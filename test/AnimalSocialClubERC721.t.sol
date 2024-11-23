@@ -42,6 +42,9 @@ contract AnimalSocialClubTest is Test {
             // waitlistedAddresses,
             // waitlistedIDs
         );
+        for (uint i = 0; i < waitlistedAddresses.length; i++) {
+            asc.addToWaitlist(asc.ELEPHANT_ID(), 0, waitlistedAddresses[i]);
+        }
         asc.setKYC(buyer, true);
         asc.setKYC(user, true);
         vm.stopPrank();
@@ -81,21 +84,25 @@ contract AnimalSocialClubTest is Test {
 
     // function testReservedTokens() public view {
     //     assertEq(asc.uri(asc.ID_RESERVED()), "ipfs://baseURI/5.json");
-    //     assertEq(asc.currentSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
+    //     assertEq(asc.totalSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
     // }
 
-    function testMintElephant(uint howMany) public {
-        AnimalSocialClubERC721 elephant = asc.elephant();
+    function testMintWithDonation(uint tier, uint howMany) public {
+        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+
+        AnimalSocialClubERC721 membership = asc.contracts(tier);
         vm.assume(howMany < 3);
         uint256 ambassadorInitialBalance = ambassador.balance;
-        uint256 initialSupply = asc.elephant().currentSupply();
+        uint256 initialSupply = membership.totalSupply();
 
         vm.prank(adminAddress);
         asc.setSaleActive(true);
         vm.deal(user, 2000000000000 ether);
         vm.startPrank(user);
         for (uint i = 0; i < howMany; i++) {
-            elephant.mintWithDonationRequestNetwork{value: 0.1 ether}(
+            membership.mintWithDonationRequestNetwork{
+                value: membership.PRICE()
+            }(
                 user,
                 ambassador,
                 new bytes(1),
@@ -106,23 +113,23 @@ contract AnimalSocialClubTest is Test {
         }
         vm.stopPrank();
 
-        howMany = howMany >= elephant.TOTAL_SUPPLY()
-            ? elephant.TOTAL_SUPPLY()
+        howMany = howMany >= membership.TOTAL_SUPPLY()
+            ? membership.TOTAL_SUPPLY()
             : howMany;
 
         assertEq(
-            elephant.balanceOf(user),
+            membership.balanceOf(user),
             howMany,
             "Balance of user doesnt match expectation"
         );
         assertEq(
-            elephant.currentSupply(),
+            membership.totalSupply(),
             initialSupply + howMany,
             "Token supply doesnt match expectation"
         );
         assertEq(
             ambassador.balance,
-            ambassadorInitialBalance + (howMany * 0.01 ether),
+            ambassadorInitialBalance + ((howMany * membership.PRICE()) / 10),
             "Ambassador did not get proper commission"
         );
     }

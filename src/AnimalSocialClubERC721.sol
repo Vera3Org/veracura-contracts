@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -17,7 +18,7 @@ import "src/ASC721Manager.sol";
 
 contract AnimalSocialClubERC721 is
     Initializable,
-    ERC721Upgradeable,
+    ERC721EnumerableUpgradeable,
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
     Vera3DistributionModel
@@ -38,9 +39,6 @@ contract AnimalSocialClubERC721 is
 
     // Sale status
     bool public saleActive;
-
-    // Tracking token supply
-    uint public currentSupply;
 
     // Events
     event SaleStateChanged(bool active);
@@ -102,19 +100,16 @@ contract AnimalSocialClubERC721 is
         // it's on the admin to add kyc or kyb
         require(manager.hasKYC(to), "Destination address without KYC!");
         require(
-            currentSupply + 1 <= TOTAL_SUPPLY,
+            totalSupply() + 1 <= TOTAL_SUPPLY,
             "Exceeds total supply of tokens"
         );
         require(
-            currentSupply + 1 <= (TOTAL_SUPPLY - NUMBER_RESERVED),
+            totalSupply() + 1 <= (TOTAL_SUPPLY - NUMBER_RESERVED),
             "No more tokens: the remainder is reserved"
         );
 
-        // Update token supply
-        currentSupply += 1;
-
         // Mint the NFTs to the buyer
-        _safeMint(to, currentSupply);
+        _safeMint(to, totalSupply());
     }
 
     // Function to mint NFTs. `referrer` is optional.
@@ -130,21 +125,19 @@ contract AnimalSocialClubERC721 is
         require(manager.hasKYC(to), "Destination address without KYC!");
         super.requireReferrer(referrer);
         require(
-            currentSupply + 1 <= TOTAL_SUPPLY,
+            totalSupply() + 1 <= TOTAL_SUPPLY - waitlisted.length,
             "Exceeds total supply of tokens"
         );
         require(
-            currentSupply + 1 <= (TOTAL_SUPPLY - NUMBER_RESERVED),
+            totalSupply() + 1 <=
+                (TOTAL_SUPPLY - NUMBER_RESERVED - waitlisted.length),
             "No more tokens: the remainder is reserved for lottery"
         );
         require(msg.value == PRICE, "Incorrect ETH amount sent");
 
-        // Update token supply
-        currentSupply += 1;
-
         console.log("minting");
         // Mint the NFTs to the buyer
-        _safeMint(to, currentSupply);
+        _safeMint(to, totalSupply());
         console.log("minted");
 
         ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
@@ -274,8 +267,10 @@ contract AnimalSocialClubERC721 is
     uint256 public constant WAITLIST_DISCOUNT_PCT = 5;
     bool public isLaunched;
 
-    // keep track of who's on waitlist
+    // pair (array, address) to keep track of who's on waitlist
+    address[] public waitlisted;
     mapping(address => bool) public waitlist;
+
     // keep track of which specific tokenId the address is waitlisted for
     mapping(address => uint) public waitlistId;
     // keep track of how much deposit was made for waitlist
@@ -296,8 +291,7 @@ contract AnimalSocialClubERC721 is
         address user
     ) external payable onlyOwner nonReentrant {
         require(!isLaunched, "Sale has already launched");
-
-        uint tokenId = currentSupply;
+        uint tokenId = totalSupply() + waitlisted.length;
         require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
         require(
             tokenId < TOTAL_SUPPLY,
@@ -310,8 +304,7 @@ contract AnimalSocialClubERC721 is
 
         waitlist[user] = true;
         waitlistId[user] = tokenId;
-
-        currentSupply += 1;
+        waitlisted.push(user);
 
         emit WaitlistJoined(user);
     }
