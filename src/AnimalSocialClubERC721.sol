@@ -344,6 +344,15 @@ contract AnimalSocialClubERC721 is
 
         waitlistClaimed[msg.sender] = true;
         uint256 tokenId = waitlistId[msg.sender];
+
+        // remove person from waitlist
+        for (uint i = 0; i < waitlisted.length; i++) {
+            if (msg.sender == waitlisted[i]) {
+                waitlisted[i] = waitlisted[waitlisted.length];
+                waitlisted.pop();
+            }
+        }
+
         _safeMint(msg.sender, tokenId);
         emit WaitlistClaimed(msg.sender);
     }
