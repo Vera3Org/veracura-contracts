@@ -100,11 +100,11 @@ contract AnimalSocialClubERC721 is
         // it's on the admin to add kyc or kyb
         require(manager.hasKYC(to), "Destination address without KYC!");
         require(
-            totalSupply() + 1 <= TOTAL_SUPPLY,
+            totalSupply() + 1 < TOTAL_SUPPLY,
             "Exceeds total supply of tokens"
         );
         require(
-            totalSupply() + 1 <= (TOTAL_SUPPLY - NUMBER_RESERVED),
+            totalSupply() + 1 < (TOTAL_SUPPLY - NUMBER_RESERVED),
             "No more tokens: the remainder is reserved"
         );
 
@@ -125,11 +125,11 @@ contract AnimalSocialClubERC721 is
         require(manager.hasKYC(to), "Destination address without KYC!");
         super.requireReferrer(referrer);
         require(
-            totalSupply() + 1 <= TOTAL_SUPPLY - waitlisted.length,
+            totalSupply() + 1 < TOTAL_SUPPLY - waitlisted.length,
             "Exceeds total supply of tokens"
         );
         require(
-            totalSupply() + 1 <=
+            totalSupply() + 1 <
                 (TOTAL_SUPPLY - NUMBER_RESERVED - waitlisted.length),
             "No more tokens: the remainder is reserved for lottery"
         );
