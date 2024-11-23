@@ -302,6 +302,12 @@ contract AnimalSocialClubERC721 is
         emit WaitlistJoined(user);
     }
 
+    /**
+     * Called by a user to claim their waitlisted token.
+     * User must pay what's left to pay minus a discount.
+     * After payment, the token is minted to them just like the normal case.
+     * currentSupply is not incremented here because it already was in addToWaitlist.
+     */
     function claimWaitlist() external payable nonReentrant {
         require(isLaunched, "Sale has not launched yet");
         require(waitlist[msg.sender], "Not on waitlist for this token");
