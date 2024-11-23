@@ -205,7 +205,7 @@ contract AnimalSocialClubERC721 is
             "Auction already ended"
         );
         require(
-            msg.value > highestBid[i],
+            msg.value > highestBid[i] + minBidIncrement,
             "Bid must be higher than current highest bid"
         );
         require(
