@@ -179,12 +179,18 @@ contract AnimalSocialClubERC721 is
     /////////////////////////////////////////////////////////////////
     ///////// TIGER Auction things
     /////////////////////////////////////////////////////////////////
+
+    // address & amount of current highest bid
     address[] public highestBidder;
     uint256[] public highestBid;
+
+    // track auction start & end
     bool public auctionStarted;
     bool public auctionEnded;
     uint256 public auctionEndTime;
+
     uint256 public constant startingPrice = 2 ether;
+    // minimum step to increment highest bid
     uint256 public constant minBidIncrement = 0.1 ether;
 
     function startAuction() external onlyOwner {
@@ -197,15 +203,23 @@ contract AnimalSocialClubERC721 is
         auctionStarted = true;
     }
 
-    function placeBid(uint256 i) external payable nonReentrant {
-        require(i < TOTAL_SUPPLY, "Invalid card ID");
+    /**
+     * Place bid on a certain reserved token.
+     * Bid is included in msg.value.
+     * If higher than highest bid + minimum increment,
+     * this bid becomes the new highest bid, and the previous one
+     * gets transfered back to the previous user.
+     */
+    function placeBid(uint256 tokenId) external payable nonReentrant {
+        require(tokenId < TOTAL_SUPPLY, "tokenId is too high");
+        require(tokenId > TOTAL_SUPPLY - NUMBER_RESERVED, "tokenId is too low");
         require(auctionStarted, "Auction not yet started");
         require(
             !auctionEnded && block.timestamp <= auctionEndTime,
             "Auction already ended"
         );
         require(
-            msg.value > highestBid[i] + minBidIncrement,
+            msg.value > highestBid[tokenId] + minBidIncrement,
             "Bid must be higher than current highest bid"
         );
         require(
@@ -213,12 +227,12 @@ contract AnimalSocialClubERC721 is
             "Bid must be at least the starting price"
         );
 
-        highestBidder[i] = msg.sender;
-        highestBid[i] = msg.value;
+        highestBidder[tokenId] = msg.sender;
+        highestBid[tokenId] = msg.value;
 
-        if (highestBidder[i] != address(0)) {
+        if (highestBidder[tokenId] != address(0)) {
             // Refund the previous highest bidder
-            payable(highestBidder[i]).transfer(highestBid[i]);
+            payable(highestBidder[tokenId]).transfer(highestBid[tokenId]);
         }
     }
 
