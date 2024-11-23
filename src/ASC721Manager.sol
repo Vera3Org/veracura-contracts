@@ -26,12 +26,13 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     AnimalSocialClubERC721 public immutable tiger;
     AnimalSocialClubERC721 public immutable shark;
     AnimalSocialClubERC721 public immutable eagle;
+    AnimalSocialClubERC721 public immutable stakeholder;
 
     uint public constant ELEPHANT_ID = 0;
     uint public constant TIGER_ID = 1;
     uint public constant SHARK_ID = 2;
     uint public constant EAGLE_ID = 3;
-    // uint public constant RESERVED_ID = 0;
+    uint public constant STAKEHOLDER_ID = 4;
 
     mapping(address => bool) private _hasKYC;
 
@@ -149,6 +150,28 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
             )
         );
         contracts.push(tiger);
+        stakeholder = AnimalSocialClubERC721(
+            payable(
+                Upgrades.deployUUPSProxy(
+                    "AnimalSocialClubERC721.sol",
+                    abi.encodeCall(
+                        AnimalSocialClubERC721.initialize,
+                        (
+                            "Animal Social Club Stakeholder Membership",
+                            "ASC.Stakeholder",
+                            250,
+                            0 ether,
+                            address(this),
+                            treasuryAddress,
+                            this,
+                            0, // 1 stakeholder reserved for lottery
+                            ethFeeProxy
+                        )
+                    )
+                )
+            )
+        );
+        contracts.push(stakeholder);
     }
 
     function setEarlyBacker(
