@@ -26,6 +26,16 @@ contract AnimalSocialClubTest is Test {
     ];
     uint256[] public waitlistedIDs = [1, 2];
 
+    address public constant LINK_BASE_MAINNET =
+        0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196;
+    address public constant VRF_WRAPPER_BASE_MAINNET =
+        0xb0407dbe851f8318bd31404A49e658143C982F23;
+
+    address public constant LINK_BASE_SEPOLIA =
+        0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
+    address public constant VRF_WRAPPER_BASE_SEPOLIA =
+        0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
+
     function setUp() public {
         ambassador = vm.addr(1);
         advocate = vm.addr(2);
@@ -36,9 +46,10 @@ contract AnimalSocialClubTest is Test {
 
         vm.startPrank(adminAddress);
         asc = new ASC721Manager(
-            adminAddress,
             treasuryAddress,
-            address(ethFeeProxy)
+            address(ethFeeProxy),
+            LINK_BASE_SEPOLIA,
+            VRF_WRAPPER_BASE_SEPOLIA
             // waitlistedAddresses,
             // waitlistedIDs
         );
@@ -49,13 +60,7 @@ contract AnimalSocialClubTest is Test {
         asc.setKYC(user, true);
         vm.stopPrank();
 
-        console.log("asc.adminAddress: ", asc.adminAddress());
-        console.log(
-            "asc.elephant.adminAddress(): ",
-            asc.elephant().adminAddress()
-        );
-        console.log("asc.adminAddress(): ", asc.adminAddress());
-
+        console.log("asc.elephant.owner(): ", asc.elephant().owner());
         // Assign roles
         vm.startPrank(adminAddress);
         asc.assignRole(
@@ -100,9 +105,11 @@ contract AnimalSocialClubTest is Test {
         vm.deal(user, 2000000000000 ether);
         vm.startPrank(user);
         for (uint i = 0; i < howMany; i++) {
-            membership.mintWithDonationRequestNetwork{
-                value: membership.PRICE()
-            }(
+            uint price = membership.PRICE();
+            if (tier == asc.STAKEHOLDER_ID()) {
+                vm.expectRevert();
+            }
+            membership.mintWithDonationRequestNetwork{value: price}(
                 user,
                 ambassador,
                 new bytes(1),
@@ -110,6 +117,9 @@ contract AnimalSocialClubTest is Test {
                 new bytes(2),
                 new bytes(3)
             );
+        }
+        if (tier == asc.STAKEHOLDER_ID()) {
+            return;
         }
         vm.stopPrank();
 
@@ -169,7 +179,11 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Ambassador as referrer
         vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        membership.mintWithDonationRequestNetwork{value: membership.PRICE()}(
+        uint price = membership.PRICE();
+        if (tier == asc.STAKEHOLDER_ID()) {
+            vm.expectRevert();
+        }
+        membership.mintWithDonationRequestNetwork{value: price}(
             buyer,
             ambassador,
             new bytes(1),
@@ -177,6 +191,9 @@ contract AnimalSocialClubTest is Test {
             new bytes(2),
             new bytes(3)
         );
+        if (tier == asc.STAKEHOLDER_ID()) {
+            return;
+        }
         vm.stopPrank();
 
         uint256 ambassadorBalance = ambassador.balance;
@@ -196,7 +213,11 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        membership.mintWithDonationRequestNetwork{value: membership.PRICE()}(
+        uint price = membership.PRICE();
+        if (tier == asc.STAKEHOLDER_ID()) {
+            vm.expectRevert();
+        }
+        membership.mintWithDonationRequestNetwork{value: price}(
             buyer,
             advocate,
             new bytes(1),
@@ -204,6 +225,9 @@ contract AnimalSocialClubTest is Test {
             new bytes(2),
             new bytes(3)
         );
+        if (tier == asc.STAKEHOLDER_ID()) {
+            return;
+        }
         vm.stopPrank();
 
         uint256 totalCommission = (membership.PRICE() * 10) / 100;
@@ -231,7 +255,11 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        membership.mintWithDonationRequestNetwork{value: membership.PRICE()}(
+        uint price = membership.PRICE();
+        if (tier == asc.STAKEHOLDER_ID()) {
+            vm.expectRevert();
+        }
+        membership.mintWithDonationRequestNetwork{value: price}(
             buyer,
             evangelist,
             new bytes(1),
@@ -239,6 +267,9 @@ contract AnimalSocialClubTest is Test {
             new bytes(2),
             new bytes(3)
         );
+        if (tier == asc.STAKEHOLDER_ID()) {
+            return;
+        }
         vm.stopPrank();
 
         uint256 totalCommission = (membership.PRICE() * 10) / 100;
