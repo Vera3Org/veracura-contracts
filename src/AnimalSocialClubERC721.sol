@@ -234,7 +234,7 @@ contract AnimalSocialClubERC721 is
         auctionEnded = true;
 
         // Mint Super VIP NFTs to the highest bidder
-        _safeMint(highestBidder[i], 1);
+        _safeMint(highestBidder[i], i);
     }
 
     // Allow the contract owner to withdraw the highest bid after the auction ends
