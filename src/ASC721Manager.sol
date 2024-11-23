@@ -160,7 +160,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
                             "Animal Social Club Stakeholder Membership",
                             "ASC.Stakeholder",
                             250,
-                            0 ether,
+                            0.5 ether,
                             address(this),
                             treasuryAddress,
                             this,
