@@ -170,15 +170,13 @@ contract AnimalSocialClubERC721 is
 
     // Function to withdraw funds to respective beneficiaries
     function withdrawFunds() external nonReentrant onlyOwner {
-        // console2.log("Hello");
         uint256 balance = address(this).balance;
-        // console2.log("got balance");
-        // require(balance > 0, "No funds to withdraw");
+
+        require(balance > 0, "No funds to withdraw");
 
         if (balance > 0) {
             payable(treasuryAddress).transfer(balance);
         }
-        // console2.log("transfered ascShare %d to asc", ascShare);
     }
 
     // Function to ensure contract can receive Ether
@@ -280,12 +278,23 @@ contract AnimalSocialClubERC721 is
     event WaitlistJoined(address indexed user);
     event WaitlistClaimed(address indexed user);
 
+    /**
+     * Register someone on the waitlist for the tokenId.
+     * Assume they deposited `waitlist_deposit` amount of ETH.
+     * Only admin can do this.
+     */
     function addToWaitlist(
-        uint tokenId,
         uint waitlist_deposit,
         address user
     ) external payable onlyOwner nonReentrant {
         require(!isLaunched, "Sale has already launched");
+
+        uint tokenId = currentSupply;
+        require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
+        require(
+            tokenId < TOTAL_SUPPLY,
+            "Total supply exhausted for this token"
+        );
         require(!waitlist[user], "Already on waitlist for this token");
         require(waitlist_deposit <= PRICE, "deposit amount is more than price");
 
@@ -293,6 +302,9 @@ contract AnimalSocialClubERC721 is
 
         waitlist[user] = true;
         waitlistId[user] = tokenId;
+
+        currentSupply += 1;
+
         emit WaitlistJoined(user);
     }
 

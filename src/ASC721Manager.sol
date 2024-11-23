@@ -326,9 +326,13 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         }
     }
 
+    /**
+     * Register someone on the waitlist for a certain token tier with ID tokenId.
+     * Assume they deposited `waitlist_deposit` amount of ETH.
+     * Only admin can do this.
+     */
     function addToWaitlist(
         uint tier,
-        uint tokenId,
         uint waitlist_deposit,
         address user
     ) external payable onlyRole(ADMIN_ROLE) nonReentrant {
@@ -336,7 +340,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
             tier < contracts.length,
             "Invalid tier: can be Elephant (1), Shark (2), Eagle (3), Tiger (4)"
         );
-        contracts[tier].addToWaitlist(tokenId, waitlist_deposit, user);
+        contracts[tier].addToWaitlist(waitlist_deposit, user);
     }
 
     // Function to ensure contract can receive Ether
