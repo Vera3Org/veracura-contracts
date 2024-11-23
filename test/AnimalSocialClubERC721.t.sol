@@ -163,13 +163,13 @@ contract AnimalSocialClubTest is Test {
     //     );
     // }
 
-    function testAmbassadorReferrer() public {
+    function testAmbassadorReferrer(uint tier) public {
+        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+        AnimalSocialClubERC721 membership = asc.contracts(tier);
         // Buyer mints an Elephant with Ambassador as referrer
-        vm.deal(buyer, 1 ether);
+        vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        asc.elephant().mintWithDonationRequestNetwork{
-            value: asc.elephant().PRICE()
-        }(
+        membership.mintWithDonationRequestNetwork{value: membership.PRICE()}(
             buyer,
             ambassador,
             new bytes(1),
@@ -180,23 +180,23 @@ contract AnimalSocialClubTest is Test {
         vm.stopPrank();
 
         uint256 ambassadorBalance = ambassador.balance;
-        uint256 expectedCommission = (asc.elephant().PRICE() * 10) / 100;
+        uint256 expectedCommission = (membership.PRICE() * 10) / 100;
 
         assertApproxEqRel(
             ambassadorBalance,
             expectedCommission,
-            1e16, // 1e18 = 100%, 1e16 = 1%
+            1e15, // 1e18 = 100%, 1e16 = 1%
             "Ambassador commission is incorrect when they are referrer"
         );
     }
 
-    function testAdvocateReferrer() public {
+    function testAdvocateReferrer(uint tier) public {
+        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+        AnimalSocialClubERC721 membership = asc.contracts(tier);
         // Buyer mints an Elephant with Advocate as referrer
-        vm.deal(buyer, 1 ether);
+        vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        asc.elephant().mintWithDonationRequestNetwork{
-            value: asc.elephant().PRICE()
-        }(
+        membership.mintWithDonationRequestNetwork{value: membership.PRICE()}(
             buyer,
             advocate,
             new bytes(1),
@@ -206,7 +206,7 @@ contract AnimalSocialClubTest is Test {
         );
         vm.stopPrank();
 
-        uint256 totalCommission = (asc.elephant().PRICE() * 10) / 100;
+        uint256 totalCommission = (membership.PRICE() * 10) / 100;
         uint256 expectedAmbassadorCommission = (totalCommission * 50) / 100;
         uint256 expectedAdvocateCommission = totalCommission -
             expectedAmbassadorCommission;
@@ -225,13 +225,13 @@ contract AnimalSocialClubTest is Test {
         );
     }
 
-    function testEvangelistReferrer() public {
+    function testEvangelistReferrer(uint tier) public {
+        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+        AnimalSocialClubERC721 membership = asc.contracts(tier);
         // Buyer mints an Elephant with Advocate as referrer
-        vm.deal(buyer, 1 ether);
+        vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        asc.elephant().mintWithDonationRequestNetwork{
-            value: asc.elephant().PRICE()
-        }(
+        membership.mintWithDonationRequestNetwork{value: membership.PRICE()}(
             buyer,
             evangelist,
             new bytes(1),
@@ -241,7 +241,7 @@ contract AnimalSocialClubTest is Test {
         );
         vm.stopPrank();
 
-        uint256 totalCommission = (asc.elephant().PRICE() * 10) / 100;
+        uint256 totalCommission = (membership.PRICE() * 10) / 100;
         uint256 expectedAmbassadorCommission = (totalCommission * 50) / 100;
         uint256 expectedAdvocateCommission = totalCommission -
             expectedAmbassadorCommission;
