@@ -267,12 +267,6 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         Role role,
         address payable delegate
     ) external {
-        console.log(
-            "Vera3DistributionModel.assignRole msg.sender: ",
-            msg.sender,
-            " tx.origin: ",
-            tx.origin
-        );
         bool isAuthorized = msg.sender == owner();
 
         if (role == Role.Ambassador) {

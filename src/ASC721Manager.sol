@@ -314,12 +314,6 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         Vera3DistributionModel.Role role,
         address payable delegate
     ) external {
-        console.log(
-            "ASC721Manager.assignRole msg.sender: ",
-            msg.sender,
-            " tx.origin: ",
-            tx.origin
-        );
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
@@ -458,9 +452,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
 
     function fulfillRandomWords(
         uint256 _requestId,
-        uint256[] memory _randomWords
-    ) internal // ) internal override {
-    {
+        uint256[] memory _randomWords // ) internal override {
+    ) internal {
         require(s_requests[_requestId].paid > 0, "request not found");
         require(
             _randomWords.length >= 10,
