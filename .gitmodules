@@ -13,3 +13,6 @@
 [submodule "lib/chainlink"]
 	path = lib/chainlink
 	url = https://github.com/smartcontractkit/chainlink
+[submodule "lib/hardhat-starter-kit"]
+	path = lib/hardhat-starter-kit
+	url = https://github.com/smartcontractkit/hardhat-starter-kit
