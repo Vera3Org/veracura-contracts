@@ -6,6 +6,7 @@ import "../src/AnimalSocialClubERC721.sol";
 import "forge-std/console.sol";
 import "src/ASC721Manager.sol";
 import "../src/DummyEthFeeProxy.sol";
+import "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFV2PlusWrapper.sol";
 
 contract AnimalSocialClubTest is Test {
     ASC721Manager public asc;
@@ -298,5 +299,9 @@ contract AnimalSocialClubTest is Test {
             1e16,
             "Evangelist commission is incorrect when they are referrer"
         );
+    }
+
+    function testLottery() public {
+        asc.requestRandomWords(true);
     }
 }

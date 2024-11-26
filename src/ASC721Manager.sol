@@ -15,7 +15,11 @@ import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interface
 import {VRFV2PlusWrapperConsumerBase} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFV2PlusWrapperConsumerBase.sol";
 import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
-contract ASC721Manager is AccessControl, ReentrancyGuard {
+contract ASC721Manager is
+    AccessControl,
+    ReentrancyGuard,
+    VRFV2PlusWrapperConsumerBase
+{
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
@@ -52,7 +56,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         address ethFeeProxy,
         address _linkAddress,
         address _VrfWrapperAddress
-    ) AccessControl() {
+    ) AccessControl() VRFV2PlusWrapperConsumerBase(_VrfWrapperAddress) {
         require(
             _treasuryAddress != address(0),
             "One or more invalid addresses"
@@ -430,21 +434,21 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         );
         uint256 requestId;
         uint256 reqPrice;
-        // if (enableNativePayment) {
-        //     (requestId, reqPrice) = requestRandomnessPayInNative(
-        //         callbackGasLimit,
-        //         requestConfirmations,
-        //         numWords,
-        //         extraArgs
-        //     );
-        // } else {
-        //     (requestId, reqPrice) = requestRandomness(
-        //         callbackGasLimit,
-        //         requestConfirmations,
-        //         numWords,
-        //         extraArgs
-        //     );
-        // }
+        if (enableNativePayment) {
+            (requestId, reqPrice) = requestRandomnessPayInNative(
+                callbackGasLimit,
+                requestConfirmations,
+                numWords,
+                extraArgs
+            );
+        } else {
+            (requestId, reqPrice) = requestRandomness(
+                callbackGasLimit,
+                requestConfirmations,
+                numWords,
+                extraArgs
+            );
+        }
         s_requests[requestId] = RequestStatus({
             paid: reqPrice,
             randomWords: new uint256[](0),
@@ -458,9 +462,8 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
 
     function fulfillRandomWords(
         uint256 _requestId,
-        uint256[] memory _randomWords
-    ) internal // ) internal override {
-    {
+        uint256[] memory _randomWords // ) internal override {
+    ) internal override {
         require(s_requests[_requestId].paid > 0, "request not found");
         require(
             _randomWords.length >= 10,
