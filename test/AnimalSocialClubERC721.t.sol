@@ -92,11 +92,12 @@ contract AnimalSocialClubTest is Test {
     //     assertEq(asc.totalSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
     // }
 
-    function testMintWithDonation(uint tier, uint howMany) public {
-        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+    function testMintWithDonation(uint8 _tier, uint8 _howMany) public {
+        vm.assume(_howMany < 3 && _tier < asc.STAKEHOLDER_ID());
+        uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+        uint256 howMany = _howMany;
 
         AnimalSocialClubERC721 membership = asc.contracts(tier);
-        vm.assume(howMany < 3);
         uint256 ambassadorInitialBalance = ambassador.balance;
         uint256 initialSupply = membership.totalSupply();
 
@@ -173,8 +174,9 @@ contract AnimalSocialClubTest is Test {
     //     );
     // }
 
-    function testAmbassadorReferrer(uint tier) public {
-        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+    function testAmbassadorReferrer(uint8 _tier) public {
+        vm.assume(_tier < asc.STAKEHOLDER_ID());
+        uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
         AnimalSocialClubERC721 membership = asc.contracts(tier);
         // Buyer mints an Elephant with Ambassador as referrer
         vm.deal(buyer, 1000 ether);
@@ -207,8 +209,9 @@ contract AnimalSocialClubTest is Test {
         );
     }
 
-    function testAdvocateReferrer(uint tier) public {
-        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+    function testAdvocateReferrer(uint8 _tier) public {
+        vm.assume(_tier < asc.STAKEHOLDER_ID());
+        uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
         AnimalSocialClubERC721 membership = asc.contracts(tier);
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1000 ether);
@@ -249,8 +252,9 @@ contract AnimalSocialClubTest is Test {
         );
     }
 
-    function testEvangelistReferrer(uint tier) public {
-        tier = bound(tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+    function testEvangelistReferrer(uint8 _tier) public {
+        vm.assume(_tier < asc.STAKEHOLDER_ID());
+        uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
         AnimalSocialClubERC721 membership = asc.contracts(tier);
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1000 ether);
