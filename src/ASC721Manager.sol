@@ -31,11 +31,11 @@ contract ASC721Manager is
     // Addresses for funds allocation
     address public immutable treasuryAddress;
 
-    AnimalSocialClubERC721 public immutable elephant;
-    AnimalSocialClubERC721 public immutable tiger;
-    AnimalSocialClubERC721 public immutable shark;
-    AnimalSocialClubERC721 public immutable eagle;
-    AnimalSocialClubERC721 public immutable stakeholder;
+    AnimalSocialClubERC721 public elephant;
+    AnimalSocialClubERC721 public tiger;
+    AnimalSocialClubERC721 public shark;
+    AnimalSocialClubERC721 public eagle;
+    AnimalSocialClubERC721 public stakeholder;
 
     uint public constant ELEPHANT_ID = 0;
     uint public constant TIGER_ID = 1;
@@ -74,122 +74,34 @@ contract ASC721Manager is
 
         linkAddress = _linkAddress;
         wrapperAddress = _VrfWrapperAddress;
+    }
 
-        elephant = AnimalSocialClubERC721(
-            payable(
-                Upgrades.deployUUPSProxy(
-                    "AnimalSocialClubERC721.sol",
-                    abi.encodeCall(
-                        AnimalSocialClubERC721.initialize,
-                        (
-                            "Animal Social Club Elephant Membership",
-                            "ASC.Elephant",
-                            9000,
-                            0.1 ether,
-                            address(this),
-                            treasuryAddress,
-                            this,
-                            0,
-                            ethFeeProxy,
-                            ELEPHANT_ID
-                        )
-                    )
-                )
-            )
-        );
-        contracts.push(elephant);
-        shark = AnimalSocialClubERC721(
-            payable(
-                Upgrades.deployUUPSProxy(
-                    "AnimalSocialClubERC721.sol",
-                    abi.encodeCall(
-                        AnimalSocialClubERC721.initialize,
-                        (
-                            "Animal Social Club Shark Membership",
-                            "ASC.Shark",
-                            520,
-                            0.5 ether,
-                            address(this),
-                            treasuryAddress,
-                            this,
-                            0,
-                            ethFeeProxy,
-                            SHARK_ID
-                        )
-                    )
-                )
-            )
-        );
-        contracts.push(shark);
-        eagle = AnimalSocialClubERC721(
-            payable(
-                Upgrades.deployUUPSProxy(
-                    "AnimalSocialClubERC721.sol",
-                    abi.encodeCall(
-                        AnimalSocialClubERC721.initialize,
-                        (
-                            "Animal Social Club Eagle Membership",
-                            "ASC.Eagle",
-                            200,
-                            1 ether,
-                            address(this),
-                            treasuryAddress,
-                            this,
-                            9, // 9 eagle reserved for lottery
-                            ethFeeProxy,
-                            EAGLE_ID
-                        )
-                    )
-                )
-            )
-        );
-        contracts.push(eagle);
-        tiger = AnimalSocialClubERC721(
-            payable(
-                Upgrades.deployUUPSProxy(
-                    "AnimalSocialClubERC721.sol",
-                    abi.encodeCall(
-                        AnimalSocialClubERC721.initialize,
-                        (
-                            "Animal Social Club Tiger Membership",
-                            "ASC.Tiger",
-                            30,
-                            2 ether,
-                            address(this),
-                            treasuryAddress,
-                            this,
-                            11, // 1 tiger reserved for lottery, 10 tigers in auction
-                            ethFeeProxy,
-                            TIGER_ID
-                        )
-                    )
-                )
-            )
-        );
-        contracts.push(tiger);
-        stakeholder = AnimalSocialClubERC721(
-            payable(
-                Upgrades.deployUUPSProxy(
-                    "AnimalSocialClubERC721.sol",
-                    abi.encodeCall(
-                        AnimalSocialClubERC721.initialize,
-                        (
-                            "Animal Social Club Stakeholder Membership",
-                            "ASC.Stakeholder",
-                            250,
-                            0.5 ether,
-                            address(this),
-                            treasuryAddress,
-                            this,
-                            0, // 1 stakeholder reserved for lottery
-                            ethFeeProxy,
-                            STAKEHOLDER_ID
-                        )
-                    )
-                )
-            )
-        );
-        contracts.push(stakeholder);
+    /**
+     * Only used during deployment. Registers each NFT tier into this contract.
+     * Deployment of these
+     * @param _elephant address of a deployed AnimalSocialClubERC721 contract
+     * @param _tiger address of a deployed AnimalSocialClubERC721 contract
+     * @param _shark address of a deployed AnimalSocialClubERC721 contract
+     * @param _eagle address of a deployed AnimalSocialClubERC721 contract
+     * @param _stakeholder address of a deployed AnimalSocialClubERC721 contract
+     */
+    function assignContracts(
+        address payable _elephant,
+        address payable _tiger,
+        address payable _shark,
+        address payable _eagle,
+        address payable _stakeholder
+    ) external onlyRole(ADMIN_ROLE) {
+        // no clearing the array bc we only use it at contract creation time
+        // for (uint i = 0; i < contracts.length; i++) {
+        //     contracts.pop();
+        // }
+        require(contracts.length == 0, "Can't initialize twice");
+        contracts.push(AnimalSocialClubERC721(_elephant));
+        contracts.push(AnimalSocialClubERC721(_tiger));
+        contracts.push(AnimalSocialClubERC721(_shark));
+        contracts.push(AnimalSocialClubERC721(_eagle));
+        contracts.push(AnimalSocialClubERC721(_stakeholder));
     }
 
     function setEarlyBacker(
