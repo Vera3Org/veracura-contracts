@@ -318,12 +318,6 @@ contract ASC721Manager is
         Vera3DistributionModel.Role role,
         address payable delegate
     ) external {
-        console.log(
-            "ASC721Manager.assignRole msg.sender: ",
-            msg.sender,
-            " tx.origin: ",
-            tx.origin
-        );
         for (uint i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
@@ -462,7 +456,7 @@ contract ASC721Manager is
 
     function fulfillRandomWords(
         uint256 _requestId,
-        uint256[] memory _randomWords // ) internal override {
+        uint256[] memory _randomWords
     ) internal override {
         require(s_requests[_requestId].paid > 0, "request not found");
         require(
