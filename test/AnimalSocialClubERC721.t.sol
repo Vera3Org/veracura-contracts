@@ -45,11 +45,7 @@ contract AnimalSocialClubTest is Test {
         ethFeeProxy = new EthereumFeeProxy();
 
         vm.startPrank(adminAddress);
-        asc = new ASC721Manager(
-            treasuryAddress,
-            LINK_BASE_SEPOLIA,
-            VRF_WRAPPER_BASE_SEPOLIA
-        );
+        asc = new ASC721Manager(treasuryAddress);
         {
             address elephantAddress = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
