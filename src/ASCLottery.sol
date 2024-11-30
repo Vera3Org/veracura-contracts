@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {console} from "forge-std/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -13,6 +14,7 @@ import {VRFV2PlusWrapperConsumerBase} from "@chainlink/contracts/src/v0.8/vrf/de
 import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
 contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
+    using EnumerableSet for EnumerableSet.AddressSet;
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(
         uint256 requestId,
@@ -55,7 +57,14 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
     address public tigerWinner;
     address[] public eagleWinners;
 
-    address[] private lotteryParticipants;
+    // address[] private lotteryParticipants;
+
+    /**
+     * @dev addresses which are eligible to receive a membership
+     * using the lottery membership.
+     * An address is added to this set when they receive a membership.
+     */
+    EnumerableSet.AddressSet private lotteryParticipants;
 
     address public immutable treasuryAddress;
 
@@ -70,6 +79,11 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
         linkAddress = _linkAddress;
         wrapperAddress = _VrfWrapperAddress;
         treasuryAddress = _treasuryAddress;
+    }
+
+    function addToParticipants(address it) external onlyOwner {
+        console.log("ASCLottery msg.sender: ", msg.sender);
+        lotteryParticipants.add(it);
     }
 
     function requestRandomWords(
@@ -125,14 +139,14 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
         uint16[] memory randomNumbers = splitUint256ToUint16(_randomWords);
         // First thing: extract the one tiger NFT winner
         {
-            uint winnerIdx = randomNumbers[0] % lotteryParticipants.length;
-            address winner = lotteryParticipants[winnerIdx];
+            uint winnerIdx = randomNumbers[0] % lotteryParticipants.length();
+            address winner = lotteryParticipants.at(winnerIdx);
             tigerWinner = winner;
         }
         // then the 9 eagles
         for (uint i = 1; i < randomNumbers.length; i++) {
-            uint winnerIdx = randomNumbers[i] % lotteryParticipants.length;
-            address winner = lotteryParticipants[winnerIdx];
+            uint winnerIdx = randomNumbers[i] % lotteryParticipants.length();
+            address winner = lotteryParticipants.at(winnerIdx);
             eagleWinners.push(winner);
         }
     }

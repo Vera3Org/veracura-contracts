@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {console} from "forge-std/console.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -111,6 +112,8 @@ contract AnimalSocialClubERC721 is
             "No more tokens: the remainder is reserved"
         );
 
+        console.log("ERC721 msg.sender: ", msg.sender);
+        console.log("ERC721 address(this): ", address(this));
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer

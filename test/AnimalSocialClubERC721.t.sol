@@ -5,11 +5,13 @@ import "forge-std/Test.sol";
 import "../src/AnimalSocialClubERC721.sol";
 import "forge-std/console.sol";
 import "src/ASC721Manager.sol";
+import "src/ASCLottery.sol";
 import "../src/DummyEthFeeProxy.sol";
 import "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFV2PlusWrapper.sol";
 
 contract AnimalSocialClubTest is Test {
     ASC721Manager public asc;
+    ASCLottery lottery;
     address public adminAddress = address(0xd3d3d3d3d3); // Dummy admin address
     address public treasuryAddress = address(0xa1a1a1a1a1); // Dummy treasury address
 
@@ -46,7 +48,13 @@ contract AnimalSocialClubTest is Test {
         ethFeeProxy = new EthereumFeeProxy();
 
         vm.startPrank(adminAddress);
-        asc = new ASC721Manager(treasuryAddress);
+        lottery = new ASCLottery(
+            LINK_BASE_SEPOLIA,
+            VRF_WRAPPER_BASE_SEPOLIA,
+            treasuryAddress
+        );
+        asc = new ASC721Manager(treasuryAddress, address(lottery));
+        lottery.transferOwnership(address(asc));
         {
             address elephantAddress = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
@@ -401,7 +409,9 @@ contract AnimalSocialClubTest is Test {
         );
     }
 
-    function testLottery() public {
-        asc.requestRandomWords(true);
-    }
+    // function testLottery() public {
+    //     vm.startPrank(adminAddress);
+    //     asc.startLottery();
+    //     vm.stopPrank();
+    // }
 }

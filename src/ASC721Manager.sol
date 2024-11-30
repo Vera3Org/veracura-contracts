@@ -3,14 +3,17 @@ pragma solidity ^0.8.26;
 
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
+import {console} from "forge-std/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {AccessControlDefaultAdminRules} from "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {AccessControlEnumerable} from "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "src/AnimalSocialClubERC721.sol";
-import "src/Vera3DistributionModel.sol";
+
+import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
+import {ASCLottery} from "src/ASCLottery.sol";
+import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
 
 contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -30,8 +33,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     error CallerNotOperator(address caller);
     /**
      * @dev Role for the smart contracts that are managed by this one.
-     * Needed for addToLotteryParticipants, since lotteryParticipants
-     * needs access control and cannot be public.
+     * Needed for addToLotteryParticipants.
      */
     bytes32 public constant NFT_ROLE = keccak256("NFT_ROLE");
     error CallerNotNFT(address caller);
@@ -56,6 +58,9 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
 
     AnimalSocialClubERC721[] public contracts;
 
+    // reference to lottery contract
+    ASCLottery public lottery;
+
     /**
      * @dev keeps track of early backers.
      * Early backers can only be registered by the admin, and they
@@ -69,15 +74,9 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
      */
     address[] public earlyBackers;
 
-    /**
-     * @dev addresses which are eligible to receive a membership
-     * using the lottery membership.
-     * An address is added to this set when they receive a membership.
-     */
-    EnumerableSet.AddressSet private lotteryParticipants;
-
     constructor(
-        address _treasuryAddress
+        address _treasuryAddress,
+        address _lotteryAddress
     ) AccessControlDefaultAdminRules(3 hours, msg.sender) {
         require(
             _treasuryAddress != address(0),
@@ -89,6 +88,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
 
         // Set the beneficiary addresses
         treasuryAddress = _treasuryAddress;
+        lottery = ASCLottery(_lotteryAddress);
     }
 
     /**
@@ -135,7 +135,9 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     }
 
     function addToLotteryParticipants(address it) public onlyRole(NFT_ROLE) {
-        lotteryParticipants.add(it);
+        console.log("ASC721Manager msg.sender: ", msg.sender);
+        console.log("ASC721Manager address(this): ", address(this));
+        lottery.addToParticipants(it);
     }
 
     /**
@@ -346,6 +348,10 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
             "Invalid tier: can be Elephant (1), Shark (2), Eagle (3), Tiger (4)"
         );
         contracts[tier].addToWaitlist(waitlist_deposit, user);
+    }
+
+    function startLottery() external onlyRole(ADMIN_ROLE) {
+        lottery.requestRandomWords(true);
     }
 
     event Received(address, uint256);

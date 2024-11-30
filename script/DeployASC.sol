@@ -36,7 +36,13 @@ contract DeployASC is Script {
     function run() public {
         vm.startBroadcast();
 
-        asc = new ASC721Manager(TREASURY_ADDRESS);
+        ASCLottery lottery = new ASCLottery(
+            LINK_ADDRESS,
+            VRF_WRAPPER_ADDRESS,
+            TREASURY_ADDRESS
+        );
+        asc = new ASC721Manager(TREASURY_ADDRESS, address(lottery));
+        lottery.transferOwnership(address(asc));
 
         address elephantAddress = Upgrades.deployUUPSProxy(
             "AnimalSocialClubERC721.sol",
