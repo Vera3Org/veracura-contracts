@@ -5,7 +5,7 @@ import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlDefaultAdminRules} from "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "src/AnimalSocialClubERC721.sol";
@@ -15,7 +15,7 @@ import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interface
 import {VRFV2PlusWrapperConsumerBase} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFV2PlusWrapperConsumerBase.sol";
 import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
-contract ASC721Manager is AccessControl, ReentrancyGuard {
+contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
@@ -59,25 +59,36 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
 
     AnimalSocialClubERC721[] public contracts;
 
+    /**
+     * @dev keeps track of early backers.
+     * Early backers can only be registered by the admin, and they
+     * donated using means outside of the smart contract.
+     * This means they are eligible to receive membership packages,
+     * like adminPackFrenFrog.
+     */
     mapping(address => bool) isEarlyBacker;
+    /**
+     * @dev used to enumerate the isEarlyBacker mapping.
+     */
     address[] public earlyBackers;
 
+    /**
+     * @dev addresses which are eligible to receive a membership
+     * using the lottery membership.
+     * An address is added to this set when they receive a membership.
+     */
     EnumerableSet.AddressSet private lotteryParticipants;
 
     constructor(
         address _treasuryAddress,
         address _linkAddress,
         address _VrfWrapperAddress
-    ) AccessControl() {
+    ) AccessControlDefaultAdminRules(3 hours, msg.sender) {
         require(
             _treasuryAddress != address(0),
             "One or more invalid addresses"
         );
 
-        require(
-            _grantRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "could not grant role"
-        );
         require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
         require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
 
@@ -135,6 +146,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         lotteryParticipants.add(it);
     }
 
+    /**
+     * @dev adds an address to the isEarlyBacker and earlyBackers variables.
+     * Admin only.
+     */
     function setEarlyBacker(
         address it,
         bool _is
@@ -143,6 +158,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         earlyBackers.push(it);
     }
 
+    /**
+     * @dev mints 10 elephants and 2 sharks to an early backer.
+     * Payment is made outside of contract.
+     */
     function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
         require(
             isEarlyBacker[dest],
@@ -157,6 +176,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         shark.adminMint(dest);
     }
 
+    /**
+     * @dev mints 25 elephants, 2 sharks, 1 eagle to early backer.
+     * Payment is made outside of contract.
+     */
     function adminPackCryptoTucan(address dest) external onlyRole(ADMIN_ROLE) {
         require(
             isEarlyBacker[dest],
@@ -173,6 +196,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         eagle.adminMint(dest);
     }
 
+    /**
+     * @dev mints 75 elephants, 9 sharks, 3 eagle to early backer.
+     * Payment is made outside of contract.
+     */
     function adminPackJaguareth(address dest) external onlyRole(ADMIN_ROLE) {
         require(
             isEarlyBacker[dest],
@@ -190,6 +217,10 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         eagle.adminMint(dest);
     }
 
+    /**
+     * @dev mints 150 elephants, 16 sharks, 7 eagle to early backer.
+     * Payment is made outside of contract.
+     */
     function adminPackWhale(address dest) external onlyRole(ADMIN_ROLE) {
         require(
             isEarlyBacker[dest],
@@ -207,6 +238,9 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         }
     }
 
+    /**
+     * @dev grants the OPERATOR role to an address.
+     */
     function setOperator(address a) public onlyRole(ADMIN_ROLE) {
         require(_grantRole(OPERATOR_ROLE, a), "role not granted");
     }
