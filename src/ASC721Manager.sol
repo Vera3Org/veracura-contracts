@@ -60,6 +60,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     AnimalSocialClubERC721[] public contracts;
 
     mapping(address => bool) isEarlyBacker;
+    address[] public earlyBackers;
 
     EnumerableSet.AddressSet private lotteryParticipants;
 
@@ -139,6 +140,7 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         bool _is
     ) external onlyRole(ADMIN_ROLE) {
         isEarlyBacker[it] = _is;
+        earlyBackers.push(it);
     }
 
     function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
