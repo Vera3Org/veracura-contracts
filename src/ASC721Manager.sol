@@ -15,6 +15,21 @@ import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
 import {ASCLottery} from "src/ASCLottery.sol";
 import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
 
+/**
+ * @dev Contract which coordinates the Animal Social Club NFT memberships.
+
+ * @dev Holds references to each of the membership contracts, and provides
+ * functions which need information to flow between contracts.
+ *
+ * @dev Roles:
+ * - ADMIN_ROLE: a human administrator which can mint membership packs,
+ *   as well as altering certain internal state variables: the early backer
+ *   list, the saleActive variable, the waitlist, as well as
+ *   the other roles OPERATOR_ROLE and NFT_ROLE
+ * - OPERATOR_ROLE: can modify the `_hasKYC` list.
+ * - NFT_ROLE: is an AnimalSocialClubERC721 contract address, and is the only
+ *   role which can interact with the `lottery` contract.
+ */
 contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
@@ -24,51 +39,74 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
      * and add the Operator Role to an address. TODO look into role admins
      */
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
     error CallerNotAdmin(address caller);
     /**
      * @dev Role for EOAs that need to invoke addToKYC
      * when a user completes KYC.
      */
+
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
     error CallerNotOperator(address caller);
+
     /**
      * @dev Role for the smart contracts that are managed by this one.
      * Needed for addToLotteryParticipants.
      */
     bytes32 public constant NFT_ROLE = keccak256("NFT_ROLE");
-    error CallerNotNFT(address caller);
 
-    // Addresses for funds allocation
+    /// Address of Animal Social Club treasury.
     address public immutable treasuryAddress;
 
-    // references to managed contracts
+    /// references to Elephant contract
     AnimalSocialClubERC721 public elephant;
+    /// references to Tiger contract
     AnimalSocialClubERC721 public tiger;
+    /// references to Shark contract
     AnimalSocialClubERC721 public shark;
+    /// references to Eagle contract
     AnimalSocialClubERC721 public eagle;
+    /// references to Stakeholder contract
     AnimalSocialClubERC721 public stakeholder;
 
-    uint public constant ELEPHANT_ID = 0;
-    uint public constant TIGER_ID = 1;
-    uint public constant SHARK_ID = 2;
-    uint public constant EAGLE_ID = 3;
-    uint public constant STAKEHOLDER_ID = 4;
+    /// index of Elephant contract in the `contracts` array
+    uint256 public constant ELEPHANT_ID = 0;
+    /// index of Tiger contract in the `contracts` array
+    uint256 public constant TIGER_ID = 1;
+    /// index of Shark contract in the `contracts` array
+    uint256 public constant SHARK_ID = 2;
+    /// index of Eagle contract in the `contracts` array
+    uint256 public constant EAGLE_ID = 3;
+    /// index of Stakeholder contract in the `contracts` array
+    uint256 public constant STAKEHOLDER_ID = 4;
 
-    mapping(address => bool) private _hasKYC;
-
+    /**
+     * @dev referenctes to [elephant, tiger, shark, eagle, stakeholder].
+     */
     AnimalSocialClubERC721[] public contracts;
 
-    // reference to lottery contract
+    /**
+     * @notice Mapping to keep track of who has completed KYC verification
+     * and thus can mint memberships.
+     * @dev Only addresses `a` for which `_hasKYC[a]` is true can mint memberships.
+     */
+    mapping(address => bool) private _hasKYC;
+
+    /**
+     * @dev reference to lottery contract.
+     */
     ASCLottery public lottery;
 
     /**
      * @dev keeps track of early backers.
-     * Early backers can only be registered by the admin, and they
+     * @dev Early backers can only be registered by the admin, and they
      * donated using means outside of the smart contract.
      * This means they are eligible to receive membership packages,
      * like adminPackFrenFrog.
      */
     mapping(address => bool) isEarlyBacker;
+
     /**
      * @dev used to enumerate the isEarlyBacker mapping.
      */
@@ -134,22 +172,35 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         require(_grantRole(NFT_ROLE, _stakeholder), "could not grant role");
     }
 
+    /**
+     * @dev can only be called by a contract in `contracts`. Adds the address
+     * `it` to the list of participants.
+     */
     function addToLotteryParticipants(address it) public onlyRole(NFT_ROLE) {
-        console.log("ASC721Manager msg.sender: ", msg.sender);
-        console.log("ASC721Manager address(this): ", address(this));
         lottery.addToParticipants(it);
     }
 
     /**
      * @dev adds an address to the isEarlyBacker and earlyBackers variables.
      * Admin only.
+     * @param _is true means that the user is added, false means the user is removed
      */
     function setEarlyBacker(
         address it,
         bool _is
     ) external onlyRole(ADMIN_ROLE) {
         isEarlyBacker[it] = _is;
-        earlyBackers.push(it);
+        if (_is) {
+            earlyBackers.push(it);
+        } else {
+            // remove `it` from the list
+            for (uint256 i = 0; i < earlyBackers.length; i++) {
+                if (earlyBackers[i] == it) {
+                    earlyBackers[i] = earlyBackers[earlyBackers.length];
+                    earlyBackers.pop();
+                }
+            }
+        }
     }
 
     /**
@@ -162,7 +213,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
             "destination address is not registered as a early backer."
         );
         // 10 elephants, 2 sharks
-        for (uint i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 10; i++) {
             elephant.adminMint(dest);
         }
 
@@ -180,7 +231,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
             "destination address is not registered as a early backer."
         );
         // 25 elephants, 2 sharks, 1 eagle
-        for (uint i = 0; i < 25; i++) {
+        for (uint256 i = 0; i < 25; i++) {
             elephant.adminMint(dest);
         }
 
@@ -200,10 +251,10 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
             "destination address is not registered as a early backer."
         );
         // 75 elephants, 9 sharks, 3 eagle
-        for (uint i = 0; i < 75; i++) {
+        for (uint256 i = 0; i < 75; i++) {
             elephant.adminMint(dest);
         }
-        for (uint i = 0; i < 9; i++) {
+        for (uint256 i = 0; i < 9; i++) {
             shark.adminMint(dest);
         }
         eagle.adminMint(dest);
@@ -221,13 +272,13 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
             "destination address is not registered as a early backer."
         );
         // 150 elephants, 16 sharks, 7 eagle
-        for (uint i = 0; i < 150; i++) {
+        for (uint256 i = 0; i < 150; i++) {
             elephant.adminMint(dest);
         }
-        for (uint i = 0; i < 16; i++) {
+        for (uint256 i = 0; i < 16; i++) {
             shark.adminMint(dest);
         }
-        for (uint i = 0; i < 7; i++) {
+        for (uint256 i = 0; i < 7; i++) {
             eagle.adminMint(dest);
         }
     }
@@ -254,9 +305,14 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         _hasKYC[a] = val;
     }
 
+    /**
+     * @dev returns `true` when `msg.sender` has at least one NFT membership,
+     * any tier.
+     * @param a the address of the queried user.
+     */
     function isMember(address a) public view returns (bool) {
-        uint len = contracts.length; // gas optimization
-        for (uint i = 0; i < len; i++) {
+        uint256 len = contracts.length; // gas optimization
+        for (uint256 i = 0; i < len; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             if (tier.balanceOf(a) != 0) {
@@ -266,10 +322,12 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         return false;
     }
 
-    // Function to withdraw funds to respective beneficiaries
+    /**
+     * @dev withdraw ether from each sub-contract and this contract to the treasury.
+     */
     function withdrawFunds() external nonReentrant onlyRole(ADMIN_ROLE) {
         // console2.log("Hello");
-        for (uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             // slither-disable-next-line calls-loop
             contracts[i].withdrawFunds();
         }
@@ -282,9 +340,13 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         }
     }
 
+    /**
+     * @dev function for the admin to call a sub-contract's `adminMint`
+     * function. See `AnimalSocialClubERC721.adminMint`.
+     */
     function adminMint(
         address to,
-        uint tier
+        uint256 tier
     ) external nonReentrant onlyRole(ADMIN_ROLE) {
         require(tier < contracts.length);
         AnimalSocialClubERC721(contracts[tier]).adminMint(to);
@@ -292,23 +354,30 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
 
     // each of these methods will call the corresponding one on each erc721 contract
 
+    /**
+     * @dev calls  `AnimalSocialClubERC721.assignRole` on each sub-contract.
+     */
     function assignRole(
         address payable upper,
         Vera3DistributionModel.Role role,
         address payable delegate
     ) external {
-        for (uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).assignRole(upper, role, delegate);
         }
     }
 
+    /**
+     * @dev calls  `AnimalSocialClubERC721.setAmbassadorToAdvocateCommission`
+     * on each sub-contract.
+     */
     function setAmbassadorToAdvocateCommission(
         address delegate,
-        uint percentage
+        uint256 percentage
     ) external {
-        for (uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(
@@ -318,11 +387,15 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         }
     }
 
+    /**
+     * @dev calls  `AnimalSocialClubERC721.setAdvocateToEvangelistCommission`
+     * on each sub-contract.
+     */
     function setAdvocateToEvangelistCommission(
         address delegate,
-        uint percentage
+        uint256 percentage
     ) external {
-        for (uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(
@@ -332,8 +405,11 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         }
     }
 
+    /**
+     * @dev calls  `AnimalSocialClubERC721.setSaleActive`  on each sub-contract.
+     */
     function setSaleActive(bool isSaleActive) external onlyRole(ADMIN_ROLE) {
-        for (uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             tier.setSaleActive(isSaleActive);
@@ -341,24 +417,32 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     }
 
     /**
-     * Register someone on the waitlist for a certain token tier with ID tokenId.
+     * @dev Register someone on the waitlist for a certain token
+     * tier with ID tokenId.
      * Assume they deposited `waitlist_deposit` amount of ETH.
      * Only admin can do this.
      */
     function addToWaitlist(
-        uint tier,
-        uint waitlist_deposit,
+        uint256 tier,
+        uint256 waitlist_deposit,
         address user
     ) external payable onlyRole(ADMIN_ROLE) nonReentrant {
         require(
             tier < contracts.length,
-            "Invalid tier: can be Elephant (1), Shark (2), Eagle (3), Tiger (4)"
+            "Invalid tier: can be Elephant (0), Shark (1), Eagle (2), Tiger (3), Stakeholder (4)"
         );
         contracts[tier].addToWaitlist(waitlist_deposit, user);
     }
 
+    /**
+     * @dev TODO verify if this is the only thing to do.
+     */
     function startLottery() external onlyRole(ADMIN_ROLE) {
         lottery.requestRandomWords(true);
+    }
+
+    function startTigerAuction() external onlyRole(ADMIN_ROLE) {
+        tiger.startAuction();
     }
 
     event Received(address, uint256);

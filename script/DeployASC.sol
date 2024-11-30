@@ -25,11 +25,11 @@ contract DeployASC is Script {
     address public constant VRF_WRAPPER_ADDRESS =
         0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed; // base sepolia
 
-    uint public constant ELEPHANT_ID = 0;
-    uint public constant TIGER_ID = 1;
-    uint public constant SHARK_ID = 2;
-    uint public constant EAGLE_ID = 3;
-    uint public constant STAKEHOLDER_ID = 4;
+    uint256 public constant ELEPHANT_ID = 0;
+    uint256 public constant TIGER_ID = 1;
+    uint256 public constant SHARK_ID = 2;
+    uint256 public constant EAGLE_ID = 3;
+    uint256 public constant STAKEHOLDER_ID = 4;
 
     function setUp() public {}
 

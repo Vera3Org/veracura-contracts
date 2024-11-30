@@ -6,6 +6,21 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "forge-std/console.sol";
 
+/**
+ * @dev Abstract contract which implements the Vera3 distribution model.
+
+ * @dev There are 3 promoter roles in the hierarchy, from highest to lowest
+ * Ambassador, Advocate and Evangelist.
+
+ * @dev Each level in the hierarchy can specify one or more promoters of the
+ * lower level, and when a mint of AnimalSocialClubERC721 happens, and
+ * the `referrer` argument is a promoter, a 10% mint fee is take from the
+ * donation and distributed as follows:
+ * - If `referrer` is an Ambassador, they keep the fee.
+ * - If `referrer` is an Advocate, they and their Ambassador share the fee.
+ * - If `referrer` is an Evangelist, all the upper levels (the Evangelist's
+ *   Advocate, and that Advocate's Ambassador) share the fee.
+ */
 abstract contract Vera3DistributionModel is OwnableUpgradeable {
     // Errors
     error NotAnAmbassador(address account);
@@ -22,21 +37,51 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     mapping(address => Role) public roles;
 
+    ///////////////////////////////////////////////////////////
     // Mappings to keep track of hierarchical relationships
-    // each key is an ambassador's address, and the value is the list of its advocates
+    ///////////////////////////////////////////////////////////
+
+    /**
+     * @dev keys are Ambassador address, values are list of their Advocates.
+     * One-to-many mapping.
+     */
     mapping(address => address payable[]) public ambassadorToAdvocates;
-    // inverted ambassadorToAdvocates: given an advocate, obtain its corresponing advocate
+
+    /**
+     * @dev inverse of ambassadorToAdvocates mapping: given a value in the list,
+     * returns the corresponding key.
+     * One-to-one mapping.
+     */
     mapping(address => address payable) public advocateToAmbassador;
 
+    /**
+     * @dev keys are Advocate address, values are list of their Evangelists.
+     * One-to-many mapping.
+     */
     mapping(address => address payable[]) public advocateToEvangelists;
+
+    /**
+     * @dev inverse of advocateToEvangelists mapping: given a value,
+     * returns the corresponding key.
+     * One-to-one mapping.
+     */
     mapping(address => address payable) public evangelistToAdvocate;
 
-    // Mapping to track Promoter Ambassador, Advocates, and their commissions
-    // commission that one ambassador gives to their advocates. 10 means 10% to advocate, rest to ambassador
+    ///////////////////////////////////////////////////////////////////////////////
+    // Mappings to track Promoter Ambassador, Advocates, and their commissions
+    ///////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @dev
+     * commission that one ambassador gives to their advocates. 10 means 10% to advocate, rest to ambassador
+     */
     mapping(address => uint256) public ambassadorToAdvocateCommission;
     // commission that one advocate gives to their evangelists.
     mapping(address => uint256) public advocateToEvangelistCommission;
 
+    /**
+     * @dev reference to Request Network's Ethereum Fee Proxy.
+     */
     IEthereumFeeProxy public ETHEREUM_FEE_PROXY;
 
     // Events for role assignment and commission updates
@@ -92,7 +137,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         );
     }
 
-    function calculateCommission(uint amt) internal pure returns (uint) {
+    function calculateCommission(uint256 amt) internal pure returns (uint256) {
         return amt / 10;
     }
 
@@ -122,8 +167,8 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             address advocate = referrer;
             (
                 address ambassador,
-                uint ambassadorShare,
-                uint advocateShare
+                uint256 ambassadorShare,
+                uint256 advocateShare
             ) = getAdvocateShare(advocate, calculateCommission(msg.value));
             // ambassador = ambassador_;
             // payable(ambassador).transfer(ambassadorShare);
@@ -142,9 +187,9 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             (
                 address payable ambassador,
                 address payable advocate,
-                uint ambassadorShare,
-                uint advocateShare,
-                uint evangelistShare
+                uint256 ambassadorShare,
+                uint256 advocateShare,
+                uint256 evangelistShare
             ) = getEvangelistShare(evangelist, calculateCommission(msg.value));
 
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{

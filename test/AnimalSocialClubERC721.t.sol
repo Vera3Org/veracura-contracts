@@ -56,7 +56,7 @@ contract AnimalSocialClubTest is Test {
         asc = new ASC721Manager(treasuryAddress, address(lottery));
         lottery.transferOwnership(address(asc));
         {
-            address elephantAddress = Upgrades.deployUUPSProxy(
+            address elephant = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
                 abi.encodeCall(
                     AnimalSocialClubERC721.initialize,
@@ -75,7 +75,7 @@ contract AnimalSocialClubTest is Test {
                 )
             );
 
-            address sharkAddress = Upgrades.deployUUPSProxy(
+            address shark = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
                 abi.encodeCall(
                     AnimalSocialClubERC721.initialize,
@@ -151,14 +151,14 @@ contract AnimalSocialClubTest is Test {
             );
 
             asc.assignContracts(
-                payable(elephantAddress),
+                payable(elephant),
                 payable(tiger),
-                payable(sharkAddress),
+                payable(shark),
                 payable(eagle),
                 payable(stakeholder)
             );
         }
-        for (uint i = 0; i < waitlistedAddresses.length; i++) {
+        for (uint256 i = 0; i < waitlistedAddresses.length; i++) {
             asc.addToWaitlist(asc.ELEPHANT_ID(), 0, waitlistedAddresses[i]);
         }
         asc.setKYC(buyer, true);
@@ -210,8 +210,8 @@ contract AnimalSocialClubTest is Test {
         asc.setSaleActive(true);
         vm.deal(user, 2000000000000 ether);
         vm.startPrank(user);
-        for (uint i = 0; i < howMany; i++) {
-            uint price = membership.PRICE();
+        for (uint256 i = 0; i < howMany; i++) {
+            uint256 price = membership.PRICE();
             if (tier == asc.STAKEHOLDER_ID()) {
                 vm.expectRevert();
             }
@@ -286,7 +286,7 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Ambassador as referrer
         vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        uint price = membership.PRICE();
+        uint256 price = membership.PRICE();
         if (tier == asc.STAKEHOLDER_ID()) {
             vm.expectRevert();
         }
@@ -321,7 +321,7 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        uint price = membership.PRICE();
+        uint256 price = membership.PRICE();
         if (tier == asc.STAKEHOLDER_ID()) {
             vm.expectRevert();
         }
@@ -364,7 +364,7 @@ contract AnimalSocialClubTest is Test {
         // Buyer mints an Elephant with Advocate as referrer
         vm.deal(buyer, 1000 ether);
         vm.startPrank(buyer);
-        uint price = membership.PRICE();
+        uint256 price = membership.PRICE();
         if (tier == asc.STAKEHOLDER_ID()) {
             vm.expectRevert();
         }
@@ -407,6 +407,15 @@ contract AnimalSocialClubTest is Test {
             1e16,
             "Evangelist commission is incorrect when they are referrer"
         );
+    }
+
+    function testAuction() public {
+        AnimalSocialClubERC721 tiger = asc.tiger();
+        vm.prank(adminAddress);
+        asc.startTigerAuction();
+        vm.startPrank(user);
+        tiger.placeBid{value: 3 ether}(0);
+        vm.stopPrank();
     }
 
     // function testLottery() public {

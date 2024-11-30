@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {console} from "forge-std/console.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -17,6 +16,42 @@ import "src/ASC721Manager.sol";
 // import "forge-std/console.sol";
 // import "forge-std/console2.sol";
 
+/**
+ * @dev Contract which represents ASC membership of a certain tier.
+ *
+ * @dev Has a capped supply, and tokens are minted by either end-users or an
+ * admin EOA. A certain number of tokens may be "reserved", either for
+ * the auction or for the lottery.
+ *
+ * @dev Minters must be actual humans and must be verified via a off-chain
+ * methods: either a decentralized KYC solution is adopted, or the
+ * administrator has verified it, an entity with the `OPERATOR_ROLE` role
+ * must register that a certain address has KYC and is thus enabled to mint.
+ *
+ * @dev When an end-user mints a membership, the donation must be tracked using
+ * Request Network. Because of this, a reference to their `EthereumFeeProxy`
+ * contract address must be provided at initialization time.
+ *
+ * @dev When the membership is minted because of off-chain donations, this
+ * contract's administrator (with ADMIN_ROLE) is able to mint it to
+ * members which have been registered as having performed KYC.
+ *
+ * @dev When a membership is minted by any means, the membership owner must be
+ * added to the list of lottery participants, located in the storage of the
+ * `manager`'s contract.
+ *
+ * @dev Tiger memberships have an auction feature, with a 2 ETH starting price,
+ * and minimum bid increment of 0.1 ether. When the auction ends, the
+ * highest bidder can withdraw a Tiger NFT.
+ *
+ * @dev There is a waitlist feature: users who were part of the waitlist and
+ * deposited a certain amount are able to claim their membership, by
+ * paying the difference between their price and the mint price discounted
+ * by 5%.
+ *
+ * @dev Contract uses OpenZeppelin's Upgrades features, so it inherits from Upgradeable
+ * contracts, and is a UUPS proxy.
+ */
 contract AnimalSocialClubERC721 is
     Initializable,
     ERC721EnumerableUpgradeable,
@@ -34,12 +69,14 @@ contract AnimalSocialClubERC721 is
     // can mint 1 at a time
     uint256 public constant MAXIMUM_MINTABLE = 1;
 
-    // Addresses for funds allocation
+    /// Address of admin contract. Is the
     address public adminAddress;
     address public treasuryAddress;
     ASC721Manager public manager;
 
-    // Sale status
+    /**
+     * @dev sale status: when false, no memberships can be minted.
+     */
     bool public saleActive;
 
     // Events
@@ -79,15 +116,20 @@ contract AnimalSocialClubERC721 is
         manager = ASC721Manager(_manager);
         NUMBER_RESERVED = num_reserved;
         TIER_ID = tier_id;
+        auctionEndTime = type(uint256).max;
     }
 
-    // Modifier to check if sale is active
+    /**
+     * @dev modifier which reverts if the sale is not active.
+     */
     modifier isSaleActive() {
         require(saleActive, "Sale is not active");
         _;
     }
 
-    // Function to start or stop the sale
+    /**
+     * @dev function to start or stop the sale. can only be called by owner.
+     */
     function setSaleActive(bool _saleActive) external onlyOwner {
         saleActive = _saleActive;
         emit SaleStateChanged(_saleActive);
@@ -97,7 +139,10 @@ contract AnimalSocialClubERC721 is
         return manager.isMember(a);
     }
 
-    // Function to mint NFTs. `referrer` is optional.
+    /**
+     * @dev function for the admin to mint a membership to `to`.
+     * Payment is made off-chain.
+     */
     function adminMint(
         address to
     ) external nonReentrant isSaleActive onlyOwner {
@@ -112,8 +157,6 @@ contract AnimalSocialClubERC721 is
             "No more tokens: the remainder is reserved"
         );
 
-        console.log("ERC721 msg.sender: ", msg.sender);
-        console.log("ERC721 address(this): ", address(this));
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
@@ -149,10 +192,8 @@ contract AnimalSocialClubERC721 is
 
         manager.addToLotteryParticipants(to);
 
-        console.log("minting");
         // Mint the NFTs to the buyer
         _safeMint(to, totalSupply());
-        console.log("minted");
 
         ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
             payable(manager.treasuryAddress()),
@@ -166,7 +207,6 @@ contract AnimalSocialClubERC721 is
             advocateReference,
             evangelistReference
         );
-        console.log("commission sent");
     }
 
     // Function to withdraw funds to respective beneficiaries
@@ -205,6 +245,9 @@ contract AnimalSocialClubERC721 is
     // minimum step to increment highest bid
     uint256 public constant minBidIncrement = 0.1 ether;
 
+    /**
+     * @dev function used by admin to start the auction for this contract's reserved tokens.
+     */
     function startAuction() external onlyOwner onlyTiger {
         require(!auctionStarted, "Auction already started");
         require(
@@ -216,11 +259,11 @@ contract AnimalSocialClubERC721 is
     }
 
     /**
-     * Place bid on a certain reserved token.
-     * Bid is included in msg.value.
-     * If higher than highest bid + minimum increment,
-     * this bid becomes the new highest bid, and the previous one
-     * gets transfered back to the previous user.
+     * @dev Place bid on a certain reserved token.
+     * Bid is included in `msg.value`.
+     * If higher than current highest bid + `minbidIncrement`,
+     * then `msg.sender` becomes the new highest bidder, and the previous
+     * bid value is transfered back to the previous user.
      */
     function placeBid(uint256 tokenId) external payable nonReentrant onlyTiger {
         require(tokenId < TOTAL_SUPPLY, "tokenId is too high");
@@ -238,13 +281,16 @@ contract AnimalSocialClubERC721 is
             msg.value >= startingPrice,
             "Bid must be at least the starting price"
         );
+        address oldHighestBidder = highestBidder[tokenId];
+        uint256 oldHighestBid = highestBid[tokenId];
+        bool shouldRefund = oldHighestBidder != address(0);
 
         highestBidder[tokenId] = msg.sender;
         highestBid[tokenId] = msg.value;
 
-        if (highestBidder[tokenId] != address(0)) {
+        if (shouldRefund) {
             // Refund the previous highest bidder
-            payable(highestBidder[tokenId]).transfer(highestBid[tokenId]);
+            payable(oldHighestBidder).transfer(oldHighestBid);
         }
     }
 
