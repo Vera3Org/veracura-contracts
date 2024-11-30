@@ -128,10 +128,11 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             // ambassador = ambassador_;
             // payable(ambassador).transfer(ambassadorShare);
             console.log("Using Ethereum fee proxy");
+            // transfer to ambassador
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
                 value: ambassadorShare
             }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
-            // payable(advocate).transfer(advocateShare);
+            // transfer to advocate
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
                 value: advocateShare
             }(payable(advocate), advocateReference, 0, payable(address(0)));
