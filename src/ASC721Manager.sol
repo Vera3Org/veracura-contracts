@@ -239,6 +239,13 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         require(_grantRole(OPERATOR_ROLE, a), "role not granted");
     }
 
+    /**
+     * @dev removes the OPERATOR role from an address.
+     */
+    function removeOperator(address a) public onlyRole(ADMIN_ROLE) {
+        revokeRole(OPERATOR_ROLE, a);
+    }
+
     function hasKYC(address a) public view returns (bool) {
         return _hasKYC[a];
     }
