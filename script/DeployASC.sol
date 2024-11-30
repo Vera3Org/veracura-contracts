@@ -38,7 +38,6 @@ contract DeployASC is Script {
 
         asc = new ASC721Manager(
             TREASURY_ADDRESS,
-            ETH_FEE_PROXY_ADDRESS,
             LINK_ADDRESS,
             VRF_WRAPPER_ADDRESS
         );

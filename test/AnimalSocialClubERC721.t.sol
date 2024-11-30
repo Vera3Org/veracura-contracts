@@ -47,12 +47,112 @@ contract AnimalSocialClubTest is Test {
         vm.startPrank(adminAddress);
         asc = new ASC721Manager(
             treasuryAddress,
-            address(ethFeeProxy),
             LINK_BASE_SEPOLIA,
             VRF_WRAPPER_BASE_SEPOLIA
-            // waitlistedAddresses,
-            // waitlistedIDs
         );
+        {
+            address elephantAddress = Upgrades.deployUUPSProxy(
+                "AnimalSocialClubERC721.sol",
+                abi.encodeCall(
+                    AnimalSocialClubERC721.initialize,
+                    (
+                        "Animal Social Club Elephant Membership",
+                        "ASC.Elephant",
+                        9000,
+                        0.1 ether,
+                        address(asc),
+                        treasuryAddress,
+                        asc,
+                        0,
+                        address(ethFeeProxy),
+                        asc.ELEPHANT_ID()
+                    )
+                )
+            );
+
+            address sharkAddress = Upgrades.deployUUPSProxy(
+                "AnimalSocialClubERC721.sol",
+                abi.encodeCall(
+                    AnimalSocialClubERC721.initialize,
+                    (
+                        "Animal Social Club Shark Membership",
+                        "ASC.Shark",
+                        520,
+                        0.5 ether,
+                        address(asc),
+                        treasuryAddress,
+                        asc,
+                        0,
+                        address(ethFeeProxy),
+                        asc.SHARK_ID()
+                    )
+                )
+            );
+
+            address eagle = Upgrades.deployUUPSProxy(
+                "AnimalSocialClubERC721.sol",
+                abi.encodeCall(
+                    AnimalSocialClubERC721.initialize,
+                    (
+                        "Animal Social Club Eagle Membership",
+                        "ASC.Eagle",
+                        200,
+                        1 ether,
+                        address(asc),
+                        treasuryAddress,
+                        asc,
+                        9, // 9 eagle reserved for lottery
+                        address(ethFeeProxy),
+                        asc.EAGLE_ID()
+                    )
+                )
+            );
+
+            address tiger = Upgrades.deployUUPSProxy(
+                "AnimalSocialClubERC721.sol",
+                abi.encodeCall(
+                    AnimalSocialClubERC721.initialize,
+                    (
+                        "Animal Social Club Tiger Membership",
+                        "ASC.Tiger",
+                        30,
+                        2 ether,
+                        address(asc),
+                        treasuryAddress,
+                        asc,
+                        11, // 1 tiger reserved for lottery, 10 tigers in auction
+                        address(ethFeeProxy),
+                        asc.TIGER_ID()
+                    )
+                )
+            );
+            address stakeholder = Upgrades.deployUUPSProxy(
+                "AnimalSocialClubERC721.sol",
+                abi.encodeCall(
+                    AnimalSocialClubERC721.initialize,
+                    (
+                        "Animal Social Club Stakeholder Membership",
+                        "ASC.Stakeholder",
+                        250,
+                        0.5 ether,
+                        address(asc),
+                        treasuryAddress,
+                        asc,
+                        0,
+                        address(ethFeeProxy),
+                        asc.STAKEHOLDER_ID()
+                    )
+                )
+            );
+
+            asc.assignContracts(
+                payable(elephantAddress),
+                payable(tiger),
+                payable(sharkAddress),
+                payable(eagle),
+                payable(stakeholder)
+            );
+        }
         for (uint i = 0; i < waitlistedAddresses.length; i++) {
             asc.addToWaitlist(asc.ELEPHANT_ID(), 0, waitlistedAddresses[i]);
         }

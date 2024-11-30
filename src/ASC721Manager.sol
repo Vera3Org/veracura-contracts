@@ -19,14 +19,30 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
+    /**
+     * @dev role for a (EOA) admin. Admin role is allowed to adminMint,
+     * and add the Operator Role to an address. TODO look into role admins
+     */
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     error CallerNotAdmin(address caller);
+    /**
+     * @dev Role for EOAs that need to invoke addToKYC
+     * when a user completes KYC.
+     */
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     error CallerNotOperator(address caller);
+    /**
+     * @dev Role for the smart contracts that are managed by this one.
+     * Needed for addToLotteryParticipants, since lotteryParticipants
+     * needs access control and cannot be public.
+     */
+    bytes32 public constant NFT_ROLE = keccak256("NFT_ROLE");
+    error CallerNotNFT(address caller);
 
     // Addresses for funds allocation
     address public immutable treasuryAddress;
 
+    // references to managed contracts
     AnimalSocialClubERC721 public elephant;
     AnimalSocialClubERC721 public tiger;
     AnimalSocialClubERC721 public shark;
@@ -49,7 +65,6 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
 
     constructor(
         address _treasuryAddress,
-        address ethFeeProxy,
         address _linkAddress,
         address _VrfWrapperAddress
     ) AccessControl() {
@@ -93,11 +108,30 @@ contract ASC721Manager is AccessControl, ReentrancyGuard {
         //     contracts.pop();
         // }
         require(contracts.length == 0, "Can't initialize twice");
+
+        elephant = AnimalSocialClubERC721(_elephant);
         contracts.push(AnimalSocialClubERC721(_elephant));
+        require(_grantRole(NFT_ROLE, _elephant), "could not grant role");
+
+        tiger = AnimalSocialClubERC721(_tiger);
         contracts.push(AnimalSocialClubERC721(_tiger));
+        require(_grantRole(NFT_ROLE, _tiger), "could not grant role");
+
+        shark = AnimalSocialClubERC721(_shark);
         contracts.push(AnimalSocialClubERC721(_shark));
+        require(_grantRole(NFT_ROLE, _shark), "could not grant role");
+
+        eagle = AnimalSocialClubERC721(_eagle);
         contracts.push(AnimalSocialClubERC721(_eagle));
+        require(_grantRole(NFT_ROLE, _eagle), "could not grant role");
+
+        stakeholder = AnimalSocialClubERC721(_stakeholder);
         contracts.push(AnimalSocialClubERC721(_stakeholder));
+        require(_grantRole(NFT_ROLE, _stakeholder), "could not grant role");
+    }
+
+    function addToLotteryParticipants(address it) public onlyRole(NFT_ROLE) {
+        lotteryParticipants.add(it);
     }
 
     function setEarlyBacker(

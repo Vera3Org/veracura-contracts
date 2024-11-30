@@ -111,6 +111,8 @@ contract AnimalSocialClubERC721 is
             "No more tokens: the remainder is reserved"
         );
 
+        manager.addToLotteryParticipants(to);
+
         // Mint the NFTs to the buyer
         _safeMint(to, totalSupply());
     }
@@ -141,6 +143,8 @@ contract AnimalSocialClubERC721 is
             "No more tokens: the remainder is reserved for lottery"
         );
         require(msg.value == PRICE, "Incorrect ETH amount sent");
+
+        manager.addToLotteryParticipants(to);
 
         console.log("minting");
         // Mint the NFTs to the buyer
