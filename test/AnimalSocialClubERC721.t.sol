@@ -229,8 +229,8 @@ contract AnimalSocialClubTest is Test {
         }
         vm.stopPrank();
 
-        howMany = howMany >= membership.TOTAL_SUPPLY()
-            ? membership.TOTAL_SUPPLY()
+        howMany = howMany >= membership.MAX_TOKEN_SUPPLY()
+            ? membership.MAX_TOKEN_SUPPLY()
             : howMany;
 
         assertEq(

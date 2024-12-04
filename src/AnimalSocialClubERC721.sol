@@ -61,7 +61,7 @@ contract AnimalSocialClubERC721 is
 {
     using Strings for uint256;
 
-    uint256 public TOTAL_SUPPLY;
+    uint256 public MAX_TOKEN_SUPPLY;
     uint256 public PRICE;
     uint256 public NUMBER_RESERVED;
     uint256 public TIER_ID;
@@ -111,7 +111,7 @@ contract AnimalSocialClubERC721 is
         // Set the beneficiary addresses
         adminAddress = _adminAddress;
         treasuryAddress = _treasuryAddress;
-        TOTAL_SUPPLY = _totalSupply;
+        MAX_TOKEN_SUPPLY = _totalSupply;
         PRICE = _mint_price;
         manager = ASC721Manager(_manager);
         NUMBER_RESERVED = num_reserved;
@@ -149,11 +149,11 @@ contract AnimalSocialClubERC721 is
         // it's on the admin to add kyc or kyb
         require(manager.hasKYC(to), "Destination address without KYC!");
         require(
-            totalSupply() + 1 < TOTAL_SUPPLY,
+            totalSupply() + 1 < MAX_TOKEN_SUPPLY,
             "Exceeds total supply of tokens"
         );
         require(
-            totalSupply() + 1 < (TOTAL_SUPPLY - NUMBER_RESERVED),
+            totalSupply() + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED),
             "No more tokens: the remainder is reserved"
         );
 
@@ -180,12 +180,12 @@ contract AnimalSocialClubERC721 is
         );
         super.requireReferrer(referrer);
         require(
-            totalSupply() + 1 < TOTAL_SUPPLY - waitlisted.length,
+            totalSupply() + 1 < MAX_TOKEN_SUPPLY - waitlisted.length,
             "Exceeds total supply of tokens"
         );
         require(
             totalSupply() + 1 <
-                (TOTAL_SUPPLY - NUMBER_RESERVED - waitlisted.length),
+                (MAX_TOKEN_SUPPLY - NUMBER_RESERVED - waitlisted.length),
             "No more tokens: the remainder is reserved for lottery"
         );
         require(msg.value == PRICE, "Incorrect ETH amount sent");
@@ -266,8 +266,11 @@ contract AnimalSocialClubERC721 is
      * bid value is transfered back to the previous user.
      */
     function placeBid(uint256 tokenId) external payable nonReentrant onlyTiger {
-        require(tokenId < TOTAL_SUPPLY, "tokenId is too high");
-        require(tokenId > TOTAL_SUPPLY - NUMBER_RESERVED, "tokenId is too low");
+        require(tokenId < MAX_TOKEN_SUPPLY, "tokenId is too high");
+        require(
+            tokenId > MAX_TOKEN_SUPPLY - NUMBER_RESERVED,
+            "tokenId is too low"
+        );
         require(auctionStarted, "Auction not yet started");
         require(
             !auctionEnded && block.timestamp <= auctionEndTime,
@@ -295,7 +298,7 @@ contract AnimalSocialClubERC721 is
     }
 
     function endAuction(uint256 i) external nonReentrant onlyOwner onlyTiger {
-        require(i < TOTAL_SUPPLY, "Invalid card ID");
+        require(i < MAX_TOKEN_SUPPLY, "Invalid card ID");
         require(auctionStarted, "Auction not yet started");
         require(!auctionEnded, "Auction already ended");
         require(
@@ -313,7 +316,7 @@ contract AnimalSocialClubERC721 is
     function withdrawHighestBid(
         uint256 i
     ) external nonReentrant onlyOwner onlyTiger {
-        require(i < TOTAL_SUPPLY, "Invalid i");
+        require(i < MAX_TOKEN_SUPPLY, "Invalid i");
         require(auctionStarted, "Auction not yet started");
         require(auctionEnded, "Auction has not ended yet");
         require(
@@ -361,7 +364,7 @@ contract AnimalSocialClubERC721 is
         uint tokenId = totalSupply() + waitlisted.length;
         require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
         require(
-            tokenId < TOTAL_SUPPLY,
+            tokenId < MAX_TOKEN_SUPPLY,
             "Total supply exhausted for this token"
         );
         require(!waitlist[user], "Already on waitlist for this token");
