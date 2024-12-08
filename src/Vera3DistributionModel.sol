@@ -73,11 +73,20 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     /**
      * @dev
-     * commission that one ambassador gives to their advocates. 10 means 10% to advocate, rest to ambassador
+     * commission that one ambassador gives to their advocates.
+     * 60 means 60% to advocate, rest 40% to ambassador
      */
-    mapping(address => uint256) public ambassadorToAdvocateCommission;
-    // commission that one advocate gives to their evangelists.
-    mapping(address => uint256) public advocateToEvangelistCommission;
+    uint256 public ambassadorToAdvocateCommission;
+    /**
+     * @dev
+     * commission that one advocate gives to their evangelists.
+     * 50 means 50% to evangelist, 50% advocate.
+     */
+    uint256 public advocateToEvangelistCommission;
+
+    // mapping(address => uint256) public ambassadorToAdvocateCommission;
+    // // commission that one advocate gives to their evangelists.
+    // mapping(address => uint256) public advocateToEvangelistCommission;
 
     /**
      * @dev reference to Request Network's Ethereum Fee Proxy.
@@ -86,19 +95,24 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     // Events for role assignment and commission updates
     event RoleAssigned(address indexed user, Role role);
-    event AmbassadorCommissionSet(
-        address indexed ambassador,
-        uint256 commission_pct
-    );
-    event AdvocateCommissionSet(
-        address indexed advocate,
-        uint256 commission_pct
-    );
+    event AmbassadorCommissionSet(uint256 commission_pct);
+    event AdvocateCommissionSet(uint256 commission_pct);
+
+    // event AmbassadorCommissionSet(
+    //     address indexed ambassador,
+    //     uint256 commission_pct
+    // );
+    // event AdvocateCommissionSet(
+    //     address indexed advocate,
+    //     uint256 commission_pct
+    // );
 
     function __Vera3DistributionModel_init(
         address ethFeeProxy
     ) internal onlyInitializing {
         ETHEREUM_FEE_PROXY = IEthereumFeeProxy(ethFeeProxy);
+        ambassadorToAdvocateCommission = 60;
+        advocateToEvangelistCommission = 50;
     }
 
     modifier onlyAmbassador() {
@@ -209,7 +223,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     // Function to set commission percentage for Promoter Ambassadors
     function setAmbassadorToAdvocateCommission(
-        address ambassador,
+        // address ambassador,
         uint256 commissionPercentage
     ) external {
         require(
@@ -220,13 +234,14 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             commissionPercentage <= 100,
             "Commission percentage must be <= 100"
         );
-        ambassadorToAdvocateCommission[ambassador] = commissionPercentage;
-        emit AmbassadorCommissionSet(ambassador, commissionPercentage);
+        // ambassadorToAdvocateCommission[ambassador] = commissionPercentage;
+        // emit AmbassadorCommissionSet(ambassador, commissionPercentage);
+        ambassadorToAdvocateCommission = commissionPercentage;
+        emit AmbassadorCommissionSet(commissionPercentage);
     }
 
     // Function to set commission percentage for Promoter Ambassadors
     function setAdvocateToEvangelistCommission(
-        address advocate,
         uint256 commissionPercentage
     ) external {
         require(
@@ -237,8 +252,10 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             commissionPercentage <= 100,
             "Commission percentage must be <= 100"
         );
-        advocateToEvangelistCommission[advocate] = commissionPercentage;
-        emit AdvocateCommissionSet(advocate, commissionPercentage);
+        // advocateToEvangelistCommission[advocate] = commissionPercentage;
+        // emit AdvocateCommissionSet(advocate, commissionPercentage);
+        advocateToEvangelistCommission = commissionPercentage;
+        emit AdvocateCommissionSet(commissionPercentage);
     }
 
     function getAdvocateShare(
@@ -246,9 +263,10 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         uint256 totalCommission
     ) internal view returns (address, uint256, uint256) {
         address ambassador = advocateToAmbassador[advocate];
-        uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
-            ambassador
-        ];
+        // uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
+        //     ambassador
+        // ];
+        uint256 advocateCommissionPct = ambassadorToAdvocateCommission;
         uint256 advocateShare = (totalCommission * advocateCommissionPct) / 100;
         uint256 ambassadorShare = totalCommission - advocateShare;
         require(
@@ -269,12 +287,14 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         address payable advocate = evangelistToAdvocate[evangelist];
         address payable ambassador = advocateToAmbassador[advocate];
         // get share % for advocate & evangelist
-        uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
-            ambassador
-        ];
-        uint256 evangelistCommissionPct = advocateToEvangelistCommission[
-            advocate
-        ];
+        // uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
+        //     ambassador
+        // ];
+        // uint256 evangelistCommissionPct = advocateToEvangelistCommission[
+        //     advocate
+        // ];
+        uint256 advocateCommissionPct = ambassadorToAdvocateCommission;
+        uint256 evangelistCommissionPct = advocateToEvangelistCommission;
 
         // calculate advocate & evangelist share in coins
         uint256 advocateShare100 = (totalCommission * advocateCommissionPct);

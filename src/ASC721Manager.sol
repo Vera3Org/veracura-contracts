@@ -373,15 +373,11 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
      * @dev calls  `AnimalSocialClubERC721.setAmbassadorToAdvocateCommission`
      * on each sub-contract.
      */
-    function setAmbassadorToAdvocateCommission(
-        address delegate,
-        uint256 percentage
-    ) external {
+    function setAmbassadorToAdvocateCommission(uint256 percentage) external {
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(
-                delegate,
                 percentage
             );
         }
@@ -391,15 +387,11 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
      * @dev calls  `AnimalSocialClubERC721.setAdvocateToEvangelistCommission`
      * on each sub-contract.
      */
-    function setAdvocateToEvangelistCommission(
-        address delegate,
-        uint256 percentage
-    ) external {
+    function setAdvocateToEvangelistCommission(uint256 percentage) external {
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(
-                delegate,
                 percentage
             );
         }

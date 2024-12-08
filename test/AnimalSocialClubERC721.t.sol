@@ -185,8 +185,8 @@ contract AnimalSocialClubTest is Test {
         );
 
         // Set commissions
-        asc.setAmbassadorToAdvocateCommission(ambassador, 50); // 50% for this Ambassador
-        asc.setAdvocateToEvangelistCommission(advocate, 50); // 50% for this Advocate
+        // asc.setAmbassadorToAdvocateCommission(ambassador, 50); // 50% for this Ambassador
+        // asc.setAdvocateToEvangelistCommission(advocate, 50); // 50% for this Advocate
 
         asc.setSaleActive(true);
         vm.stopPrank();
@@ -339,9 +339,8 @@ contract AnimalSocialClubTest is Test {
         vm.stopPrank();
 
         uint256 totalCommission = (membership.PRICE() * 10) / 100;
-        uint256 expectedAmbassadorCommission = (totalCommission * 50) / 100;
-        uint256 expectedAdvocateCommission = totalCommission -
-            expectedAmbassadorCommission;
+        uint256 expectedAmbassadorCommission = (totalCommission * 40) / 100;
+        uint256 expectedAdvocateCommission = (totalCommission * 60) / 100;
 
         assertApproxEqRel(
             ambassador.balance,
@@ -382,12 +381,9 @@ contract AnimalSocialClubTest is Test {
         vm.stopPrank();
 
         uint256 totalCommission = (membership.PRICE() * 10) / 100;
-        uint256 expectedAmbassadorCommission = (totalCommission * 50) / 100;
-        uint256 expectedAdvocateCommission = totalCommission -
-            expectedAmbassadorCommission;
-        uint256 expectedEvangelistCommission = (expectedAdvocateCommission *
-            50) / 100;
-        expectedAdvocateCommission -= expectedEvangelistCommission;
+        uint256 expectedAmbassadorCommission = (totalCommission * 40) / 100;
+        uint256 expectedAdvocateCommission = (totalCommission * 30) / 100;
+        uint256 expectedEvangelistCommission = (totalCommission * 30) / 100;
 
         assertApproxEqRel(
             ambassador.balance,
