@@ -184,7 +184,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev adds or removes an address to the isEarlyBacker and earlyBackers variables.
      * Admin only.
-     * @param _it The address to be altered
+     * @param it The address to be altered
      * @param _is true means that the user is added, false means the user is removed
      */
     function setEarlyBacker(

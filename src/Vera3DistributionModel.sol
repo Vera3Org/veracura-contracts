@@ -243,7 +243,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     /**
      * @dev Function to set commission percentage that Advocates share with Ambassadors.
-     * @param the new commission percentage. 10 means 10%, 100 mean 100%
+     * @param commissionPercentage the new commission percentage. 10 means 10%, 100 mean 100%
      */
     function setAmbassadorToAdvocateCommission(
         // address ambassador,
@@ -265,7 +265,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     /**
      * @dev Function to set commission percentage that Evangelists share with Advocates.
-     * @param the new commission percentage. 10 means 10%, 100 mean 100%
+     * @param commissionPercentage the new commission percentage. 10 means 10%, 100 mean 100%
      */
     function setAdvocateToEvangelistCommission(
         uint256 commissionPercentage
@@ -381,7 +381,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         if (role == Role.Ambassador) {
             // here `user` is the owner, and `delegate` is the advocate
             // only the owner can set an advocate
-            require(delegator == address(0))
+            require(delegator == address(0));
         } else if (role == Role.Advocate) {
             require(
                 roles[delegator] == Role.Ambassador,
