@@ -130,8 +130,9 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     }
 
     /**
-     * Only used during deployment. Registers each NFT tier into this contract.
-     * Deployment of these
+     * @dev Only used during deployment. Registers each NFT tier into this contract.
+     * @dev Requires that all the argument are addresses of AnimalSocialClubERC721 proxy contracts
+     *
      * @param _elephant address of a deployed AnimalSocialClubERC721 contract
      * @param _tiger address of a deployed AnimalSocialClubERC721 contract
      * @param _shark address of a deployed AnimalSocialClubERC721 contract
@@ -181,8 +182,9 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     }
 
     /**
-     * @dev adds an address to the isEarlyBacker and earlyBackers variables.
+     * @dev adds or removes an address to the isEarlyBacker and earlyBackers variables.
      * Admin only.
+     * @param _it The address to be altered
      * @param _is true means that the user is added, false means the user is removed
      */
     function setEarlyBacker(
@@ -206,6 +208,8 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev mints 10 elephants and 2 sharks to an early backer.
      * Payment is made outside of contract.
+     * Admin only.
+     * @param dest the receiving address of NFTs
      */
     function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
         require(
@@ -224,6 +228,8 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev mints 25 elephants, 2 sharks, 1 eagle to early backer.
      * Payment is made outside of contract.
+     * Admin only.
+     * @param dest the receiving address of NFTs
      */
     function adminPackCryptoTucan(address dest) external onlyRole(ADMIN_ROLE) {
         require(
@@ -244,6 +250,8 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev mints 75 elephants, 9 sharks, 3 eagle to early backer.
      * Payment is made outside of contract.
+     * Admin only.
+     * @param dest the receiving address of NFTs
      */
     function adminPackJaguareth(address dest) external onlyRole(ADMIN_ROLE) {
         require(
@@ -265,6 +273,8 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev mints 150 elephants, 16 sharks, 7 eagle to early backer.
      * Payment is made outside of contract.
+     * Admin only.
+     * @param dest the receiving address of NFTs
      */
     function adminPackWhale(address dest) external onlyRole(ADMIN_ROLE) {
         require(
@@ -297,16 +307,26 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         revokeRole(OPERATOR_ROLE, a);
     }
 
+    /**
+     * @dev check whether an address is registered has having
+     * completed the KYC procedure.
+     * @param a the address to check
+     */
     function hasKYC(address a) public view returns (bool) {
         return _hasKYC[a];
     }
 
+    /**
+     * @dev marks an address as having completed the KYC procedure.
+     * @param a the address to alter
+     * @param val true indicates the user has KYC, false the opposite.
+     */
     function setKYC(address a, bool val) public onlyRole(OPERATOR_ROLE) {
         _hasKYC[a] = val;
     }
 
     /**
-     * @dev returns `true` when `msg.sender` has at least one NFT membership,
+     * @dev returns `true` when the input address has at least one ASC NFT membership,
      * any tier.
      * @param a the address of the queried user.
      */
@@ -324,6 +344,8 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
 
     /**
      * @dev withdraw ether from each sub-contract and this contract to the treasury.
+     * Only admin.
+     * @dev funds are withdrawn to `treasuryAddress`.
      */
     function withdrawFunds() external nonReentrant onlyRole(ADMIN_ROLE) {
         // console2.log("Hello");
@@ -343,6 +365,9 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev function for the admin to call a sub-contract's `adminMint`
      * function. See `AnimalSocialClubERC721.adminMint`.
+     * Only admin.
+     * @param to the receiving address
+     * @param tier the membership tier. Must be between `ELEPHANT_ID` and `EAGLE_ID`
      */
     function adminMint(
         address to,
@@ -356,6 +381,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
 
     /**
      * @dev calls  `AnimalSocialClubERC721.assignRole` on each sub-contract.
+     * See that function.
      */
     function assignRole(
         address payable upper,
@@ -411,8 +437,12 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev Register someone on the waitlist for a certain token
      * tier with ID tokenId.
-     * Assume they deposited `waitlist_deposit` amount of ETH.
-     * Only admin can do this.
+     * @dev Assume they deposited `waitlist_deposit` amount of ETH.
+     * @dev Only admin can do this.
+     * @param tier the membership tier. Must be between `ELEPHANT_ID` and `EAGLE_ID`
+     * @param waitlist_deposit how much the user deposited.
+     *        will be deducted from final payment
+     * @param user address of the user to register
      */
     function addToWaitlist(
         uint256 tier,
@@ -423,6 +453,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
             tier < contracts.length,
             "Invalid tier: can be Elephant (0), Shark (1), Eagle (2), Tiger (3), Stakeholder (4)"
         );
+        // TODO check KYC member?
         contracts[tier].addToWaitlist(waitlist_deposit, user);
     }
 

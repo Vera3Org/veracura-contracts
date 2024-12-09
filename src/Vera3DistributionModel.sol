@@ -28,6 +28,9 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     error NotAnEvangelist(address account);
 
     // Roles mapping
+    /**
+     * @dev Promoter role enumeration type.
+     */
     enum Role {
         None,
         Ambassador,
@@ -43,27 +46,27 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
 
     /**
      * @dev keys are Ambassador address, values are list of their Advocates.
-     * One-to-many mapping.
+     * @dev One-to-many mapping.
      */
     mapping(address => address payable[]) public ambassadorToAdvocates;
 
     /**
      * @dev inverse of ambassadorToAdvocates mapping: given a value in the list,
      * returns the corresponding key.
-     * One-to-one mapping.
+     * @dev One-to-one mapping.
      */
     mapping(address => address payable) public advocateToAmbassador;
 
     /**
      * @dev keys are Advocate address, values are list of their Evangelists.
-     * One-to-many mapping.
+     * @dev One-to-many mapping.
      */
     mapping(address => address payable[]) public advocateToEvangelists;
 
     /**
      * @dev inverse of advocateToEvangelists mapping: given a value,
      * returns the corresponding key.
-     * One-to-one mapping.
+     * @dev One-to-one mapping.
      */
     mapping(address => address payable) public evangelistToAdvocate;
 
@@ -72,15 +75,13 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     ///////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @dev
-     * commission that one ambassador gives to their advocates.
-     * 60 means 60% to advocate, rest 40% to ambassador
+     * @dev commission that one ambassador gives to their advocates.
+     * @dev 60 means 60% to advocate, rest 40% to ambassador
      */
     uint256 public ambassadorToAdvocateCommission;
     /**
-     * @dev
-     * commission that one advocate gives to their evangelists.
-     * 50 means 50% to evangelist, 50% advocate.
+     * @dev commission that one advocate gives to their evangelists.
+     * @dev 50 means 50% to evangelist, 50% advocate.
      */
     uint256 public advocateToEvangelistCommission;
 
@@ -136,6 +137,9 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         _;
     }
 
+    /**
+     * @dev returns true if user is a registered promoter in any role.
+     */
     function isReferrer(address referrer) public view returns (bool) {
         return
             roles[referrer] == Role.Ambassador ||
@@ -143,7 +147,10 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
             roles[referrer] == Role.Evangelist;
     }
 
-    // Ensure referrer is registered as Ambassador, Advocate
+    /**
+     * @dev reverts if input address is not a valid Ambassador, Advocate or Evangelist
+     * @param referrer address to check.
+     */
     function requireReferrer(address referrer) public view {
         require(
             isReferrer(referrer),
@@ -151,10 +158,23 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         );
     }
 
+    /**
+     * @dev calculates how much commission is deducted from each donations and sent to referrer(s)
+     */
     function calculateCommission(uint256 amt) internal pure returns (uint256) {
         return amt / 10;
     }
 
+    /**
+     * @dev given a referrer, calculates how much needs to be sent to promoters, if any, and sends it.
+     * @param referrer the referred promoter, or address(0) if none.
+     * @param ambassadorReference RequestNetwork payment reference of the referred promoter.
+     *        Unused if `referrer` is none.
+     * @param advocateReference RequestNetwork payment reference of the referred promoter.
+     *        Unused if `referrer` is none or Ambassador
+     * @param evangelistReference RequestNetwork payment reference of the referred promoter, or address(0) if none.
+     *        Unused if `referrer` is none, Ambassador or Advocate.
+     */
     function sendCommission(
         address referrer,
         bytes calldata ambassadorReference,
@@ -221,7 +241,10 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         }
     }
 
-    // Function to set commission percentage for Promoter Ambassadors
+    /**
+     * @dev Function to set commission percentage that Advocates share with Ambassadors.
+     * @param the new commission percentage. 10 means 10%, 100 mean 100%
+     */
     function setAmbassadorToAdvocateCommission(
         // address ambassador,
         uint256 commissionPercentage
@@ -240,7 +263,10 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         emit AmbassadorCommissionSet(commissionPercentage);
     }
 
-    // Function to set commission percentage for Promoter Ambassadors
+    /**
+     * @dev Function to set commission percentage that Evangelists share with Advocates.
+     * @param the new commission percentage. 10 means 10%, 100 mean 100%
+     */
     function setAdvocateToEvangelistCommission(
         uint256 commissionPercentage
     ) external onlyOwner {
@@ -258,6 +284,15 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         emit AdvocateCommissionSet(commissionPercentage);
     }
 
+    /**
+     * @dev Calculates how much is the advocate's share for a given commission value.
+     * @param advocate the Advocate's address. Will be used to fetch the upper Ambassador.
+     * @param totalCommission the commission to share.
+     * @return Triple `(ambassador, ambassadorShare, advocateShare where): `ambassador` is
+     * the address of the upper Ambassador of this `advocate`, `ambassadorShare` is the amount
+     * of coins that the Ambassador gets, and `advocateShare` is the number of coins that the
+     * Advocate gets.
+     */
     function getAdvocateShare(
         address advocate,
         uint256 totalCommission
@@ -276,6 +311,15 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         return (ambassador, ambassadorShare, advocateShare);
     }
 
+    /**
+     * @dev Calculates how much is the evangelist's share for a given commission value.
+     * @param evangelist the Evangelist's address. Will be used to fetch the upper Advocate.
+     * @param totalCommission the commission to share.
+     * @return Triple `(advocate, advocateShare, evangelistShare where): `advocate` is
+     * the address of the upper Advocate of this `evangelist`, `advocateShare` is the amount
+     * of coins that the Advocate gets, and `evangelistShare` is the number of coins that the
+     * Evangelist gets.
+     */
     function getEvangelistShare(
         address evangelist,
         uint256 totalCommission
@@ -321,15 +365,14 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     }
 
     /**
-     * Updates the hierarchy of roles.
-     * E.g. an Ambassador `user` adds a `delegate` with `role` Advocate to his/her group.
-     * args:
-     *   - user: the upper level in the hierarchy. Unused when contract owner assigns an Ambassador role.
-     *   - role: the role which the `delegate` will have.
-     *   - delegate: the lower level in the hierarchy.
+     * @dev Updates the hierarchy of roles.
+     * @dev E.g. an Ambassador `delegator` adds a `delegate` with `role` Advocate to his/her group.
+     * @param delegator the upper level in the hierarchy. address(0) when contract owner assigns an Ambassador role.
+     * @param role the role which the `delegate` will have.
+     * @param delegate the lower level in the hierarchy.
      */
     function assignRole(
-        address payable user,
+        address payable delegator,
         Role role,
         address payable delegate
     ) external {
@@ -338,9 +381,10 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         if (role == Role.Ambassador) {
             // here `user` is the owner, and `delegate` is the advocate
             // only the owner can set an advocate
+            require(delegator == address(0))
         } else if (role == Role.Advocate) {
             require(
-                roles[user] == Role.Ambassador,
+                roles[delegator] == Role.Ambassador,
                 "user is not an Ambassador and cannot delegate an Advocate"
             );
             require(
@@ -348,23 +392,23 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
                 "delegate is already an ambassador for someone else"
             );
             // One advocate can add an ambassador only for themselves, not others. Only admin is allowed to everything
-            isAuthorized = isAuthorized || user == msg.sender;
+            isAuthorized = isAuthorized || delegator == msg.sender;
             // add advocate to the list of the corresponding ambassador
-            ambassadorToAdvocates[user].push(delegate);
+            ambassadorToAdvocates[delegator].push(delegate);
             // reverse the many-to-one mapping
-            advocateToAmbassador[delegate] = user;
+            advocateToAmbassador[delegate] = delegator;
         } else if (role == Role.Evangelist) {
             require(
-                roles[user] == Role.Advocate,
+                roles[delegator] == Role.Advocate,
                 "user is not an Advocate and cannot delegate an Evangelist"
             );
             require(
                 evangelistToAdvocate[delegate] == address(0),
                 "delegate is already an advocate for someone else"
             );
-            isAuthorized = isAuthorized || user == msg.sender;
-            advocateToEvangelists[user].push(delegate);
-            evangelistToAdvocate[delegate] = user;
+            isAuthorized = isAuthorized || delegator == msg.sender;
+            advocateToEvangelists[delegator].push(delegate);
+            evangelistToAdvocate[delegate] = delegator;
         } else if (role == Role.None) {
             // TODO discuss whether ambassador/advocate can remove ppl below them
             require(
@@ -374,6 +418,6 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
         }
         require(isAuthorized, "user not authorized");
         roles[delegate] = role;
-        emit RoleAssigned(user, role);
+        emit RoleAssigned(delegator, role);
     }
 }
