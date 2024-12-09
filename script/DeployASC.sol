@@ -25,6 +25,9 @@ contract DeployASC is Script {
     address public constant VRF_WRAPPER_ADDRESS =
         0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed; // base sepolia
 
+    address public constant DUMMY_WAITLISTED_ADDRESS =
+        address(0xe198f322E463510deB487170dD299Df9787f5470);
+
     uint256 public constant ELEPHANT_ID = 0;
     uint256 public constant TIGER_ID = 1;
     uint256 public constant SHARK_ID = 2;
@@ -143,6 +146,12 @@ contract DeployASC is Script {
             payable(sharkAddress),
             payable(eagle),
             payable(stakeholder)
+        );
+
+        asc.addToWaitlist(
+            TIGER_ID,
+            asc.tiger().PRICE() / 50,
+            DUMMY_WAITLISTED_ADDRESS
         );
 
         vm.stopBroadcast();
