@@ -225,7 +225,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     function setAmbassadorToAdvocateCommission(
         // address ambassador,
         uint256 commissionPercentage
-    ) external {
+    ) external onlyOwner {
         require(
             roles[msg.sender] == Role.Ambassador || msg.sender == owner(),
             "Not authorized!"
@@ -243,7 +243,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     // Function to set commission percentage for Promoter Ambassadors
     function setAdvocateToEvangelistCommission(
         uint256 commissionPercentage
-    ) external {
+    ) external onlyOwner {
         require(
             roles[msg.sender] == Role.Advocate || msg.sender == owner(),
             "Not authorized!"
