@@ -117,7 +117,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         address _lotteryAddress
     ) AccessControlDefaultAdminRules(3 hours, msg.sender) {
         require(
-            _treasuryAddress != address(0),
+            _treasuryAddress != address(0) && _lotteryAddress != address(0),
             "One or more invalid addresses"
         );
 
@@ -391,7 +391,12 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).assignRole(upper, role, delegate);
+            Vera3DistributionModel(tier).assignRole(
+                upper,
+                role,
+                delegate,
+                msg.sender
+            );
         }
     }
 

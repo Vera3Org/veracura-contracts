@@ -21,7 +21,7 @@ import "forge-std/console.sol";
  * - If `referrer` is an Evangelist, all the upper levels (the Evangelist's
  *   Advocate, and that Advocate's Ambassador) share the fee.
  */
-abstract contract Vera3DistributionModel is OwnableUpgradeable {
+abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
     // Errors
     error NotAnAmbassador(address account);
     error NotAnAdvocate(address account);
@@ -111,6 +111,7 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     function __Vera3DistributionModel_init(
         address ethFeeProxy
     ) internal onlyInitializing {
+        // __Ownable_init(adminAddress);
         ETHEREUM_FEE_PROXY = IEthereumFeeProxy(ethFeeProxy);
         ambassadorToAdvocateCommission = 60;
         advocateToEvangelistCommission = 50;
@@ -374,50 +375,9 @@ abstract contract Vera3DistributionModel is OwnableUpgradeable {
     function assignRole(
         address payable delegator,
         Role role,
-        address payable delegate
-    ) external {
-        bool isAuthorized = msg.sender == owner();
-
-        if (role == Role.Ambassador) {
-            // here `user` is the owner, and `delegate` is the advocate
-            // only the owner can set an advocate
-            require(delegator == address(0));
-        } else if (role == Role.Advocate) {
-            require(
-                roles[delegator] == Role.Ambassador,
-                "user is not an Ambassador and cannot delegate an Advocate"
-            );
-            require(
-                advocateToAmbassador[delegate] == address(0),
-                "delegate is already an ambassador for someone else"
-            );
-            // One advocate can add an ambassador only for themselves, not others. Only admin is allowed to everything
-            isAuthorized = isAuthorized || delegator == msg.sender;
-            // add advocate to the list of the corresponding ambassador
-            ambassadorToAdvocates[delegator].push(delegate);
-            // reverse the many-to-one mapping
-            advocateToAmbassador[delegate] = delegator;
-        } else if (role == Role.Evangelist) {
-            require(
-                roles[delegator] == Role.Advocate,
-                "user is not an Advocate and cannot delegate an Evangelist"
-            );
-            require(
-                evangelistToAdvocate[delegate] == address(0),
-                "delegate is already an advocate for someone else"
-            );
-            isAuthorized = isAuthorized || delegator == msg.sender;
-            advocateToEvangelists[delegator].push(delegate);
-            evangelistToAdvocate[delegate] = delegator;
-        } else if (role == Role.None) {
-            // TODO discuss whether ambassador/advocate can remove ppl below them
-            require(
-                msg.sender == owner(),
-                "only the owner can assign arbitrary roles"
-            );
-        }
-        require(isAuthorized, "user not authorized");
-        roles[delegate] = role;
-        emit RoleAssigned(delegator, role);
+        address payable delegate,
+        address _msgSender
+    ) external virtual {
+        revert("Not implemented here!");
     }
 }

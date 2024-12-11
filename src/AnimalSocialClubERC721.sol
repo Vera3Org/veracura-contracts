@@ -55,8 +55,8 @@ import "src/ASC721Manager.sol";
 contract AnimalSocialClubERC721 is
     Initializable,
     ERC721EnumerableUpgradeable,
-    OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
+    OwnableUpgradeable,
     Vera3DistributionModel
 {
     using Strings for uint256;
@@ -69,8 +69,9 @@ contract AnimalSocialClubERC721 is
     // can mint 1 at a time
     uint256 public constant MAXIMUM_MINTABLE = 1;
 
-    /// Address of admin contract. Is the
+    /// @dev Address of contract admin.
     address public adminAddress;
+    /// @dev Address of treasury where funds are withdraw.
     address public treasuryAddress;
     ASC721Manager public manager;
 
@@ -99,10 +100,10 @@ contract AnimalSocialClubERC721 is
         address ethFeeProxy,
         uint tier_id
     ) public initializer {
-        __Ownable_init(_adminAddress);
         __ERC721_init(name, symbol);
         __ReentrancyGuard_init();
         __Vera3DistributionModel_init(ethFeeProxy);
+        __Ownable_init(_adminAddress);
         // require(msg.sender == _adminAddress, "sender must be admin");
         require(
             _adminAddress != address(0) && _treasuryAddress != address(0),
@@ -129,10 +130,21 @@ contract AnimalSocialClubERC721 is
     }
 
     /**
+     * @dev modifier which reverts if the sale is not active.
+     */
+    modifier onlyOwnerAndManager() {
+        require(
+            msg.sender == owner() || msg.sender == address(manager),
+            "Caller must be either owner or manager for this function"
+        );
+        _;
+    }
+
+    /**
      * @dev function to start or stop the sale. can only be called by owner.
      * @param _saleActive the state of the sale. `true` to enable, `false` to disable.
      */
-    function setSaleActive(bool _saleActive) external onlyOwner {
+    function setSaleActive(bool _saleActive) external onlyOwnerAndManager {
         saleActive = _saleActive;
         emit SaleStateChanged(_saleActive);
     }
@@ -154,7 +166,7 @@ contract AnimalSocialClubERC721 is
      */
     function adminMint(
         address to
-    ) external nonReentrant isSaleActive onlyOwner {
+    ) external nonReentrant isSaleActive onlyOwnerAndManager {
         // it's on the admin to add kyc or kyb
         require(manager.hasKYC(to), "Destination address without KYC!");
         require(
@@ -232,7 +244,7 @@ contract AnimalSocialClubERC721 is
      * @dev withdraws ether funds to `treasuryAddress`.
      * @dev Only admin.
      */
-    function withdrawFunds() external nonReentrant onlyOwner {
+    function withdrawFunds() external nonReentrant onlyOwnerAndManager {
         uint256 balance = address(this).balance;
 
         require(balance > 0, "No funds to withdraw");
@@ -254,9 +266,15 @@ contract AnimalSocialClubERC721 is
         _;
     }
 
-    // address & amount of current highest bid
-    address[] public highestBidder;
-    uint256[] public highestBid;
+    // /// @dev keys are token IDs, values are address & amount of current highest bidder
+    // address[] public highestBidder;
+
+    struct Bid {
+        address _address;
+        uint amount;
+    }
+    /// @dev keys are token IDs, values are the current highest bidder and bid value.
+    mapping(uint => Bid) public highestBid;
 
     // track auction start & end
     bool public auctionStarted;
@@ -270,7 +288,7 @@ contract AnimalSocialClubERC721 is
     /**
      * @dev function used by admin to start the auction for this contract's reserved tokens.
      */
-    function startAuction() external onlyOwner onlyTiger {
+    function startAuction() external onlyOwnerAndManager onlyTiger {
         require(!auctionStarted, "Auction already started");
         require(
             !auctionEnded && block.timestamp <= auctionEndTime,
@@ -299,27 +317,35 @@ contract AnimalSocialClubERC721 is
             "Auction already ended"
         );
         require(
-            msg.value > highestBid[tokenId] + minBidIncrement,
+            msg.value > highestBid[tokenId].amount + minBidIncrement,
             "Bid must be higher than current highest bid"
         );
         require(
             msg.value >= startingPrice,
             "Bid must be at least the starting price"
         );
-        address oldHighestBidder = highestBidder[tokenId];
-        uint256 oldHighestBid = highestBid[tokenId];
-        bool shouldRefund = oldHighestBidder != address(0);
+        Bid memory oldBid = highestBid[tokenId];
+        // address oldHighestBidder = highestBidder[tokenId];
+        // uint256 oldHighestBid = highestBid[tokenId];
+        bool shouldRefund = oldBid._address != address(0);
 
-        highestBidder[tokenId] = msg.sender;
-        highestBid[tokenId] = msg.value;
+        // highestBidder[tokenId] = msg.sender;
+        {
+            Bid memory newBid;
+            newBid._address = msg.sender;
+            newBid.amount = msg.value;
+            highestBid[tokenId] = newBid;
+        }
 
         if (shouldRefund) {
             // Refund the previous highest bidder
-            payable(oldHighestBidder).transfer(oldHighestBid);
+            payable(oldBid._address).transfer(oldBid.amount);
         }
     }
 
-    function endAuction(uint256 i) external nonReentrant onlyOwner onlyTiger {
+    function endAuction(
+        uint256 i
+    ) external nonReentrant onlyOwnerAndManager onlyTiger {
         require(i < MAX_TOKEN_SUPPLY, "Invalid card ID");
         require(auctionStarted, "Auction not yet started");
         require(!auctionEnded, "Auction already ended");
@@ -331,13 +357,13 @@ contract AnimalSocialClubERC721 is
         auctionEnded = true;
 
         // Mint Super VIP NFTs to the highest bidder
-        _safeMint(highestBidder[i], i);
+        _safeMint(highestBid[i]._address, i);
     }
 
     // Allow the contract owner to withdraw the highest bid after the auction ends
     function withdrawHighestBid(
         uint256 i
-    ) external nonReentrant onlyOwner onlyTiger {
+    ) external nonReentrant onlyOwnerAndManager onlyTiger {
         require(i < MAX_TOKEN_SUPPLY, "Invalid i");
         require(auctionStarted, "Auction not yet started");
         require(auctionEnded, "Auction has not ended yet");
@@ -345,11 +371,11 @@ contract AnimalSocialClubERC721 is
             block.timestamp >= auctionEndTime,
             "Auction end time not reached yet"
         );
-        require(highestBidder[i] != address(0), "No bids received");
+        require(highestBid[i]._address != address(0), "No bids received");
 
-        uint256 amount = highestBid[i];
-        highestBid[i] = 0;
-        highestBidder[i] = address(0);
+        uint256 amount = highestBid[i].amount;
+        highestBid[i].amount = 0;
+        highestBid[i]._address = address(0);
         payable(owner()).transfer(amount);
     }
 
@@ -383,7 +409,7 @@ contract AnimalSocialClubERC721 is
     function addToWaitlist(
         uint waitlist_deposit,
         address user
-    ) external payable onlyOwner nonReentrant {
+    ) external payable onlyOwnerAndManager nonReentrant {
         require(!isLaunched, "Sale has already launched");
         uint tokenId = totalSupply() + waitlisted.length;
         require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
@@ -437,7 +463,67 @@ contract AnimalSocialClubERC721 is
         emit WaitlistClaimed(msg.sender);
     }
 
-    function launch() external onlyOwner nonReentrant {
+    function launch() external onlyOwnerAndManager nonReentrant {
         isLaunched = true;
+    }
+
+    /**
+     * @dev Updates the hierarchy of roles.
+     * @dev E.g. an Ambassador `delegator` adds a `delegate` with `role` Advocate to his/her group.
+     * @param delegator the upper level in the hierarchy. address(0) when contract owner assigns an Ambassador role.
+     * @param role the role which the `delegate` will have.
+     * @param delegate the lower level in the hierarchy.
+     */
+    function assignRole(
+        address payable delegator,
+        Role role,
+        address payable delegate,
+        address _msgSender
+    ) external override {
+        bool isAuthorized = msg.sender == owner() ||
+            msg.sender == address(manager);
+
+        if (role == Role.Ambassador) {
+            // here `user` is the owner, and `delegate` is the advocate
+            // only the owner can set an ambassador
+            require(delegator == address(0));
+        } else if (role == Role.Advocate) {
+            require(
+                roles[delegator] == Role.Ambassador,
+                "user is not an Ambassador and cannot delegate an Advocate"
+            );
+            require(
+                advocateToAmbassador[delegate] == address(0),
+                "delegate is already an ambassador for someone else"
+            );
+            // One advocate can add an ambassador only for themselves, not others.
+            // Only admin is allowed to everything
+            isAuthorized = isAuthorized || delegator == _msgSender;
+            // add advocate to the list of the corresponding ambassador
+            ambassadorToAdvocates[delegator].push(delegate);
+            // reverse the many-to-one mapping
+            advocateToAmbassador[delegate] = delegator;
+        } else if (role == Role.Evangelist) {
+            require(
+                roles[delegator] == Role.Advocate,
+                "user is not an Advocate and cannot delegate an Evangelist"
+            );
+            require(
+                evangelistToAdvocate[delegate] == address(0),
+                "delegate is already an advocate for someone else"
+            );
+            isAuthorized = isAuthorized || delegator == _msgSender;
+            advocateToEvangelists[delegator].push(delegate);
+            evangelistToAdvocate[delegate] = delegator;
+        } else if (role == Role.None) {
+            // TODO discuss whether ambassador/advocate can remove ppl below them
+            require(
+                _msgSender == owner(),
+                "only the owner can assign arbitrary roles"
+            );
+        }
+        require(isAuthorized, "user not authorized");
+        roles[delegate] = role;
+        emit RoleAssigned(delegator, role);
     }
 }

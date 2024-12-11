@@ -65,7 +65,7 @@ contract AnimalSocialClubTest is Test {
                         "ASC.Elephant",
                         9000,
                         0.1 ether,
-                        address(asc),
+                        adminAddress,
                         treasuryAddress,
                         asc,
                         0,
@@ -74,6 +74,9 @@ contract AnimalSocialClubTest is Test {
                     )
                 )
             );
+            // AnimalSocialClubERC721(payable(elephant)).transferOwnership(
+            //     adminAddress
+            // );
 
             address shark = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
@@ -84,7 +87,7 @@ contract AnimalSocialClubTest is Test {
                         "ASC.Shark",
                         520,
                         0.5 ether,
-                        address(asc),
+                        adminAddress,
                         treasuryAddress,
                         asc,
                         0,
@@ -92,6 +95,9 @@ contract AnimalSocialClubTest is Test {
                         asc.SHARK_ID()
                     )
                 )
+            );
+            AnimalSocialClubERC721(payable(shark)).transferOwnership(
+                adminAddress
             );
 
             address eagle = Upgrades.deployUUPSProxy(
@@ -103,7 +109,7 @@ contract AnimalSocialClubTest is Test {
                         "ASC.Eagle",
                         200,
                         1 ether,
-                        address(asc),
+                        adminAddress,
                         treasuryAddress,
                         asc,
                         9, // 9 eagle reserved for lottery
@@ -111,6 +117,9 @@ contract AnimalSocialClubTest is Test {
                         asc.EAGLE_ID()
                     )
                 )
+            );
+            AnimalSocialClubERC721(payable(eagle)).transferOwnership(
+                adminAddress
             );
 
             address tiger = Upgrades.deployUUPSProxy(
@@ -122,7 +131,7 @@ contract AnimalSocialClubTest is Test {
                         "ASC.Tiger",
                         30,
                         2 ether,
-                        address(asc),
+                        adminAddress,
                         treasuryAddress,
                         asc,
                         11, // 1 tiger reserved for lottery, 10 tigers in auction
@@ -130,6 +139,9 @@ contract AnimalSocialClubTest is Test {
                         asc.TIGER_ID()
                     )
                 )
+            );
+            AnimalSocialClubERC721(payable(tiger)).transferOwnership(
+                adminAddress
             );
             address stakeholder = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
@@ -140,7 +152,7 @@ contract AnimalSocialClubTest is Test {
                         "ASC.Stakeholder",
                         250,
                         0.5 ether,
-                        address(asc),
+                        adminAddress,
                         treasuryAddress,
                         asc,
                         0,
@@ -148,6 +160,9 @@ contract AnimalSocialClubTest is Test {
                         asc.STAKEHOLDER_ID()
                     )
                 )
+            );
+            AnimalSocialClubERC721(payable(stakeholder)).transferOwnership(
+                adminAddress
             );
 
             asc.assignContracts(
@@ -196,6 +211,44 @@ contract AnimalSocialClubTest is Test {
     //     assertEq(asc.uri(asc.ID_RESERVED()), "ipfs://baseURI/5.json");
     //     assertEq(asc.totalSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
     // }
+
+    function testAdminMint(uint8 _tier, uint8 _howMany) public {
+        vm.assume(_howMany < 3 && _tier < asc.STAKEHOLDER_ID());
+        uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+        uint256 howMany = _howMany;
+
+        AnimalSocialClubERC721 membership = asc.contracts(tier);
+        uint256 initialSupply = membership.totalSupply();
+
+        vm.deal(user, 2000000000000 ether);
+        vm.startPrank(adminAddress);
+
+        asc.setSaleActive(true);
+        for (uint256 i = 0; i < howMany; i++) {
+            // mint using both methods
+            asc.adminMint(user, tier);
+            AnimalSocialClubERC721(asc.contracts(tier)).adminMint(user);
+        }
+        if (tier == asc.STAKEHOLDER_ID()) {
+            return;
+        }
+        vm.stopPrank();
+
+        howMany = howMany >= membership.MAX_TOKEN_SUPPLY()
+            ? membership.MAX_TOKEN_SUPPLY()
+            : howMany;
+
+        assertEq(
+            membership.balanceOf(user),
+            howMany * 2,
+            "Balance of user doesnt match expectation"
+        );
+        assertEq(
+            membership.totalSupply(),
+            initialSupply + (howMany * 2),
+            "Token supply doesnt match expectation"
+        );
+    }
 
     function testMintWithDonation(uint8 _tier, uint8 _howMany) public {
         vm.assume(_howMany < 3 && _tier < asc.STAKEHOLDER_ID());
@@ -411,7 +464,7 @@ contract AnimalSocialClubTest is Test {
         asc.startTigerAuction();
         vm.deal(user, 2000000000000 ether);
         vm.startPrank(user);
-        tiger.placeBid{value: 3 ether}(0);
+        tiger.placeBid{value: 3 ether}(21);
         vm.stopPrank();
     }
 
