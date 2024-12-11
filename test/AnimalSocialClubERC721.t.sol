@@ -74,9 +74,6 @@ contract AnimalSocialClubTest is Test {
                     )
                 )
             );
-            // AnimalSocialClubERC721(payable(elephant)).transferOwnership(
-            //     adminAddress
-            // );
 
             address shark = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
@@ -95,9 +92,6 @@ contract AnimalSocialClubTest is Test {
                         asc.SHARK_ID()
                     )
                 )
-            );
-            AnimalSocialClubERC721(payable(shark)).transferOwnership(
-                adminAddress
             );
 
             address eagle = Upgrades.deployUUPSProxy(
@@ -118,9 +112,6 @@ contract AnimalSocialClubTest is Test {
                     )
                 )
             );
-            AnimalSocialClubERC721(payable(eagle)).transferOwnership(
-                adminAddress
-            );
 
             address tiger = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
@@ -140,9 +131,6 @@ contract AnimalSocialClubTest is Test {
                     )
                 )
             );
-            AnimalSocialClubERC721(payable(tiger)).transferOwnership(
-                adminAddress
-            );
             address stakeholder = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
                 abi.encodeCall(
@@ -160,9 +148,6 @@ contract AnimalSocialClubTest is Test {
                         asc.STAKEHOLDER_ID()
                     )
                 )
-            );
-            AnimalSocialClubERC721(payable(stakeholder)).transferOwnership(
-                adminAddress
             );
 
             asc.assignContracts(
