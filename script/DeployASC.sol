@@ -16,8 +16,11 @@ import {ASC721Manager} from "../src/ASC721Manager.sol";
 
 contract DeployASC is Script {
     ASC721Manager public asc;
+    address public constant ADMIN_ADDRESS =
+        0x98A5c7E6eb3DEaf7Db34d14d63D46ec5a5A2f775; // dummy CHANGE THIS FOR MAINNET
     address public constant TREASURY_ADDRESS =
-        0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // dummy
+        0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // dummy CHANGE THIS FOR MAINNET
+
     address public constant ETH_FEE_PROXY_ADDRESS =
         0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65; // base sepolia
     address public constant LINK_ADDRESS =
@@ -147,6 +150,8 @@ contract DeployASC is Script {
             payable(eagle),
             payable(stakeholder)
         );
+
+        require(asc.owner() == address(ADMIN_ADDRESS));
 
         asc.addToWaitlist(
             TIGER_ID,
