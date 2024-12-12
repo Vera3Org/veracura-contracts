@@ -1,0 +1,59 @@
+#!/bin/bash
+
+source .env.testnet
+
+ASC_MANAGER="0xD992580213E98874deb760C7C05903d2dbF8a21a"
+ELEPHANT="0xdB217E9cE6805506E070Dbf9872965258E98cB63"
+TIGER="0xC78B0BE412D2E517a4Eb77E712A1297828ee3043"
+SHARK="0x12FFDD91925E14719DbEd216B0cc3871116B8353"
+EAGLE="0xDC5aB0F522445Ec9C9C7B9A47FfF298a012e1AbB"
+STAKEHOLDER="0x67918e65dCeeBac53d587E72ea2145849a1bAD6b"
+
+
+function cast_base() {
+    cast call -r "$RPC_URL" $@
+}
+
+function cast_manager() {
+    cast_base "$ASC_MANAGER" $@
+}
+
+
+function cast_elephant() {
+    cast_base "$ELEPHANT" $@
+}
+
+
+function cast_shark() {
+    cast_base "$SHARK" $@
+}
+
+
+function cast_eagle() {
+    cast_base "$EAGLE" $@
+}
+
+
+function cast_tiger() {
+    cast_base "$TIGER" $@
+}
+
+
+function cast_stakeholder() {
+    cast_base "$STAKEHOLDER" $@
+}
+
+
+function print_names() {
+    echo " - manager: $ASC_MANAGER"
+    for x in elephant tiger shark eagle stakeholder ; do 
+        echo " - $x  $(cast_manager $x'()(address)')"
+    done
+}
+
+function print_names_blockscout() {
+    echo " - manager: https://base-sepolia.blockscout.com/address/$ASC_MANAGER"
+    for x in elephant tiger shark eagle stakeholder ; do 
+        echo " - $x  https://base-sepolia.blockscout.com/address/$(cast_manager $x'()(address)')"
+    done
+}
