@@ -465,8 +465,13 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     /**
      * @dev TODO verify if this is the only thing to do.
      */
-    function startLottery() external payable onlyRole(ADMIN_ROLE) {
-        lottery.requestRandomWords(true);
+    function startLottery()
+        external
+        payable
+        onlyRole(ADMIN_ROLE)
+        returns (uint256)
+    {
+        return lottery.requestRandomWords{value: msg.value}(true);
     }
 
     function startTigerAuction() external onlyRole(ADMIN_ROLE) {
