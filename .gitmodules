@@ -16,3 +16,6 @@
 [submodule "lib/hardhat-starter-kit"]
 	path = lib/hardhat-starter-kit
 	url = https://github.com/smartcontractkit/hardhat-starter-kit
+[submodule "lib/foundry-chainlink-toolkit"]
+	path = lib/foundry-chainlink-toolkit
+	url = https://github.com/smartcontractkit/foundry-chainlink-toolkit
