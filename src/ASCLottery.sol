@@ -90,7 +90,7 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
 
     function requestRandomWords(
         bool enableNativePayment
-    ) external onlyOwner returns (uint256) {
+    ) external payable onlyOwner returns (uint256) {
         bytes memory extraArgs = VRFV2PlusClient._argsToBytes(
             VRFV2PlusClient.ExtraArgsV1({nativePayment: enableNativePayment})
         );
