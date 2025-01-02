@@ -478,4 +478,10 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     receive() external payable {
         emit Received(msg.sender, msg.value);
     }
+
+    function setLotteryContract(
+        address payable _newLottery
+    ) external onlyRole(ADMIN_ROLE) {
+        lottery = ASCLottery(_newLottery);
+    }
 }
