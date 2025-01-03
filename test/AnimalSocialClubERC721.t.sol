@@ -53,7 +53,17 @@ contract AnimalSocialClubTest is Test {
             VRF_WRAPPER_BASE_SEPOLIA,
             treasuryAddress
         );
-        asc = new ASC721Manager(treasuryAddress, address(lottery));
+
+        address payable asc_address = payable(
+            Upgrades.deployUUPSProxy(
+                "ASC721Manager.sol",
+                abi.encodeCall(
+                    ASC721Manager.initialize,
+                    (treasuryAddress, address(lottery))
+                )
+            )
+        );
+        asc = ASC721Manager(asc_address);
         lottery.transferOwnership(address(asc));
         {
             address elephant = Upgrades.deployUUPSProxy(
@@ -453,9 +463,10 @@ contract AnimalSocialClubTest is Test {
         vm.stopPrank();
     }
 
-    // function testLottery() public {
-    //     vm.startPrank(adminAddress);
-    //     asc.startLottery();
-    //     vm.stopPrank();
-    // }
+    function testLottery() public {
+        vm.deal(adminAddress, 100 ether);
+        vm.startPrank(adminAddress);
+        asc.startLottery{value: 1 ether}();
+        vm.stopPrank();
+    }
 }

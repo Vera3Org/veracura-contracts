@@ -16,6 +16,7 @@ import {ASC721Manager} from "../src/ASC721Manager.sol";
 
 contract DeployASC is Script {
     ASC721Manager public asc;
+    address payable public asc_address;
     address public constant ADMIN_ADDRESS =
         0x98A5c7E6eb3DEaf7Db34d14d63D46ec5a5A2f775; // dummy CHANGE THIS FOR MAINNET
     address public constant TREASURY_ADDRESS =
@@ -47,8 +48,18 @@ contract DeployASC is Script {
             VRF_WRAPPER_ADDRESS,
             TREASURY_ADDRESS
         );
-        asc = new ASC721Manager(TREASURY_ADDRESS, address(lottery));
-        lottery.transferOwnership(address(asc));
+        // asc = new ASC721Manager(TREASURY_ADDRESS, address(lottery));
+        asc_address = payable(
+            Upgrades.deployUUPSProxy(
+                "ASC721Manager.sol",
+                abi.encodeCall(
+                    ASC721Manager.initialize,
+                    (TREASURY_ADDRESS, address(lottery))
+                )
+            )
+        );
+        asc = ASC721Manager(asc_address);
+        lottery.transferOwnership(asc_address);
 
         address elephantAddress = Upgrades.deployUUPSProxy(
             "AnimalSocialClubERC721.sol",
@@ -59,7 +70,7 @@ contract DeployASC is Script {
                     "ASC.Elephant",
                     9000,
                     0.1 ether,
-                    address(asc),
+                    asc_address,
                     TREASURY_ADDRESS,
                     asc,
                     0,
@@ -77,7 +88,7 @@ contract DeployASC is Script {
                     "ASC.Shark",
                     520,
                     0.5 ether,
-                    address(asc),
+                    asc_address,
                     TREASURY_ADDRESS,
                     asc,
                     0,
@@ -96,7 +107,7 @@ contract DeployASC is Script {
                     "ASC.Eagle",
                     200,
                     1 ether,
-                    address(asc),
+                    asc_address,
                     TREASURY_ADDRESS,
                     asc,
                     9, // 9 eagle reserved for lottery
@@ -115,7 +126,7 @@ contract DeployASC is Script {
                     "ASC.Tiger",
                     30,
                     2 ether,
-                    address(asc),
+                    asc_address,
                     TREASURY_ADDRESS,
                     asc,
                     11, // 1 tiger reserved for lottery, 10 tigers in auction
@@ -133,7 +144,7 @@ contract DeployASC is Script {
                     "ASC.Stakeholder",
                     250,
                     0.5 ether,
-                    address(asc),
+                    asc_address,
                     TREASURY_ADDRESS,
                     asc,
                     0,
@@ -161,6 +172,6 @@ contract DeployASC is Script {
 
         vm.stopBroadcast();
 
-        console.log("Done. Animal Social Club Manager address: ", address(asc));
+        console.log("Done. Animal Social Club Manager address: ", asc_address);
     }
 }

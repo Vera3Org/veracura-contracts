@@ -4,12 +4,14 @@ pragma solidity ^0.8.26;
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 import {console} from "forge-std/console.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {AccessControlDefaultAdminRules} from "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
-import {AccessControlEnumerable} from "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
+import {AccessControlDefaultAdminRulesUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
+// import {AccessControlEnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
+// import "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRules.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
 import {ASCLottery} from "src/ASCLottery.sol";
@@ -30,7 +32,10 @@ import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
  * - NFT_ROLE: is an AnimalSocialClubERC721 contract address, and is the only
  *   role which can interact with the `lottery` contract.
  */
-contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
+contract ASC721Manager is
+    AccessControlDefaultAdminRulesUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
@@ -57,7 +62,7 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
     bytes32 public constant NFT_ROLE = keccak256("NFT_ROLE");
 
     /// Address of Animal Social Club treasury.
-    address public immutable treasuryAddress;
+    address public treasuryAddress;
 
     /// references to Elephant contract
     AnimalSocialClubERC721 public elephant;
@@ -112,10 +117,15 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
      */
     address[] public earlyBackers;
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address _treasuryAddress,
         address _lotteryAddress
-    ) AccessControlDefaultAdminRules(3 hours, msg.sender) {
+    ) public initializer {
         require(
             _treasuryAddress != address(0) && _lotteryAddress != address(0),
             "One or more invalid addresses"
@@ -123,6 +133,8 @@ contract ASC721Manager is AccessControlDefaultAdminRules, ReentrancyGuard {
 
         require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
         require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
+
+        __AccessControlDefaultAdminRules_init(3 hours, msg.sender);
 
         // Set the beneficiary addresses
         treasuryAddress = _treasuryAddress;
