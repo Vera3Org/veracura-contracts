@@ -48,7 +48,6 @@ contract DeployASC is Script {
             VRF_WRAPPER_ADDRESS,
             TREASURY_ADDRESS
         );
-        // asc = new ASC721Manager(TREASURY_ADDRESS, address(lottery));
         asc_address = payable(
             Upgrades.deployUUPSProxy(
                 "ASC721Manager.sol",
@@ -70,7 +69,7 @@ contract DeployASC is Script {
                     "ASC.Elephant",
                     9000,
                     0.1 ether,
-                    asc_address,
+                    ADMIN_ADDRESS,
                     TREASURY_ADDRESS,
                     asc,
                     0,
@@ -88,7 +87,7 @@ contract DeployASC is Script {
                     "ASC.Shark",
                     520,
                     0.5 ether,
-                    asc_address,
+                    ADMIN_ADDRESS,
                     TREASURY_ADDRESS,
                     asc,
                     0,
@@ -107,7 +106,7 @@ contract DeployASC is Script {
                     "ASC.Eagle",
                     200,
                     1 ether,
-                    asc_address,
+                    ADMIN_ADDRESS,
                     TREASURY_ADDRESS,
                     asc,
                     9, // 9 eagle reserved for lottery
@@ -126,7 +125,7 @@ contract DeployASC is Script {
                     "ASC.Tiger",
                     30,
                     2 ether,
-                    asc_address,
+                    ADMIN_ADDRESS,
                     TREASURY_ADDRESS,
                     asc,
                     11, // 1 tiger reserved for lottery, 10 tigers in auction
@@ -144,7 +143,7 @@ contract DeployASC is Script {
                     "ASC.Stakeholder",
                     250,
                     0.5 ether,
-                    asc_address,
+                    ADMIN_ADDRESS,
                     TREASURY_ADDRESS,
                     asc,
                     0,
@@ -163,6 +162,16 @@ contract DeployASC is Script {
         );
 
         require(asc.owner() == address(ADMIN_ADDRESS));
+        AnimalSocialClubERC721[5] memory contracts = [
+            AnimalSocialClubERC721(payable(elephantAddress)),
+            AnimalSocialClubERC721(payable(tiger)),
+            AnimalSocialClubERC721(payable(sharkAddress)),
+            AnimalSocialClubERC721(payable(eagle)),
+            AnimalSocialClubERC721(payable(stakeholder))
+        ];
+        for (uint i = 0; i < contracts.length; i++) {
+            require(contracts[i].owner() == address(ADMIN_ADDRESS));
+        }
 
         asc.addToWaitlist(
             TIGER_ID,

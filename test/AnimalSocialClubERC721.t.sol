@@ -167,12 +167,23 @@ contract AnimalSocialClubTest is Test {
                 payable(eagle),
                 payable(stakeholder)
             );
+            AnimalSocialClubERC721[5] memory contracts = [
+                AnimalSocialClubERC721(payable(elephant)),
+                AnimalSocialClubERC721(payable(tiger)),
+                AnimalSocialClubERC721(payable(shark)),
+                AnimalSocialClubERC721(payable(eagle)),
+                AnimalSocialClubERC721(payable(stakeholder))
+            ];
+            for (uint i = 0; i < contracts.length; i++) {
+                require(contracts[i].owner() == address(adminAddress));
+            }
         }
         for (uint256 i = 0; i < waitlistedAddresses.length; i++) {
             asc.addToWaitlist(asc.ELEPHANT_ID(), 0, waitlistedAddresses[i]);
         }
         asc.setKYC(buyer, true);
         asc.setKYC(user, true);
+
         vm.stopPrank();
 
         console.log("asc.elephant.owner(): ", asc.elephant().owner());

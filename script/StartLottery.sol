@@ -40,11 +40,12 @@ contract StartLottery is Script {
         vm.startBroadcast();
 
         asc = ASC721Manager(
-            payable(0xD992580213E98874deb760C7C05903d2dbF8a21a)
+            // payable(0xD992580213E98874deb760C7C05903d2dbF8a21a)
+            payable(0x4F64a1f34F4aF09d0546e7a873BE0f03cD62e1cf)
         );
 
-        vm.deal(address(asc), 1 ether);
-        asc.startLottery{value: 1 ether}();
+        vm.deal(address(asc), 4 ether);
+        asc.startLottery{value: 4 ether}();
 
         vm.stopBroadcast();
     }
