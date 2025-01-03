@@ -16,7 +16,7 @@
 
 
 # base sepolia
-RPC_URL="https://base-sepolia.blockpi.network/v1/rpc/public"
+RPC_URL="${RPC_URL:-https://base-sepolia.blockpi.network/v1/rpc/public}"
 
 # request.network fee proxy on base sepolia (deployed manually)
 FEE_PROXY_ADDRESS="0xA52672A2aC57263d599284a75585Cc7771363A05"
@@ -31,6 +31,7 @@ TESTNET_TREASURY_ADDRESS="$WALLET_ADDRESS"
 forge clean && forge script \
     --private-key $PRIVATE_KEY \
     --rpc-url $RPC_URL \
+    --slow \
     --optimize --optimizer-runs 1000 \
     script/DeployASC.sol:DeployASC  \
     --verify \

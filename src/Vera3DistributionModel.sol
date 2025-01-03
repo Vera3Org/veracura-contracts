@@ -378,6 +378,6 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
         address payable delegate,
         address _msgSender
     ) external virtual {
-        revert("Not implemented here!");
+        revert("Not implemented here, you should override this function!");
     }
 }
