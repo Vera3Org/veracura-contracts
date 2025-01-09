@@ -33,14 +33,34 @@ contract StartLottery is Script {
 
     function run() public {
         vm.startBroadcast();
+        vm.deal(msg.sender, 40 ether);
 
         asc = ASC721Manager(
             // payable(0xD992580213E98874deb760C7C05903d2dbF8a21a)
             payable(0x4F64a1f34F4aF09d0546e7a873BE0f03cD62e1cf)
         );
 
-        vm.deal(address(asc), 4 ether);
-        asc.startLottery{value: 4 ether}();
+        asc.addToLotteryParticipants(
+            0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29
+        );
+        asc.addToLotteryParticipants(
+            0x657376F553814Adb084Cd44C31D418833F0594f8
+        );
+        asc.addToLotteryParticipants(
+            0xA09C4e64826a1483Ee72EE60513EC9cEE49F8F3b
+        );
+        asc.addToLotteryParticipants(
+            0xee3e63892768b9cb54520EB189959140019E0231
+        );
+        asc.addToLotteryParticipants(
+            0x7F7a49334b34B6296CAE4b608d2012eB20fe5cd2
+        );
+        asc.addToLotteryParticipants(
+            0x09D4a3d729B13d1Fadc586D8A5E26FED9F41c43c
+        );
+
+        // asc.startLottery{value: 19160418160817313}();
+        asc.startLottery{value: 0.02 ether}();
 
         vm.stopBroadcast();
     }
