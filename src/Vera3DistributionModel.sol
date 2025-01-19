@@ -289,7 +289,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * @dev Calculates how much is the advocate's share for a given commission value.
      * @param advocate the Advocate's address. Will be used to fetch the upper Ambassador.
      * @param totalCommission the commission to share.
-     * @return Triple `(ambassador, ambassadorShare, advocateShare where): `ambassador` is
+     * @return Triple `(ambassador, ambassadorShare, advocateShare)` where: `ambassador` is
      * the address of the upper Ambassador of this `advocate`, `ambassadorShare` is the amount
      * of coins that the Ambassador gets, and `advocateShare` is the number of coins that the
      * Advocate gets.
@@ -316,10 +316,12 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * @dev Calculates how much is the evangelist's share for a given commission value.
      * @param evangelist the Evangelist's address. Will be used to fetch the upper Advocate.
      * @param totalCommission the commission to share.
-     * @return Triple `(advocate, advocateShare, evangelistShare where): `advocate` is
-     * the address of the upper Advocate of this `evangelist`, `advocateShare` is the amount
-     * of coins that the Advocate gets, and `evangelistShare` is the number of coins that the
-     * Evangelist gets.
+     * @return Quintuple `(ambassador, advocate, ambassadorShare, advocateShare, evangelistShare where):
+     * `ambassador` is the address of the upper ambassador of this evangelist's
+     * advocate, `advocate` is the address of the upper Advocate of this
+     * `evangelist`, `ambassadorShare` is the amount of coin the the Ambassador
+     * gets, `advocateShare` is the amount of coins that the Advocate gets, and
+     * `evangelistShare` is the number of coins that the Evangelist gets.
      */
     function getEvangelistShare(
         address evangelist,
