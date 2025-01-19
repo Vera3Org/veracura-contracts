@@ -33,7 +33,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
         forge verify-contract \
             "$address" \
             src/ASC721Manager.sol:ASC721Manager \
-            --rpc-url $RPC_URL \
+            --rpc-url "$RPC_URL" \
             --guess-constructor-args \
             --optimizer-runs 1000 \
             --verifier=etherscan \
@@ -47,7 +47,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
             "$address" \
             src/AnimalSocialClubERC721.sol:AnimalSocialClubERC721 \
             --guess-constructor-args \
-            --rpc-url $RPC_URL \
+            --rpc-url "$RPC_URL" \
             --optimizer-runs 1000 \
             --verifier=etherscan \
             --verifier-url="$VERIFIER_URL" \
@@ -59,7 +59,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
         forge verify-contract \
             "$address" \
             src/ASCLottery.sol:ASCLottery \
-            --rpc-url $RPC_URL \
+            --rpc-url "$RPC_URL" \
             --guess-constructor-args \
             --optimizer-runs 1000 \
             --verifier=etherscan \
@@ -72,7 +72,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
         forge verify-contract \
             "$address" \
             lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy \
-            --rpc-url $RPC_URL \
+            --rpc-url "$RPC_URL" \
             --guess-constructor-args \
             --optimizer-runs 1000 \
             --verifier=etherscan \
