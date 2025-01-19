@@ -3,11 +3,11 @@
 set -e
 
 # defines ETHERSCAN_API_KEY, RPC_URL
-[ -f .env.testnet ] && source .env.testnet
+[ -f .env.testnet.eth-sepolia ] && source .env.testnet.eth-sepolia
 
-DEPLOYMENTS_FILE=broadcast/DeployASC.sol/84532/run-latest.json
-SOLIDITY_VERSION="v0.8.26+commit.8a97fa7a"
-export VERIFIER_URL="https://api-sepolia.basescan.org/api"
+DEPLOYMENTS_FILE=broadcast/DeployASC.sol/11155111/run-1737316105.json
+#SOLIDITY_VERSION="v0.8.26+commit.8a97fa7a"
+export VERIFIER_URL="https://api-sepolia.etherscan.io/api"
 
 jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
 
@@ -39,7 +39,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
             --verifier=etherscan \
             --verifier-url="$VERIFIER_URL" \
             --verifier-api-key "$ETHERSCAN_API_KEY" \
-            --watch --compiler-version "$SOLIDITY_VERSION"
+            --watch #--compiler-version "$SOLIDITY_VERSION"
         )
     elif [ "$name" = "AnimalSocialClubERC721" ] ; then
         ( set -x
@@ -52,7 +52,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
             --verifier=etherscan \
             --verifier-url="$VERIFIER_URL" \
             --verifier-api-key "$ETHERSCAN_API_KEY" \
-            --watch --compiler-version "$SOLIDITY_VERSION"
+            --watch #--compiler-version "$SOLIDITY_VERSION"
         )
     elif [ "$name" = "ASCLottery" ] ; then
         ( set -x
@@ -65,7 +65,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
             --verifier=etherscan \
             --verifier-url="$VERIFIER_URL" \
             --verifier-api-key "$ETHERSCAN_API_KEY" \
-            --watch --compiler-version "$SOLIDITY_VERSION"
+            --watch #--compiler-version "$SOLIDITY_VERSION"
         )
     elif [ "$name" = "ERC1967Proxy" ] ; then
         ( set -x
@@ -78,7 +78,7 @@ jq -c '.transactions[]' "$DEPLOYMENTS_FILE" | while read -r line ; do
             --verifier=etherscan \
             --verifier-url="$VERIFIER_URL" \
             --verifier-api-key "$ETHERSCAN_API_KEY" \
-            --watch --compiler-version "$SOLIDITY_VERSION"
+            --watch #--compiler-version "$SOLIDITY_VERSION"
         )
     else
         echo WHAT IS "$name"

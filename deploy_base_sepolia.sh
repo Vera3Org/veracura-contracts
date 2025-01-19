@@ -19,14 +19,14 @@
 RPC_URL="${RPC_URL:-https://base-sepolia.blockpi.network/v1/rpc/public}"
 
 # request.network fee proxy on base sepolia (deployed manually)
-FEE_PROXY_ADDRESS="0xA52672A2aC57263d599284a75585Cc7771363A05"
+export ETH_FEE_PROXY_ADDRESS="0xA52672A2aC57263d599284a75585Cc7771363A05"
 
 # taken from https://docs.chain.link/vrf/v2-5/supported-networks#base-sepolia-testnet
-LINK_BASE_SEPOLIA=0xE4aB69C077896252FAFBD49EFD26B5D171A32410
-VRF_WRAPPER_BASE_SEPOLIA=0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed\
+export LINK_ADDRESS=0xE4aB69C077896252FAFBD49EFD26B5D171A32410
+export VRF_WRAPPER_ADDRESS=0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed\
 
 # dummy address corresponding to dummy private key
-TESTNET_TREASURY_ADDRESS="$WALLET_ADDRESS"
+export TESTNET_TREASURY_ADDRESS="$WALLET_ADDRESS"
 
 forge clean && forge script \
     --private-key $PRIVATE_KEY \

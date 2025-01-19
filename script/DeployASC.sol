@@ -17,20 +17,13 @@ import {ASC721Manager} from "../src/ASC721Manager.sol";
 contract DeployASC is Script {
     ASC721Manager public asc;
     address payable public asc_address;
-    address public constant ADMIN_ADDRESS =
-        0x98A5c7E6eb3DEaf7Db34d14d63D46ec5a5A2f775; // dummy CHANGE THIS FOR MAINNET
-    address public constant TREASURY_ADDRESS =
-        0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // dummy CHANGE THIS FOR MAINNET
-
-    address public constant ETH_FEE_PROXY_ADDRESS =
-        0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65; // base sepolia
-    address public constant LINK_ADDRESS =
-        0xE4aB69C077896252FAFBD49EFD26B5D171A32410; // base sepolia
-    address public constant VRF_WRAPPER_ADDRESS =
-        0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed; // base sepolia
-
-    address public constant DUMMY_WAITLISTED_ADDRESS =
-        address(0xe198f322E463510deB487170dD299Df9787f5470);
+    address public ADMIN_ADDRESS = vm.envAddress("ADMIN_ADDRESS");
+    address public TREASURY_ADDRESS = vm.envAddress("TESTNET_TREASURY_ADDRESS");
+    address public ETH_FEE_PROXY_ADDRESS =
+        vm.envAddress("ETH_FEE_PROXY_ADDRESS");
+    address public LINK_ADDRESS = vm.envAddress("LINK_ADDRESS");
+    address public VRF_WRAPPER_ADDRESS = vm.envAddress("VRF_WRAPPER_ADDRESS");
+    address public DUMMY_WAITLISTED_ADDRESS = vm.envAddress("DUMMY_0_ADDRESS");
 
     uint256 public constant ELEPHANT_ID = 0;
     uint256 public constant TIGER_ID = 1;

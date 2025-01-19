@@ -1,15 +1,15 @@
 # You should source this file with "source fn_utils.sh"
 # so that you'll have various utility functions and variables in your shell
 
-source .env.testnet
+source .env.testnet.eth-sepolia
 
-ASC_MANAGER="0x91D9fBa2557aD50766e09B5D4e1ac1431f5d3d09"
-ELEPHANT="0x7115431C0E9615C9A0688F32D0Fa432D61E25434"
-TIGER="0x2F856f40472270360AAA6eE01dF5aAC1E61b0a36"
-SHARK="0x3c5ffa7E5DcF8BE4c7BC676e29d702Ae95D92CC7"
-EAGLE="0xc64943eb6c2b4738A1351C6e896cAC7110021052"
-STAKEHOLDER="0x87257bFfd8f53E6d2fEB42367726B616578d5299"
-LOTTERY="0x33f30863E640E1a3870C0E451c0719aeD3124741"
+ASC_MANAGER="0x6a14b7745dfac89a1fe673d034c2e574d8bf06e4"
+ELEPHANT=0xA6fEbb3d0D63968f54A5EA5B72718fF5fe21022d
+TIGER=0x7294F592448663D169F18704ddc6CC532c27A22f
+SHARK=0x4bB30957d7a9a51545c606e13E2Ef4e98d1bcc40
+EAGLE=0xAfD8255C1abAAbd25F70178be9531da0087424Bc
+STAKEHOLDER=0x83712599317Ea81453C48530db1eAe624885dFa8
+LOTTERY=0xA52672A2aC57263d599284a75585Cc7771363A05
 
 
 
@@ -65,21 +65,21 @@ function cast_lottery() {
 
 function print_names() {
     echo " - manager: $ASC_MANAGER"
-    for x in elephant tiger shark eagle stakeholder lottery ; do 
+    for x in elephant tiger shark eagle stakeholder lottery ; do
         echo " - $x  $(cast_manager call $x'()(address)')"
     done
 }
 
 function print_names_shell() {
     echo "ASC_MANAGER=$ASC_MANAGER"
-    for x in elephant tiger shark eagle stakeholder lottery ; do 
+    for x in elephant tiger shark eagle stakeholder lottery ; do
         echo "$x=$(cast_manager call $x'()(address)')"
     done
 }
 
-function print_names_blockscout() {
-    echo " - manager: https://base-sepolia.blockscout.com/address/$ASC_MANAGER"
-    for x in elephant tiger shark eagle stakeholder lottery ; do 
-        echo " - $x  https://base-sepolia.blockscout.com/address/$(cast_manager call $x'()(address)')"
+function print_names_etherscan() {
+    echo " - manager: https://sepolia.etherscan.io/address/$ASC_MANAGER"
+    for x in elephant tiger shark eagle stakeholder lottery ; do
+        echo " - $x  https://sepolia.etherscan.io/address/$(cast_manager call $x'()(address)')"
     done
 }
