@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # defines PRIVATE_KEY
-[ -f .env.testnet ] && source .env.testnet
+[ -f .env.testnet.base ] && source .env.testnet.base
 
 ([ -z "$PRIVATE_KEY" ] || [ -z "$WALLET_ADDRESS" ] ) && {
     echo 'No variable PRIVATE_KEY or WALLET_ADDRESS in the environment.'
@@ -35,7 +35,7 @@ forge clean && forge script \
     --optimize --optimizer-runs 1000 \
     script/DeployASC.sol:DeployASC  \
     --verify \
-    --verifier=blockscout \
-    --verifier-url="https://base-sepolia.blockscout.com/api" \
+    --verifier=etherscan \
+    --verifier-url="https://sepolia.basescan.org/api" \
     --etherscan-api-key "$ETHERSCAN_API_KEY" \
-    --broadcast $@
+    $@
