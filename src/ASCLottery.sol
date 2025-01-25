@@ -71,7 +71,12 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
     {
         // require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
         // require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
-
+        require(
+            _linkAddress != address(0) &&
+            _VrfWrapperAddress != address(0) &&
+            _treasuryAddress != address(0) ,
+            "null address"
+        );
         linkAddress = _linkAddress;
         wrapperAddress = _VrfWrapperAddress;
         treasuryAddress = _treasuryAddress;
