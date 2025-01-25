@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
-
-import {console} from "forge-std/console.sol";
-// import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {AccessControlDefaultAdminRulesUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
@@ -481,10 +477,6 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
     function startLottery() external payable onlyRole(ADMIN_ROLE) returns (uint256) {
         return lottery.requestRandomWords{value: msg.value}(true);
-    }
-
-    function startTigerAuction() external onlyRole(ADMIN_ROLE) {
-        tiger.startAuction();
     }
 
     event Received(address, uint256);

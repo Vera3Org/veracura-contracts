@@ -125,7 +125,7 @@ contract AnimalSocialClubERC721 is
         manager = ASC721Manager(_manager);
         NUMBER_RESERVED = num_reserved;
         TIER_ID = tier_id;
-        auctionEndTime = type(uint256).max;
+        // auctionEndTime = type(uint256).max;
         saleActive = true;
     }
 
@@ -249,103 +249,6 @@ contract AnimalSocialClubERC721 is
     // Function to ensure contract can receive Ether
     receive() external payable {}
 
-    /////////////////////////////////////////////////////////////////
-    ///////// TIGER Auction things
-    /////////////////////////////////////////////////////////////////
-
-    modifier onlyTiger() {
-        require(TIER_ID == manager.TIGER_ID(), "Only tiger supports this");
-        _;
-    }
-
-    // /// @dev keys are token IDs, values are address & amount of current highest bidder
-    // address[] public highestBidder;
-
-    struct Bid {
-        address _address;
-        uint256 amount;
-    }
-    /// @dev keys are token IDs, values are the current highest bidder and bid value.
-
-    mapping(uint256 => Bid) public highestBid;
-
-    // track auction start & end
-    bool public auctionStarted;
-    bool public auctionEnded;
-    uint256 public auctionEndTime;
-
-    uint256 public constant startingPrice = 2 ether;
-    // minimum step to increment highest bid
-    uint256 public constant minBidIncrement = 0.1 ether;
-
-    /**
-     * @dev function used by admin to start the auction for this contract's reserved tokens.
-     */
-    function startAuction() external onlyOwnerAndManager onlyTiger {
-        require(!auctionStarted, "Auction already started");
-        require(!auctionEnded && block.timestamp <= auctionEndTime, "Auction already ended");
-        auctionEndTime = block.timestamp + 7 days; // Auction duration is 7 days
-        auctionStarted = true;
-    }
-
-    /**
-     * @dev Place bid on a certain reserved token.
-     * Bid is included in `msg.value`.
-     * If higher than current highest bid + `minbidIncrement`,
-     * then `msg.sender` becomes the new highest bidder, and the previous
-     * bid value is transfered back to the previous user.
-     */
-    function placeBid(uint256 tokenId) external payable nonReentrant onlyTiger {
-        require(tokenId < MAX_TOKEN_SUPPLY, "tokenId is too high");
-        require(tokenId > MAX_TOKEN_SUPPLY - NUMBER_RESERVED, "tokenId is too low");
-        require(auctionStarted, "Auction not yet started");
-        require(!auctionEnded && block.timestamp <= auctionEndTime, "Auction already ended");
-        require(msg.value > highestBid[tokenId].amount + minBidIncrement, "Bid must be higher than current highest bid");
-        require(msg.value >= startingPrice, "Bid must be at least the starting price");
-        Bid memory oldBid = highestBid[tokenId];
-        // address oldHighestBidder = highestBidder[tokenId];
-        // uint256 oldHighestBid = highestBid[tokenId];
-        bool shouldRefund = oldBid._address != address(0);
-
-        // highestBidder[tokenId] = msg.sender;
-        {
-            Bid memory newBid;
-            newBid._address = msg.sender;
-            newBid.amount = msg.value;
-            highestBid[tokenId] = newBid;
-        }
-
-        if (shouldRefund) {
-            // Refund the previous highest bidder
-            payable(oldBid._address).transfer(oldBid.amount);
-        }
-    }
-
-    function endAuction(uint256 i) external nonReentrant onlyOwnerAndManager onlyTiger {
-        require(i < MAX_TOKEN_SUPPLY, "Invalid card ID");
-        require(auctionStarted, "Auction not yet started");
-        require(!auctionEnded, "Auction already ended");
-        require(block.timestamp >= auctionEndTime, "Auction end time not reached yet");
-        // Mark auction as ended
-        auctionEnded = true;
-
-        // Mint Super VIP NFTs to the highest bidder
-        _safeMint(highestBid[i]._address, i);
-    }
-
-    // Allow the contract owner to withdraw the highest bid after the auction ends
-    function withdrawHighestBid(uint256 i) external nonReentrant onlyOwnerAndManager onlyTiger {
-        require(i < MAX_TOKEN_SUPPLY, "Invalid i");
-        require(auctionStarted, "Auction not yet started");
-        require(auctionEnded, "Auction has not ended yet");
-        require(block.timestamp >= auctionEndTime, "Auction end time not reached yet");
-        require(highestBid[i]._address != address(0), "No bids received");
-
-        uint256 amount = highestBid[i].amount;
-        highestBid[i].amount = 0;
-        highestBid[i]._address = address(0);
-        payable(owner()).transfer(amount);
-    }
 
     //////////////////////////////////////////////////////////////
     /////// WAITLIST
