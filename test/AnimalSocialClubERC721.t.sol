@@ -32,9 +32,9 @@ contract AnimalSocialClubTest is Test {
         [address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f), address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720)];
     uint256[] public waitlistedIDs = [1, 2];
 
-    address public constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-    address public constant VRF_WRAPPER_ADDRESS = 0x195f15F2d49d693cE265b4fB0fdDbE15b1850Cc1;
-    address public constant ETH_FEE_PROXY_ADDRESS =0xe11BF2fDA23bF0A98365e1A4c04A87C9339e8687;
+    address public constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789; // eth sepolia
+    address public constant VRF_WRAPPER_ADDRESS = 0x195f15F2d49d693cE265b4fB0fdDbE15b1850Cc1; // eth sepolia
+    address public constant ETH_FEE_PROXY_ADDRESS =0xe11BF2fDA23bF0A98365e1A4c04A87C9339e8687; // eth sepolia
 
 
     function setUp() public {
