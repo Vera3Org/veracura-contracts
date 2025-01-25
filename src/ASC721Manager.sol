@@ -185,25 +185,33 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         lottery.addToParticipants(it);
     }
 
+    event SetEarlyBacker(address backer, bool newState, bool oldState);
     /**
      * @dev adds or removes an address to the isEarlyBacker and earlyBackers variables.
      * Admin only.
      * @param it The address to be altered
      * @param _is true means that the user is added, false means the user is removed
      */
+
     function setEarlyBacker(address it, bool _is) external onlyRole(ADMIN_ROLE) {
+        require(isEarlyBacker[it] = !_is, "address is already in the desired state");
         isEarlyBacker[it] = _is;
         if (_is) {
             earlyBackers.push(it);
+            emit SetEarlyBacker(it, _is, false);
+            return;
         } else {
             // remove `it` from the list
             for (uint256 i = 0; i < earlyBackers.length; i++) {
                 if (earlyBackers[i] == it) {
                     earlyBackers[i] = earlyBackers[earlyBackers.length];
                     earlyBackers.pop();
+                    emit SetEarlyBacker(it, _is, true);
+                    return;
                 }
             }
         }
+        emit SetEarlyBacker(it, _is, false);
     }
 
     /**
