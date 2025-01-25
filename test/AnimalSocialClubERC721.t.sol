@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
+
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 import "forge-std/Test.sol";
 import "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFV2PlusWrapper.sol";
 import "forge-std/console.sol";
-import "src/ASC721Manager.sol";
-import "src/ASCLottery.sol";
-import "../src/AnimalSocialClubERC721.sol";
-import "../src/DummyEthFeeProxy.sol";
+
+
+import {ASC721Manager} from "src/ASC721Manager.sol";
+import {ASCLottery} from "src/ASCLottery.sol";
+import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
+import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
+import "src/DummyEthFeeProxy.sol";
 
 contract AnimalSocialClubTest is Test {
     ASC721Manager public asc;
@@ -27,11 +32,10 @@ contract AnimalSocialClubTest is Test {
         [address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f), address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720)];
     uint256[] public waitlistedIDs = [1, 2];
 
-    address public constant LINK_BASE_MAINNET = 0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196;
-    address public constant VRF_WRAPPER_BASE_MAINNET = 0xb0407dbe851f8318bd31404A49e658143C982F23;
+    address public constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
+    address public constant VRF_WRAPPER_ADDRESS = 0x195f15F2d49d693cE265b4fB0fdDbE15b1850Cc1;
+    address public constant ETH_FEE_PROXY_ADDRESS =0xe11BF2fDA23bF0A98365e1A4c04A87C9339e8687;
 
-    address public constant LINK_BASE_SEPOLIA = 0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
-    address public constant VRF_WRAPPER_BASE_SEPOLIA = 0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
 
     function setUp() public {
         ambassador = vm.addr(1);
@@ -39,18 +43,22 @@ contract AnimalSocialClubTest is Test {
         evangelist = vm.addr(3);
         buyer = vm.addr(4);
         // ethFeeProxy = address(0xA52672A2aC57263d599284a75585Cc7771363A05); // base sepolia testnet address
-        ethFeeProxy = new EthereumFeeProxy();
+        ethFeeProxy = EthereumFeeProxy(payable(ETH_FEE_PROXY_ADDRESS)); // eth sepolia testnet address
+        console.log("ethfeeproxy deployed.");
 
         vm.startPrank(adminAddress);
-        lottery = new ASCLottery(LINK_BASE_SEPOLIA, VRF_WRAPPER_BASE_SEPOLIA, treasuryAddress);
+        lottery = new ASCLottery(LINK_ADDRESS, VRF_WRAPPER_ADDRESS, treasuryAddress);
+        console.log("lottery deployed.");
 
         address payable asc_address = payable(
             Upgrades.deployUUPSProxy(
                 "ASC721Manager.sol", abi.encodeCall(ASC721Manager.initialize, (treasuryAddress, address(lottery)))
             )
         );
+        console.log("manager deployed.");
         asc = ASC721Manager(asc_address);
         lottery.transferOwnership(address(asc));
+        console.log("ownership transfered");
         {
             address elephant = Upgrades.deployUUPSProxy(
                 "AnimalSocialClubERC721.sol",
@@ -405,7 +413,8 @@ contract AnimalSocialClubTest is Test {
     function testLottery() public {
         vm.deal(adminAddress, 100 ether);
         vm.startPrank(adminAddress);
-        asc.startLottery{value: 1 ether}();
+        uint256 requestId = asc.startLottery{value: 1 ether}();
+        console.log("lottery started");
         vm.stopPrank();
     }
 }

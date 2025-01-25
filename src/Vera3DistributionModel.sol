@@ -95,7 +95,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
     IEthereumFeeProxy public ETHEREUM_FEE_PROXY;
 
     // Events for role assignment and commission updates
-    event RoleAssigned(address indexed user, Role role);
+    event RoleAssigned(address indexed user, Role indexed role, address indexed delegate, address _msgSender);
     event AmbassadorCommissionSet(uint256 commission_pct);
     event AdvocateCommissionSet(uint256 commission_pct);
 
@@ -159,6 +159,14 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
         return amt / 10;
     }
 
+    event CommissionSent(
+        address ambassador,
+        uint256 ambassadorAmount,
+        address advocate,
+        uint256 advocateAmount,
+        address evangelist,
+        uint256 evangelistAmount
+    );
     /**
      * @dev given a referrer, calculates how much needs to be sent to promoters, if any, and sends it.
      * @param referrer the referred promoter, or address(0) if none.
@@ -169,6 +177,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * @param evangelistReference RequestNetwork payment reference of the referred promoter, or address(0) if none.
      *        Unused if `referrer` is none, Ambassador or Advocate.
      */
+
     function sendCommission(
         address referrer,
         bytes calldata ambassadorReference,
@@ -188,6 +197,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: calculateCommission(msg.value)}(
                 payable(ambassador), ambassadorReference, 0, payable(address(0))
             );
+            emit CommissionSent(ambassador, msg.value, address(0), 0, address(0), 0);
 
             return;
         } else if (roles[referrer] == Role.Advocate) {
@@ -206,6 +216,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: advocateShare}(
                 payable(advocate), advocateReference, 0, payable(address(0))
             );
+            emit CommissionSent(ambassador, ambassadorShare, advocate, advocateShare, address(0), 0);
             return;
         } else if (roles[referrer] == Role.Evangelist) {
             address evangelist = referrer;
@@ -226,6 +237,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: evangelistShare}(
                 payable(evangelist), evangelistReference, 0, payable(address(0))
             );
+            emit CommissionSent(ambassador, ambassadorShare, advocate, advocateShare, evangelist, evangelistShare);
             return;
         } else {
             revert("referrer role is None!!");

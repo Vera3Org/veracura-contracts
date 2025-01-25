@@ -11,7 +11,6 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {AccessControlDefaultAdminRulesUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
 // import {AccessControlEnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRules.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
@@ -177,12 +176,15 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         require(_grantRole(NFT_ROLE, _stakeholder), "could not grant role");
     }
 
+    event AddedToLotteryParticipants(address participant);
     /**
      * @dev can only be called by a contract in `contracts`. Adds the address
      * `it` to the list of participants.
      */
+
     function addToLotteryParticipants(address it) public onlyRole(NFT_ROLE) {
         lottery.addToParticipants(it);
+        emit AddedToLotteryParticipants(it);
     }
 
     event SetEarlyBacker(address backer, bool newState, bool oldState);
@@ -214,12 +216,14 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         emit SetEarlyBacker(it, _is, false);
     }
 
+    event MintedPackFrenFrog(address dest);
     /**
      * @dev mints 10 elephants and 2 sharks to an early backer.
      * Payment is made outside of contract.
      * Admin only.
      * @param dest the receiving address of NFTs
      */
+
     function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
         require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 10 elephants, 2 sharks
@@ -229,14 +233,17 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
 
         shark.adminMint(dest);
         shark.adminMint(dest);
+        emit MintedPackFrenFrog(dest);
     }
 
+    event MintedPackCryptoTucan(address dest);
     /**
      * @dev mints 25 elephants, 2 sharks, 1 eagle to early backer.
      * Payment is made outside of contract.
      * Admin only.
      * @param dest the receiving address of NFTs
      */
+
     function adminPackCryptoTucan(address dest) external onlyRole(ADMIN_ROLE) {
         require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 25 elephants, 2 sharks, 1 eagle
@@ -248,14 +255,17 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         shark.adminMint(dest);
 
         eagle.adminMint(dest);
+        emit MintedPackCryptoTucan(dest);
     }
 
+    event MintedPackJaguareth(address dest);
     /**
      * @dev mints 75 elephants, 9 sharks, 3 eagle to early backer.
      * Payment is made outside of contract.
      * Admin only.
      * @param dest the receiving address of NFTs
      */
+
     function adminPackJaguareth(address dest) external onlyRole(ADMIN_ROLE) {
         require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 75 elephants, 9 sharks, 3 eagle
@@ -268,14 +278,17 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         eagle.adminMint(dest);
         eagle.adminMint(dest);
         eagle.adminMint(dest);
+        emit MintedPackJaguareth(dest);
     }
 
+    event MintedPackWhale(address dest);
     /**
      * @dev mints 150 elephants, 16 sharks, 7 eagle to early backer.
      * Payment is made outside of contract.
      * Admin only.
      * @param dest the receiving address of NFTs
      */
+
     function adminPackWhale(address dest) external onlyRole(ADMIN_ROLE) {
         require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 150 elephants, 16 sharks, 7 eagle
@@ -288,13 +301,17 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         for (uint256 i = 0; i < 7; i++) {
             eagle.adminMint(dest);
         }
+        emit MintedPackWhale(dest);
     }
 
+    event OperatorChanged(address dest);
     /**
      * @dev grants the OPERATOR role to an address.
      */
+
     function setOperator(address a) public onlyRole(ADMIN_ROLE) {
         require(_grantRole(OPERATOR_ROLE, a), "role not granted");
+        emit OperatorChanged(a);
     }
 
     /**
@@ -302,6 +319,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
     function removeOperator(address a) public onlyRole(ADMIN_ROLE) {
         revokeRole(OPERATOR_ROLE, a);
+        emit OperatorChanged(address(0));
     }
 
     /**
@@ -313,6 +331,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         return _hasKYC[a];
     }
 
+    event SetKyc(address a, bool val);
     /**
      * @dev marks an address as having completed the KYC procedure.
      * @param a the address to alter
@@ -320,6 +339,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
     function setKYC(address a, bool val) public onlyRole(OPERATOR_ROLE) {
         _hasKYC[a] = val;
+        emit SetKyc(a, val);
     }
 
     /**
@@ -359,6 +379,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         }
     }
 
+    event AdminMinted(address to, uint256 tier, address donor);
     /**
      * @dev function for the admin to call a sub-contract's `adminMint`
      * function. See `AnimalSocialClubERC721.adminMint`.
@@ -369,10 +390,12 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     function adminMint(address to, uint256 tier) external nonReentrant onlyRole(ADMIN_ROLE) {
         require(tier < contracts.length);
         AnimalSocialClubERC721(contracts[tier]).adminMint(to);
+        emit AdminMinted(to, tier, msg.sender);
     }
 
     // each of these methods will call the corresponding one on each erc721 contract
 
+    event RoleAssigned(address upper, Vera3DistributionModel.Role role, address delegate);
     /**
      * @dev calls  `AnimalSocialClubERC721.assignRole` on each sub-contract.
      * See that function.
@@ -383,6 +406,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
             // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).assignRole(upper, role, delegate, msg.sender);
         }
+        emit RoleAssigned(upper, role, delegate);
     }
 
     /**

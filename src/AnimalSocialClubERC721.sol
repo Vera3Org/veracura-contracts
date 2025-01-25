@@ -83,6 +83,17 @@ contract AnimalSocialClubERC721 is
     // Events
     event SaleStateChanged(bool active);
 
+    event Initialized(
+        uint256 tier_id,
+        uint256 _totalSupply,
+        uint256 _mint_price,
+        address _adminAddress,
+        address _treasuryAddress,
+        ASC721Manager _manager,
+        uint256 num_reserved,
+        address ethFeeProxy
+    );
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -155,12 +166,14 @@ contract AnimalSocialClubERC721 is
         return manager.isMember(a);
     }
 
+    event AdminMinted(address to);
     /**
      * @dev function for the admin to mint a membership to `to`.
      * Payment is made off-chain.
      * @dev requires that `saleActive` is true. See `setSaleActive`.
      * @param to the destination address
      */
+
     function adminMint(address to) external nonReentrant isSaleActive onlyOwnerAndManager {
         // it's on the admin to add kyc or kyb
         require(manager.hasKYC(to), "Destination address without KYC!");
@@ -171,7 +184,10 @@ contract AnimalSocialClubERC721 is
 
         // Mint the NFTs to the buyer
         _safeMint(to, totalSupply());
+        emit AdminMinted(to);
     }
+
+    event MintedWithDonation(uint256 token_id, address to, address referrer, address donor);
 
     /**
      * @dev Main function to mint a membership NFT to a KYC'd address.
@@ -206,12 +222,14 @@ contract AnimalSocialClubERC721 is
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        _safeMint(to, totalSupply());
+        uint256 token_id = totalSupply();
+        _safeMint(to, token_id);
 
         ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
             payable(manager.treasuryAddress()), donorReference, 0, payable(address(0))
         );
         sendCommission(referrer, ambassadorReference, advocateReference, evangelistReference);
+        emit MintedWithDonation(token_id, to, referrer, msg.sender);
     }
 
     /**
@@ -450,6 +468,6 @@ contract AnimalSocialClubERC721 is
         }
         require(isAuthorized, "user not authorized");
         roles[delegate] = role;
-        emit RoleAssigned(delegator, role);
+        emit RoleAssigned(delegator, role, delegate, _msgSender);
     }
 }

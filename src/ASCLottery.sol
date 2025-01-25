@@ -2,12 +2,12 @@
 pragma solidity ^0.8.26;
 
 import {console} from "forge-std/console.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "src/AnimalSocialClubERC721.sol";
-import "src/Vera3DistributionModel.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
+import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
 
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import {VRFV2PlusWrapperConsumerBase} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFV2PlusWrapperConsumerBase.sol";
