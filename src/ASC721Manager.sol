@@ -190,7 +190,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * `it` to the list of participants.
      */
 
-    function addToLotteryParticipants(address it) public onlyRole(NFT_ROLE) {
+    function addToLotteryParticipants(address it) external onlyRole(NFT_ROLE) {
         lottery.addToParticipants(it);
         emit AddedToLotteryParticipants(it);
     }
