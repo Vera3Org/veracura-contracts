@@ -36,47 +36,59 @@ contract StartLottery is Script {
     function setUp() public {}
 
     function run() public {
-        vm.startBroadcast();
-        vm.deal(msg.sender, 40 ether);
+        vm.deal(ADMIN_ADDRESS, 40 ether);
+        vm.startBroadcast(ADMIN_ADDRESS);
 
         asc = ASC721Manager(
             // payable(0xD992580213E98874deb760C7C05903d2dbF8a21a)
-            payable(0x6a14b7745dfac89a1fe673d034c2e574d8bf06e4) // asc on eth sepolia
+            payable(0x6a14b7745DfAC89A1fE673D034c2E574D8BF06E4) // asc on eth sepolia
         );
 
-        asc.addToLotteryParticipants(
-            0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29
+        asc.setKYC(0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29, true);
+        asc.setKYC(0x657376F553814Adb084Cd44C31D418833F0594f8, true);
+        asc.setKYC(0xA09C4e64826a1483Ee72EE60513EC9cEE49F8F3b, true);
+        asc.setKYC(0xee3e63892768b9cb54520EB189959140019E0231, true);
+        asc.setKYC(0x7F7a49334b34B6296CAE4b608d2012eB20fe5cd2, true);
+        asc.setKYC(0x09D4a3d729B13d1Fadc586D8A5E26FED9F41c43c, true);
+        asc.setKYC(0x0FdF2350397a2a0fb2Eb5FfD4ae0d128779B02f9, true);
+        asc.setKYC(0x52FEe296d49672c904170858066Ecc5E9908B7ab, true);
+        asc.setKYC(0x0052b3d9519B4A45d796A9513Dcf34E6577D0a03, true);
+        asc.setKYC(0xc5fF763d5f545a2eB84A253A986678f02E055e23, true);
+
+
+        asc.adminMint(
+            0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29, asc.ELEPHANT_ID()
         );
-        asc.addToLotteryParticipants(
-            0x657376F553814Adb084Cd44C31D418833F0594f8
+        asc.adminMint(
+            0x657376F553814Adb084Cd44C31D418833F0594f8, asc.ELEPHANT_ID()
         );
-        asc.addToLotteryParticipants(
-            0xA09C4e64826a1483Ee72EE60513EC9cEE49F8F3b
+        asc.adminMint(
+            0xA09C4e64826a1483Ee72EE60513EC9cEE49F8F3b, asc.ELEPHANT_ID()
         );
-        asc.addToLotteryParticipants(
-            0xee3e63892768b9cb54520EB189959140019E0231
+        asc.adminMint(
+            0xee3e63892768b9cb54520EB189959140019E0231, asc.ELEPHANT_ID()
         );
-        asc.addToLotteryParticipants(
-            0x7F7a49334b34B6296CAE4b608d2012eB20fe5cd2
+        asc.adminMint(
+            0x7F7a49334b34B6296CAE4b608d2012eB20fe5cd2, asc.ELEPHANT_ID()
         );
-        asc.addToLotteryParticipants(
-            0x09D4a3d729B13d1Fadc586D8A5E26FED9F41c43c
+        asc.adminMint(
+            0x09D4a3d729B13d1Fadc586D8A5E26FED9F41c43c, asc.ELEPHANT_ID()
         );
 
-        asc.addToLotteryParticipants(
-            0x0fdf2350397a2a0fb2eb5ffd4ae0d128779b02f9
+        asc.adminMint(
+            0x0FdF2350397a2a0fb2Eb5FfD4ae0d128779B02f9, asc.ELEPHANT_ID()
         );
 
-        asc.addToLotteryParticipants(
-            0x52fee296d49672c904170858066ecc5e9908b7ab
+        asc.adminMint(
+            0x52FEe296d49672c904170858066Ecc5E9908B7ab, asc.ELEPHANT_ID()
         );
 
-        asc.addToLotteryParticipants(
-            0x0052b3d9519b4a45d796a9513dcf34e6577d0a03
+        asc.adminMint(
+            0x0052b3d9519B4A45d796A9513Dcf34E6577D0a03, asc.ELEPHANT_ID()
         );
 
-        asc.addToLotteryParticipants(
-            0xc5ff763d5f545a2eb84a253a986678f02e055e23
+        asc.adminMint(
+            0xc5fF763d5f545a2eB84A253A986678f02E055e23, asc.ELEPHANT_ID()
         );
 
         asc.startLottery{value: 0.02 ether}();
