@@ -17,11 +17,7 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     event RequestSent(uint256 requestId, uint32 numWords);
-    event RequestFulfilled(
-        uint256 requestId,
-        uint256[] randomWords,
-        uint256 payment
-    );
+    event RequestFulfilled(uint256 requestId, uint256[] randomWords, uint256 payment);
 
     struct RequestStatus {
         uint256 paid; // amount paid in link
@@ -29,8 +25,7 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
         uint256[] randomWords;
     }
 
-    mapping(uint256 => RequestStatus)
-        public s_requests; /* requestId --> requestStatus */
+    mapping(uint256 => RequestStatus) public s_requests; /* requestId --> requestStatus */
 
     // past requests Id.
     uint256[] public requestIds;
@@ -70,11 +65,10 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
 
     address public immutable treasuryAddress;
 
-    constructor(
-        address _linkAddress,
-        address _VrfWrapperAddress,
-        address _treasuryAddress
-    ) VRFV2PlusWrapperConsumerBase(_VrfWrapperAddress) Ownable(msg.sender) {
+    constructor(address _linkAddress, address _VrfWrapperAddress, address _treasuryAddress)
+        VRFV2PlusWrapperConsumerBase(_VrfWrapperAddress)
+        Ownable(msg.sender)
+    {
         // require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
         // require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
 
@@ -88,56 +82,30 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
         lotteryParticipants.add(it);
     }
 
-    function requestRandomWords(
-        bool enableNativePayment
-    ) external payable onlyOwner returns (uint256) {
-        bytes memory extraArgs = VRFV2PlusClient._argsToBytes(
-            VRFV2PlusClient.ExtraArgsV1({nativePayment: enableNativePayment})
-        );
+    function requestRandomWords(bool enableNativePayment) external payable onlyOwner returns (uint256) {
+        bytes memory extraArgs =
+            VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: enableNativePayment}));
         uint256 requestId;
         uint256 reqPrice;
         if (enableNativePayment) {
-            (requestId, reqPrice) = requestRandomnessPayInNative(
-                callbackGasLimit,
-                requestConfirmations,
-                numWords,
-                extraArgs
-            );
+            (requestId, reqPrice) =
+                requestRandomnessPayInNative(callbackGasLimit, requestConfirmations, numWords, extraArgs);
         } else {
-            (requestId, reqPrice) = requestRandomness(
-                callbackGasLimit,
-                requestConfirmations,
-                numWords,
-                extraArgs
-            );
+            (requestId, reqPrice) = requestRandomness(callbackGasLimit, requestConfirmations, numWords, extraArgs);
         }
-        s_requests[requestId] = RequestStatus({
-            paid: reqPrice,
-            randomWords: new uint256[](0),
-            fulfilled: false
-        });
+        s_requests[requestId] = RequestStatus({paid: reqPrice, randomWords: new uint256[](0), fulfilled: false});
         requestIds.push(requestId);
         lastRequestId = requestId;
         emit RequestSent(requestId, numWords);
         return requestId;
     }
 
-    function fulfillRandomWords(
-        uint256 _requestId,
-        uint256[] memory _randomWords
-    ) internal override {
+    function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
         require(s_requests[_requestId].paid > 0, "request not found");
-        require(
-            _randomWords.length >= 10,
-            "Need enough randomness to choose 10 winners"
-        );
+        require(_randomWords.length >= 10, "Need enough randomness to choose 10 winners");
         s_requests[_requestId].fulfilled = true;
         s_requests[_requestId].randomWords = _randomWords;
-        emit RequestFulfilled(
-            _requestId,
-            _randomWords,
-            s_requests[_requestId].paid
-        );
+        emit RequestFulfilled(_requestId, _randomWords, s_requests[_requestId].paid);
         uint16[] memory randomNumbers = splitUint256ToUint16(_randomWords);
         // First thing: extract the one tiger NFT winner
         {
@@ -153,9 +121,7 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
         }
     }
 
-    function getRequestStatus(
-        uint256 _requestId
-    )
+    function getRequestStatus(uint256 _requestId)
         external
         view
         returns (uint256 paid, bool fulfilled, uint256[] memory randomWords)
@@ -170,23 +136,18 @@ contract ASCLottery is VRFV2PlusWrapperConsumerBase, Ownable {
      */
     function withdrawLink() public onlyOwner {
         LinkTokenInterface link = LinkTokenInterface(linkAddress);
-        require(
-            link.transfer(msg.sender, link.balanceOf(address(this))),
-            "Unable to transfer"
-        );
+        require(link.transfer(msg.sender, link.balanceOf(address(this))), "Unable to transfer");
     }
 
     /// @notice withdrawNative withdraws the amount specified in amount to the treasury
     /// @param amount the amount to withdraw, in wei
     function withdrawNative(uint256 amount) external onlyOwner {
-        (bool success, ) = payable(treasuryAddress).call{value: amount}("");
+        (bool success,) = payable(treasuryAddress).call{value: amount}("");
         // solhint-disable-next-line gas-custom-errors
         require(success, "withdrawNative failed");
     }
 
-    function splitUint256ToUint16(
-        uint256[] memory input
-    ) public pure returns (uint16[] memory) {
+    function splitUint256ToUint16(uint256[] memory input) public pure returns (uint16[] memory) {
         uint16[] memory output = new uint16[](input.length * 16);
         for (uint256 i = 0; i < input.length; i++) {
             uint256 value = input[i];

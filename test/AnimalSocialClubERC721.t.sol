@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../src/AnimalSocialClubERC721.sol";
+import "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFV2PlusWrapper.sol";
 import "forge-std/console.sol";
 import "src/ASC721Manager.sol";
 import "src/ASCLottery.sol";
+import "../src/AnimalSocialClubERC721.sol";
 import "../src/DummyEthFeeProxy.sol";
-import "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFV2PlusWrapper.sol";
 
 contract AnimalSocialClubTest is Test {
     ASC721Manager public asc;
@@ -23,21 +23,15 @@ contract AnimalSocialClubTest is Test {
     address buyer;
     EthereumFeeProxy ethFeeProxy;
 
-    address[] public waitlistedAddresses = [
-        address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f),
-        address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720)
-    ];
+    address[] public waitlistedAddresses =
+        [address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f), address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720)];
     uint256[] public waitlistedIDs = [1, 2];
 
-    address public constant LINK_BASE_MAINNET =
-        0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196;
-    address public constant VRF_WRAPPER_BASE_MAINNET =
-        0xb0407dbe851f8318bd31404A49e658143C982F23;
+    address public constant LINK_BASE_MAINNET = 0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196;
+    address public constant VRF_WRAPPER_BASE_MAINNET = 0xb0407dbe851f8318bd31404A49e658143C982F23;
 
-    address public constant LINK_BASE_SEPOLIA =
-        0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
-    address public constant VRF_WRAPPER_BASE_SEPOLIA =
-        0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
+    address public constant LINK_BASE_SEPOLIA = 0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
+    address public constant VRF_WRAPPER_BASE_SEPOLIA = 0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
 
     function setUp() public {
         ambassador = vm.addr(1);
@@ -48,19 +42,11 @@ contract AnimalSocialClubTest is Test {
         ethFeeProxy = new EthereumFeeProxy();
 
         vm.startPrank(adminAddress);
-        lottery = new ASCLottery(
-            LINK_BASE_SEPOLIA,
-            VRF_WRAPPER_BASE_SEPOLIA,
-            treasuryAddress
-        );
+        lottery = new ASCLottery(LINK_BASE_SEPOLIA, VRF_WRAPPER_BASE_SEPOLIA, treasuryAddress);
 
         address payable asc_address = payable(
             Upgrades.deployUUPSProxy(
-                "ASC721Manager.sol",
-                abi.encodeCall(
-                    ASC721Manager.initialize,
-                    (treasuryAddress, address(lottery))
-                )
+                "ASC721Manager.sol", abi.encodeCall(ASC721Manager.initialize, (treasuryAddress, address(lottery)))
             )
         );
         asc = ASC721Manager(asc_address);
@@ -160,13 +146,7 @@ contract AnimalSocialClubTest is Test {
                 )
             );
 
-            asc.assignContracts(
-                payable(elephant),
-                payable(tiger),
-                payable(shark),
-                payable(eagle),
-                payable(stakeholder)
-            );
+            asc.assignContracts(payable(elephant), payable(tiger), payable(shark), payable(eagle), payable(stakeholder));
             AnimalSocialClubERC721[5] memory contracts = [
                 AnimalSocialClubERC721(payable(elephant)),
                 AnimalSocialClubERC721(payable(tiger)),
@@ -174,7 +154,7 @@ contract AnimalSocialClubTest is Test {
                 AnimalSocialClubERC721(payable(eagle)),
                 AnimalSocialClubERC721(payable(stakeholder))
             ];
-            for (uint i = 0; i < contracts.length; i++) {
+            for (uint256 i = 0; i < contracts.length; i++) {
                 require(contracts[i].owner() == address(adminAddress));
             }
         }
@@ -189,21 +169,9 @@ contract AnimalSocialClubTest is Test {
         console.log("asc.elephant.owner(): ", asc.elephant().owner());
         // Assign roles
         vm.startPrank(adminAddress);
-        asc.assignRole(
-            payable(address(0)),
-            Vera3DistributionModel.Role.Ambassador,
-            payable(ambassador)
-        );
-        asc.assignRole(
-            payable(ambassador),
-            Vera3DistributionModel.Role.Advocate,
-            payable(advocate)
-        );
-        asc.assignRole(
-            payable(advocate),
-            Vera3DistributionModel.Role.Evangelist,
-            payable(evangelist)
-        );
+        asc.assignRole(payable(address(0)), Vera3DistributionModel.Role.Ambassador, payable(ambassador));
+        asc.assignRole(payable(ambassador), Vera3DistributionModel.Role.Advocate, payable(advocate));
+        asc.assignRole(payable(advocate), Vera3DistributionModel.Role.Evangelist, payable(evangelist));
 
         // Set commissions
         // asc.setAmbassadorToAdvocateCommission(ambassador, 50); // 50% for this Ambassador
@@ -240,20 +208,10 @@ contract AnimalSocialClubTest is Test {
         }
         vm.stopPrank();
 
-        howMany = howMany >= membership.MAX_TOKEN_SUPPLY()
-            ? membership.MAX_TOKEN_SUPPLY()
-            : howMany;
+        howMany = howMany >= membership.MAX_TOKEN_SUPPLY() ? membership.MAX_TOKEN_SUPPLY() : howMany;
 
-        assertEq(
-            membership.balanceOf(user),
-            howMany * 2,
-            "Balance of user doesnt match expectation"
-        );
-        assertEq(
-            membership.totalSupply(),
-            initialSupply + (howMany * 2),
-            "Token supply doesnt match expectation"
-        );
+        assertEq(membership.balanceOf(user), howMany * 2, "Balance of user doesnt match expectation");
+        assertEq(membership.totalSupply(), initialSupply + (howMany * 2), "Token supply doesnt match expectation");
     }
 
     function testMintWithDonation(uint8 _tier, uint8 _howMany) public {
@@ -275,12 +233,7 @@ contract AnimalSocialClubTest is Test {
                 vm.expectRevert();
             }
             membership.mintWithDonationRequestNetwork{value: price}(
-                user,
-                ambassador,
-                new bytes(1),
-                new bytes(1),
-                new bytes(2),
-                new bytes(3)
+                user, ambassador, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
             );
         }
         if (tier == asc.STAKEHOLDER_ID()) {
@@ -288,20 +241,10 @@ contract AnimalSocialClubTest is Test {
         }
         vm.stopPrank();
 
-        howMany = howMany >= membership.MAX_TOKEN_SUPPLY()
-            ? membership.MAX_TOKEN_SUPPLY()
-            : howMany;
+        howMany = howMany >= membership.MAX_TOKEN_SUPPLY() ? membership.MAX_TOKEN_SUPPLY() : howMany;
 
-        assertEq(
-            membership.balanceOf(user),
-            howMany,
-            "Balance of user doesnt match expectation"
-        );
-        assertEq(
-            membership.totalSupply(),
-            initialSupply + howMany,
-            "Token supply doesnt match expectation"
-        );
+        assertEq(membership.balanceOf(user), howMany, "Balance of user doesnt match expectation");
+        assertEq(membership.totalSupply(), initialSupply + howMany, "Token supply doesnt match expectation");
         assertEq(
             ambassador.balance,
             ambassadorInitialBalance + ((howMany * membership.PRICE()) / 10),
@@ -350,12 +293,7 @@ contract AnimalSocialClubTest is Test {
             vm.expectRevert();
         }
         membership.mintWithDonationRequestNetwork{value: price}(
-            buyer,
-            ambassador,
-            new bytes(1),
-            new bytes(1),
-            new bytes(2),
-            new bytes(3)
+            buyer, ambassador, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
         );
         if (tier == asc.STAKEHOLDER_ID()) {
             return;
@@ -385,12 +323,7 @@ contract AnimalSocialClubTest is Test {
             vm.expectRevert();
         }
         membership.mintWithDonationRequestNetwork{value: price}(
-            buyer,
-            advocate,
-            new bytes(1),
-            new bytes(1),
-            new bytes(2),
-            new bytes(3)
+            buyer, advocate, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
         );
         if (tier == asc.STAKEHOLDER_ID()) {
             return;
@@ -427,12 +360,7 @@ contract AnimalSocialClubTest is Test {
             vm.expectRevert();
         }
         membership.mintWithDonationRequestNetwork{value: price}(
-            buyer,
-            evangelist,
-            new bytes(1),
-            new bytes(1),
-            new bytes(2),
-            new bytes(3)
+            buyer, evangelist, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
         );
         if (tier == asc.STAKEHOLDER_ID()) {
             return;

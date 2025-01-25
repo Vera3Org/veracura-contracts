@@ -8,19 +8,19 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "src/AnimalSocialClubERC721.sol";
-import "src/Vera3DistributionModel.sol";
 
+import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
+import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
 import {Script, console} from "forge-std/Script.sol";
 import {ASC721Manager} from "../src/ASC721Manager.sol";
+import {ASCLottery} from "../src/ASCLottery.sol";
 
 contract DeployASC is Script {
     ASC721Manager public asc;
     address payable public asc_address;
     address public ADMIN_ADDRESS = vm.envAddress("ADMIN_ADDRESS");
     address public TREASURY_ADDRESS = vm.envAddress("TESTNET_TREASURY_ADDRESS");
-    address public ETH_FEE_PROXY_ADDRESS =
-        vm.envAddress("ETH_FEE_PROXY_ADDRESS");
+    address public ETH_FEE_PROXY_ADDRESS = vm.envAddress("ETH_FEE_PROXY_ADDRESS");
     address public LINK_ADDRESS = vm.envAddress("LINK_ADDRESS");
     address public VRF_WRAPPER_ADDRESS = vm.envAddress("VRF_WRAPPER_ADDRESS");
     address public DUMMY_WAITLISTED_ADDRESS = vm.envAddress("DUMMY_0_ADDRESS");
@@ -36,18 +36,10 @@ contract DeployASC is Script {
     function run() public {
         vm.startBroadcast();
 
-        ASCLottery lottery = new ASCLottery(
-            LINK_ADDRESS,
-            VRF_WRAPPER_ADDRESS,
-            TREASURY_ADDRESS
-        );
+        ASCLottery lottery = new ASCLottery(LINK_ADDRESS, VRF_WRAPPER_ADDRESS, TREASURY_ADDRESS);
         asc_address = payable(
             Upgrades.deployUUPSProxy(
-                "ASC721Manager.sol",
-                abi.encodeCall(
-                    ASC721Manager.initialize,
-                    (TREASURY_ADDRESS, address(lottery))
-                )
+                "ASC721Manager.sol", abi.encodeCall(ASC721Manager.initialize, (TREASURY_ADDRESS, address(lottery)))
             )
         );
         asc = ASC721Manager(asc_address);
@@ -147,11 +139,7 @@ contract DeployASC is Script {
         );
 
         asc.assignContracts(
-            payable(elephantAddress),
-            payable(tiger),
-            payable(sharkAddress),
-            payable(eagle),
-            payable(stakeholder)
+            payable(elephantAddress), payable(tiger), payable(sharkAddress), payable(eagle), payable(stakeholder)
         );
 
         require(asc.owner() == address(ADMIN_ADDRESS));
@@ -162,15 +150,11 @@ contract DeployASC is Script {
             AnimalSocialClubERC721(payable(eagle)),
             AnimalSocialClubERC721(payable(stakeholder))
         ];
-        for (uint i = 0; i < contracts.length; i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             require(contracts[i].owner() == address(ADMIN_ADDRESS));
         }
 
-        asc.addToWaitlist(
-            TIGER_ID,
-            asc.tiger().PRICE() / 50,
-            DUMMY_WAITLISTED_ADDRESS
-        );
+        asc.addToWaitlist(TIGER_ID, asc.tiger().PRICE() / 50, DUMMY_WAITLISTED_ADDRESS);
 
         vm.stopBroadcast();
 

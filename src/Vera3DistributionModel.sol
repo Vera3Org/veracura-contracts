@@ -8,10 +8,10 @@ import "forge-std/console.sol";
 
 /**
  * @dev Abstract contract which implements the Vera3 distribution model.
-
+ *
  * @dev There are 3 promoter roles in the hierarchy, from highest to lowest
  * Ambassador, Advocate and Evangelist.
-
+ *
  * @dev Each level in the hierarchy can specify one or more promoters of the
  * lower level, and when a mint of AnimalSocialClubERC721 happens, and
  * the `referrer` argument is a promoter, a 10% mint fee is take from the
@@ -108,9 +108,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
     //     uint256 commission_pct
     // );
 
-    function __Vera3DistributionModel_init(
-        address ethFeeProxy
-    ) internal onlyInitializing {
+    function __Vera3DistributionModel_init(address ethFeeProxy) internal onlyInitializing {
         // __Ownable_init(adminAddress);
         ETHEREUM_FEE_PROXY = IEthereumFeeProxy(ethFeeProxy);
         ambassadorToAdvocateCommission = 60;
@@ -143,9 +141,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      */
     function isReferrer(address referrer) public view returns (bool) {
         return
-            roles[referrer] == Role.Ambassador ||
-            roles[referrer] == Role.Advocate ||
-            roles[referrer] == Role.Evangelist;
+            roles[referrer] == Role.Ambassador || roles[referrer] == Role.Advocate || roles[referrer] == Role.Evangelist;
     }
 
     /**
@@ -153,10 +149,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * @param referrer address to check.
      */
     function requireReferrer(address referrer) public view {
-        require(
-            isReferrer(referrer),
-            "referrer must be a valid Ambassador, Advocate or Evangelist"
-        );
+        require(isReferrer(referrer), "referrer must be a valid Ambassador, Advocate or Evangelist");
     }
 
     /**
@@ -192,30 +185,27 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
             address ambassador = referrer;
             // payable(ambassador).transfer(totalCommission);
             console.log("Using Ethereum fee proxy");
-            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
-                value: calculateCommission(msg.value)
-            }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: calculateCommission(msg.value)}(
+                payable(ambassador), ambassadorReference, 0, payable(address(0))
+            );
 
             return;
         } else if (roles[referrer] == Role.Advocate) {
             // Referrer is an Advocate delegated by an Ambassador
             address advocate = referrer;
-            (
-                address ambassador,
-                uint256 ambassadorShare,
-                uint256 advocateShare
-            ) = getAdvocateShare(advocate, calculateCommission(msg.value));
+            (address ambassador, uint256 ambassadorShare, uint256 advocateShare) =
+                getAdvocateShare(advocate, calculateCommission(msg.value));
             // ambassador = ambassador_;
             // payable(ambassador).transfer(ambassadorShare);
             console.log("Using Ethereum fee proxy");
             // transfer to ambassador
-            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
-                value: ambassadorShare
-            }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: ambassadorShare}(
+                payable(ambassador), ambassadorReference, 0, payable(address(0))
+            );
             // transfer to advocate
-            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
-                value: advocateShare
-            }(payable(advocate), advocateReference, 0, payable(address(0)));
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: advocateShare}(
+                payable(advocate), advocateReference, 0, payable(address(0))
+            );
             return;
         } else if (roles[referrer] == Role.Evangelist) {
             address evangelist = referrer;
@@ -227,15 +217,15 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
                 uint256 evangelistShare
             ) = getEvangelistShare(evangelist, calculateCommission(msg.value));
 
-            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
-                value: ambassadorShare
-            }(payable(ambassador), ambassadorReference, 0, payable(address(0)));
-            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
-                value: advocateShare
-            }(payable(advocate), advocateReference, 0, payable(address(0)));
-            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{
-                value: evangelistShare
-            }(payable(evangelist), evangelistReference, 0, payable(address(0)));
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: ambassadorShare}(
+                payable(ambassador), ambassadorReference, 0, payable(address(0))
+            );
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: advocateShare}(
+                payable(advocate), advocateReference, 0, payable(address(0))
+            );
+            ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: evangelistShare}(
+                payable(evangelist), evangelistReference, 0, payable(address(0))
+            );
             return;
         } else {
             revert("referrer role is None!!");
@@ -250,14 +240,8 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
         // address ambassador,
         uint256 commissionPercentage
     ) external onlyOwner {
-        require(
-            roles[msg.sender] == Role.Ambassador || msg.sender == owner(),
-            "Not authorized!"
-        );
-        require(
-            commissionPercentage <= 100,
-            "Commission percentage must be <= 100"
-        );
+        require(roles[msg.sender] == Role.Ambassador || msg.sender == owner(), "Not authorized!");
+        require(commissionPercentage <= 100, "Commission percentage must be <= 100");
         // ambassadorToAdvocateCommission[ambassador] = commissionPercentage;
         // emit AmbassadorCommissionSet(ambassador, commissionPercentage);
         ambassadorToAdvocateCommission = commissionPercentage;
@@ -268,17 +252,9 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * @dev Function to set commission percentage that Evangelists share with Advocates.
      * @param commissionPercentage the new commission percentage. 10 means 10%, 100 mean 100%
      */
-    function setAdvocateToEvangelistCommission(
-        uint256 commissionPercentage
-    ) external onlyOwner {
-        require(
-            roles[msg.sender] == Role.Advocate || msg.sender == owner(),
-            "Not authorized!"
-        );
-        require(
-            commissionPercentage <= 100,
-            "Commission percentage must be <= 100"
-        );
+    function setAdvocateToEvangelistCommission(uint256 commissionPercentage) external onlyOwner {
+        require(roles[msg.sender] == Role.Advocate || msg.sender == owner(), "Not authorized!");
+        require(commissionPercentage <= 100, "Commission percentage must be <= 100");
         // advocateToEvangelistCommission[advocate] = commissionPercentage;
         // emit AdvocateCommissionSet(advocate, commissionPercentage);
         advocateToEvangelistCommission = commissionPercentage;
@@ -294,10 +270,11 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * of coins that the Ambassador gets, and `advocateShare` is the number of coins that the
      * Advocate gets.
      */
-    function getAdvocateShare(
-        address advocate,
-        uint256 totalCommission
-    ) internal view returns (address, uint256, uint256) {
+    function getAdvocateShare(address advocate, uint256 totalCommission)
+        internal
+        view
+        returns (address, uint256, uint256)
+    {
         address ambassador = advocateToAmbassador[advocate];
         // uint256 advocateCommissionPct = ambassadorToAdvocateCommission[
         //     ambassador
@@ -323,10 +300,7 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * gets, `advocateShare` is the amount of coins that the Advocate gets, and
      * `evangelistShare` is the number of coins that the Evangelist gets.
      */
-    function getEvangelistShare(
-        address evangelist,
-        uint256 totalCommission
-    )
+    function getEvangelistShare(address evangelist, uint256 totalCommission)
         internal
         view
         returns (address payable, address payable, uint256, uint256, uint256)
@@ -349,22 +323,14 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
         uint256 ambassadorShare = totalCommission - advocateShare;
 
         // the evangelist takes a piece of the advocate's share
-        uint256 evangelistShare = (advocateShare100 * evangelistCommissionPct) /
-            10000;
+        uint256 evangelistShare = (advocateShare100 * evangelistCommissionPct) / 10000;
         advocateShare -= evangelistShare;
 
         require(
-            totalCommission ==
-                (ambassadorShare + advocateShare + evangelistShare),
+            totalCommission == (ambassadorShare + advocateShare + evangelistShare),
             "Error in calculation for evangelist: shares don't add up"
         );
-        return (
-            ambassador,
-            advocate,
-            ambassadorShare,
-            advocateShare,
-            evangelistShare
-        );
+        return (ambassador, advocate, ambassadorShare, advocateShare, evangelistShare);
     }
 
     /**
@@ -374,12 +340,10 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      * @param role the role which the `delegate` will have.
      * @param delegate the lower level in the hierarchy.
      */
-    function assignRole(
-        address payable delegator,
-        Role role,
-        address payable delegate,
-        address _msgSender
-    ) external virtual {
+    function assignRole(address payable delegator, Role role, address payable delegate, address _msgSender)
+        external
+        virtual
+    {
         revert("Not implemented here, you should override this function!");
     }
 }

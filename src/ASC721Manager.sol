@@ -8,7 +8,8 @@ import {console} from "forge-std/console.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {AccessControlDefaultAdminRulesUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
+import {AccessControlDefaultAdminRulesUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
 // import {AccessControlEnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
 // import "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRules.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -19,7 +20,7 @@ import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
 
 /**
  * @dev Contract which coordinates the Animal Social Club NFT memberships.
-
+ *
  * @dev Holds references to each of the membership contracts, and provides
  * functions which need information to flow between contracts.
  *
@@ -32,10 +33,7 @@ import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
  * - NFT_ROLE: is an AnimalSocialClubERC721 contract address, and is the only
  *   role which can interact with the `lottery` contract.
  */
-contract ASC721Manager is
-    AccessControlDefaultAdminRulesUpgradeable,
-    ReentrancyGuardUpgradeable
-{
+contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyGuardUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
@@ -122,14 +120,8 @@ contract ASC721Manager is
         _disableInitializers();
     }
 
-    function initialize(
-        address _treasuryAddress,
-        address _lotteryAddress
-    ) public initializer {
-        require(
-            _treasuryAddress != address(0) && _lotteryAddress != address(0),
-            "One or more invalid addresses"
-        );
+    function initialize(address _treasuryAddress, address _lotteryAddress) public initializer {
+        require(_treasuryAddress != address(0) && _lotteryAddress != address(0), "One or more invalid addresses");
 
         require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
         require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
@@ -199,10 +191,7 @@ contract ASC721Manager is
      * @param it The address to be altered
      * @param _is true means that the user is added, false means the user is removed
      */
-    function setEarlyBacker(
-        address it,
-        bool _is
-    ) external onlyRole(ADMIN_ROLE) {
+    function setEarlyBacker(address it, bool _is) external onlyRole(ADMIN_ROLE) {
         isEarlyBacker[it] = _is;
         if (_is) {
             earlyBackers.push(it);
@@ -224,10 +213,7 @@ contract ASC721Manager is
      * @param dest the receiving address of NFTs
      */
     function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
-        require(
-            isEarlyBacker[dest],
-            "destination address is not registered as a early backer."
-        );
+        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 10 elephants, 2 sharks
         for (uint256 i = 0; i < 10; i++) {
             elephant.adminMint(dest);
@@ -244,10 +230,7 @@ contract ASC721Manager is
      * @param dest the receiving address of NFTs
      */
     function adminPackCryptoTucan(address dest) external onlyRole(ADMIN_ROLE) {
-        require(
-            isEarlyBacker[dest],
-            "destination address is not registered as a early backer."
-        );
+        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 25 elephants, 2 sharks, 1 eagle
         for (uint256 i = 0; i < 25; i++) {
             elephant.adminMint(dest);
@@ -266,10 +249,7 @@ contract ASC721Manager is
      * @param dest the receiving address of NFTs
      */
     function adminPackJaguareth(address dest) external onlyRole(ADMIN_ROLE) {
-        require(
-            isEarlyBacker[dest],
-            "destination address is not registered as a early backer."
-        );
+        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 75 elephants, 9 sharks, 3 eagle
         for (uint256 i = 0; i < 75; i++) {
             elephant.adminMint(dest);
@@ -289,10 +269,7 @@ contract ASC721Manager is
      * @param dest the receiving address of NFTs
      */
     function adminPackWhale(address dest) external onlyRole(ADMIN_ROLE) {
-        require(
-            isEarlyBacker[dest],
-            "destination address is not registered as a early backer."
-        );
+        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
         // 150 elephants, 16 sharks, 7 eagle
         for (uint256 i = 0; i < 150; i++) {
             elephant.adminMint(dest);
@@ -381,10 +358,7 @@ contract ASC721Manager is
      * @param to the receiving address
      * @param tier the membership tier. Must be between `ELEPHANT_ID` and `EAGLE_ID`
      */
-    function adminMint(
-        address to,
-        uint256 tier
-    ) external nonReentrant onlyRole(ADMIN_ROLE) {
+    function adminMint(address to, uint256 tier) external nonReentrant onlyRole(ADMIN_ROLE) {
         require(tier < contracts.length);
         AnimalSocialClubERC721(contracts[tier]).adminMint(to);
     }
@@ -395,20 +369,11 @@ contract ASC721Manager is
      * @dev calls  `AnimalSocialClubERC721.assignRole` on each sub-contract.
      * See that function.
      */
-    function assignRole(
-        address payable upper,
-        Vera3DistributionModel.Role role,
-        address payable delegate
-    ) external {
+    function assignRole(address payable upper, Vera3DistributionModel.Role role, address payable delegate) external {
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).assignRole(
-                upper,
-                role,
-                delegate,
-                msg.sender
-            );
+            Vera3DistributionModel(tier).assignRole(upper, role, delegate, msg.sender);
         }
     }
 
@@ -420,9 +385,7 @@ contract ASC721Manager is
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(
-                percentage
-            );
+            Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(percentage);
         }
     }
 
@@ -434,9 +397,7 @@ contract ASC721Manager is
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(
-                percentage
-            );
+            Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(percentage);
         }
     }
 
@@ -461,11 +422,12 @@ contract ASC721Manager is
      *        will be deducted from final payment
      * @param user address of the user to register
      */
-    function addToWaitlist(
-        uint256 tier,
-        uint256 waitlist_deposit,
-        address user
-    ) external payable onlyRole(ADMIN_ROLE) nonReentrant {
+    function addToWaitlist(uint256 tier, uint256 waitlist_deposit, address user)
+        external
+        payable
+        onlyRole(ADMIN_ROLE)
+        nonReentrant
+    {
         require(
             tier < contracts.length,
             "Invalid tier: can be Elephant (0), Shark (1), Eagle (2), Tiger (3), Stakeholder (4)"
@@ -477,12 +439,7 @@ contract ASC721Manager is
     /**
      * @dev TODO verify if this is the only thing to do.
      */
-    function startLottery()
-        external
-        payable
-        onlyRole(ADMIN_ROLE)
-        returns (uint256)
-    {
+    function startLottery() external payable onlyRole(ADMIN_ROLE) returns (uint256) {
         return lottery.requestRandomWords{value: msg.value}(true);
     }
 
@@ -496,9 +453,7 @@ contract ASC721Manager is
         emit Received(msg.sender, msg.value);
     }
 
-    function setLotteryContract(
-        address payable _newLottery
-    ) external onlyRole(ADMIN_ROLE) {
+    function setLotteryContract(address payable _newLottery) external onlyRole(ADMIN_ROLE) {
         lottery = ASCLottery(_newLottery);
     }
 }
