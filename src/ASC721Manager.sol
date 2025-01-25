@@ -154,6 +154,14 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         //     contracts.pop();
         // }
         require(contracts.length == 0, "Can't initialize twice");
+        require(
+            _elephant != address(0) &&
+            _tiger != address(0) &&
+            _shark != address(0) &&
+            _eagle != address(0) &&
+            _stakeholder != address(0),
+            "null address"
+        );
 
         elephant = AnimalSocialClubERC721(_elephant);
         contracts.push(AnimalSocialClubERC721(_elephant));
@@ -486,6 +494,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     function setLotteryContract(address payable _newLottery) external onlyRole(ADMIN_ROLE) {
+        require(_newLottery != address(0), "null address");
         lottery = ASCLottery(_newLottery);
     }
 }
