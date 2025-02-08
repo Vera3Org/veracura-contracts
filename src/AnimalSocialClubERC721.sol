@@ -75,6 +75,8 @@ contract AnimalSocialClubERC721 is
     address public treasuryAddress;
     ASC721Manager public manager;
 
+    string public BASE_URI;
+
     /**
      * @dev sale status: when false, no memberships can be minted.
      */
@@ -109,7 +111,8 @@ contract AnimalSocialClubERC721 is
         ASC721Manager _manager,
         uint256 num_reserved,
         address ethFeeProxy,
-        uint256 tier_id
+        uint256 tier_id,
+        string memory _initialBaseURI
     ) public initializer {
         __ERC721_init(name, symbol);
         __ReentrancyGuard_init();
@@ -127,6 +130,7 @@ contract AnimalSocialClubERC721 is
         TIER_ID = tier_id;
         // auctionEndTime = type(uint256).max;
         saleActive = true;
+        BASE_URI = _initialBaseURI;
     }
 
     /**
@@ -248,7 +252,6 @@ contract AnimalSocialClubERC721 is
 
     // Function to ensure contract can receive Ether
     receive() external payable {}
-
 
     //////////////////////////////////////////////////////////////
     /////// WAITLIST
@@ -372,5 +375,37 @@ contract AnimalSocialClubERC721 is
         require(isAuthorized, "user not authorized");
         roles[delegate] = role;
         emit RoleAssigned(delegator, role, delegate, _msgSender);
+    }
+
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        return string.concat(super.tokenURI(tokenId), ".json");
+    }
+
+    /**
+     * @dev Base URI for computing {tokenURI}. If set, the resulting URI for each
+     * token will be the concatenation of the `baseURI` and the `tokenId`. Empty
+     * by default, can be overridden in child contracts.
+     */
+    function _baseURI() internal view virtual override returns (string memory) {
+        return string.concat(BASE_URI, tierIdString());
+    }
+
+    function setBaseURI(string memory newUri) external onlyOwnerAndManager {
+        BASE_URI = newUri;
+    }
+
+    function tierIdString() internal view virtual returns (string memory) {
+        if (TIER_ID == manager.ELEPHANT_ID()) {
+            return "elephant/";
+        } else if (TIER_ID == manager.TIGER_ID()) {
+            return "tiger/";
+        } else if (TIER_ID == manager.SHARK_ID()) {
+            return "shark/";
+        } else if (TIER_ID == manager.EAGLE_ID()) {
+            return "eagle/";
+        } else if (TIER_ID == manager.STAKEHOLDER_ID()) {
+            return "stakeholder/";
+        }
+        return "";
     }
 }

@@ -151,11 +151,8 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         // }
         require(contracts.length == 0, "Can't initialize twice");
         require(
-            _elephant != address(0) &&
-            _tiger != address(0) &&
-            _shark != address(0) &&
-            _eagle != address(0) &&
-            _stakeholder != address(0),
+            _elephant != address(0) && _tiger != address(0) && _shark != address(0) && _eagle != address(0)
+                && _stakeholder != address(0),
             "null address"
         );
 
@@ -341,6 +338,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * @param a the address to alter
      * @param val true indicates the user has KYC, false the opposite.
      */
+
     function setKYC(address a, bool val) public onlyRole(OPERATOR_ROLE) {
         _hasKYC[a] = val;
         emit SetKyc(a, val);
@@ -391,6 +389,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * @param to the receiving address
      * @param tier the membership tier. Must be between `ELEPHANT_ID` and `EAGLE_ID`
      */
+
     function adminMint(address to, uint256 tier) external nonReentrant onlyRole(ADMIN_ROLE) {
         require(tier < contracts.length);
         AnimalSocialClubERC721(contracts[tier]).adminMint(to);
@@ -404,6 +403,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * @dev calls  `AnimalSocialClubERC721.assignRole` on each sub-contract.
      * See that function.
      */
+
     function assignRole(address payable upper, Vera3DistributionModel.Role role, address payable delegate) external {
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];

@@ -5,8 +5,7 @@ import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 import "forge-std/Test.sol";
 import "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFV2PlusWrapper.sol";
-import "forge-std/console.sol";
-
+import {console} from "forge-std/console.sol";
 
 import {ASC721Manager} from "src/ASC721Manager.sol";
 import {ASCLottery} from "src/ASCLottery.sol";
@@ -34,8 +33,9 @@ contract AnimalSocialClubTest is Test {
 
     address public constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789; // eth sepolia
     address public constant VRF_WRAPPER_ADDRESS = 0x195f15F2d49d693cE265b4fB0fdDbE15b1850Cc1; // eth sepolia
-    address public constant ETH_FEE_PROXY_ADDRESS =0xe11BF2fDA23bF0A98365e1A4c04A87C9339e8687; // eth sepolia
+    address public constant ETH_FEE_PROXY_ADDRESS = 0xe11BF2fDA23bF0A98365e1A4c04A87C9339e8687; // eth sepolia
 
+    string public constant DUMMY_BASE_URI = "ipfs://ciao/";
 
     function setUp() public {
         ambassador = vm.addr(1);
@@ -74,7 +74,8 @@ contract AnimalSocialClubTest is Test {
                         asc,
                         0,
                         address(ethFeeProxy),
-                        asc.ELEPHANT_ID()
+                        asc.ELEPHANT_ID(),
+                        DUMMY_BASE_URI
                     )
                 )
             );
@@ -93,7 +94,8 @@ contract AnimalSocialClubTest is Test {
                         asc,
                         0,
                         address(ethFeeProxy),
-                        asc.SHARK_ID()
+                        asc.SHARK_ID(),
+                        DUMMY_BASE_URI
                     )
                 )
             );
@@ -112,7 +114,8 @@ contract AnimalSocialClubTest is Test {
                         asc,
                         9, // 9 eagle reserved for lottery
                         address(ethFeeProxy),
-                        asc.EAGLE_ID()
+                        asc.EAGLE_ID(),
+                        DUMMY_BASE_URI
                     )
                 )
             );
@@ -131,7 +134,8 @@ contract AnimalSocialClubTest is Test {
                         asc,
                         11, // 1 tiger reserved for lottery, 10 tigers in auction
                         address(ethFeeProxy),
-                        asc.TIGER_ID()
+                        asc.TIGER_ID(),
+                        DUMMY_BASE_URI
                     )
                 )
             );
@@ -149,7 +153,8 @@ contract AnimalSocialClubTest is Test {
                         asc,
                         0,
                         address(ethFeeProxy),
-                        asc.STAKEHOLDER_ID()
+                        asc.STAKEHOLDER_ID(),
+                        DUMMY_BASE_URI
                     )
                 )
             );
@@ -195,7 +200,7 @@ contract AnimalSocialClubTest is Test {
     // }
 
     function testAdminMint(uint8 _tier, uint8 _howMany) public {
-        vm.assume(_howMany < 3 && _tier < asc.STAKEHOLDER_ID());
+        vm.assume(_howMany > 0 && _howMany < 3 && _tier < asc.STAKEHOLDER_ID());
         uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
         uint256 howMany = _howMany;
 
@@ -209,7 +214,17 @@ contract AnimalSocialClubTest is Test {
         for (uint256 i = 0; i < howMany; i++) {
             // mint using both methods
             asc.adminMint(user, tier);
+            {
+                uint256 tokenId = membership.totalSupply() - 1;
+                string memory tokenURI = membership.tokenURI(tokenId);
+                console.log("uri for tier %s: %s", tier, tokenId);
+            }
             AnimalSocialClubERC721(asc.contracts(tier)).adminMint(user);
+            {
+                uint256 tokenId = membership.totalSupply() - 1;
+                string memory tokenURI = membership.tokenURI(tokenId);
+                console.log("uri for tier %s: %s", tier, tokenId);
+            }
         }
         if (tier == asc.STAKEHOLDER_ID()) {
             return;

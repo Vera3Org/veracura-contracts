@@ -7,14 +7,11 @@ import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receive
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {AnimalSocialClubERC721} from "src/AnimalSocialClubERC721.sol";
 
-
 contract ASCAuction is Ownable, IERC721Receiver, ReentrancyGuard {
     AnimalSocialClubERC721 public immutable tiger;
-    uint256 public tokenId = uint256.max;
+    uint256 public tokenId = type(uint256).max;
 
-    constructor(address _treasuryAddress, address payable _tigerAddress)
-        Ownable(msg.sender)
-    {
+    constructor(address _treasuryAddress, address payable _tigerAddress) Ownable(msg.sender) {
         tiger = AnimalSocialClubERC721(_tigerAddress);
         auctionEndTime = type(uint256).max;
     }
@@ -61,23 +58,23 @@ contract ASCAuction is Ownable, IERC721Receiver, ReentrancyGuard {
      * bid value is transfered back to the previous user.
      */
     function placeBid() external payable nonReentrant {
-        require(this.tokenId < tiger.MAX_TOKEN_SUPPLY(), "this.tokenId is too high");
-        require(this.tokenId > tiger.MAX_TOKEN_SUPPLY() - tiger.NUMBER_RESERVED(), "this.tokenId is too low");
+        require(tokenId < tiger.MAX_TOKEN_SUPPLY(), "tokenId is too high");
+        require(tokenId > tiger.MAX_TOKEN_SUPPLY() - tiger.NUMBER_RESERVED(), "tokenId is too low");
         require(auctionStarted, "Auction not yet started");
         require(!auctionEnded && block.timestamp <= auctionEndTime, "Auction already ended");
-        require(msg.value > highestBid[this.tokenId].amount + minBidIncrement, "Bid must be higher than current highest bid");
+        require(msg.value > highestBid[tokenId].amount + minBidIncrement, "Bid must be higher than current highest bid");
         require(msg.value >= startingPrice, "Bid must be at least the starting price");
-        Bid memory oldBid = highestBid[this.tokenId];
-        // address oldHighestBidder = highestBidder[this.tokenId];
-        // uint256 oldHighestBid = highestBid[this.tokenId];
+        Bid memory oldBid = highestBid[tokenId];
+        // address oldHighestBidder = highestBidder[tokenId];
+        // uint256 oldHighestBid = highestBid[tokenId];
         bool shouldRefund = oldBid._address != address(0);
 
-        // highestBidder[this.tokenId] = msg.sender;
+        // highestBidder[tokenId] = msg.sender;
         {
             Bid memory newBid;
             newBid._address = msg.sender;
             newBid.amount = msg.value;
-            highestBid[this.tokenId] = newBid;
+            highestBid[tokenId] = newBid;
         }
 
         if (shouldRefund) {
@@ -86,7 +83,7 @@ contract ASCAuction is Ownable, IERC721Receiver, ReentrancyGuard {
         }
     }
 
-    function endAuction(uint256 i) external nonReentrant onlyOwner{
+    function endAuction(uint256 i) external nonReentrant onlyOwner {
         require(i < tiger.MAX_TOKEN_SUPPLY(), "Invalid card ID");
         require(auctionStarted, "Auction not yet started");
         require(!auctionEnded, "Auction already ended");
@@ -95,11 +92,11 @@ contract ASCAuction is Ownable, IERC721Receiver, ReentrancyGuard {
         auctionEnded = true;
 
         // Mint Super VIP NFTs to the highest bidder
-        tiger.safeTransfer(highestBid[i]._address, i);
+        tiger.safeTransferFrom(address(this), highestBid[i]._address, i);
     }
 
     // Allow the contract owner to withdraw the highest bid after the auction ends
-    function withdrawHighestBid(uint256 i) external nonReentrant onlyOwner{
+    function withdrawHighestBid(uint256 i) external nonReentrant onlyOwner {
         require(i < tiger.MAX_TOKEN_SUPPLY(), "Invalid i");
         require(auctionStarted, "Auction not yet started");
         require(auctionEnded, "Auction has not ended yet");
@@ -112,15 +109,17 @@ contract ASCAuction is Ownable, IERC721Receiver, ReentrancyGuard {
         payable(owner()).transfer(amount);
     }
 
-    function onERC721Received(address operator, address from, uint256 _tokenId, bytes calldata data) external returns (bytes4) {
+    function onERC721Received(address operator, address from, uint256 _tokenId, bytes calldata data)
+        external
+        returns (bytes4)
+    {
         // this contract will receive the tiger to be auctioned, and nothing more.
         if (msg.sender == address(tiger)) {
-            require(this.tokenId == uint256.max, "contract can receive at most one ASC tiger NFT");
-            this.tokenId = _tokenId;
+            require(tokenId == type(uint256).max, "contract can receive at most one ASC tiger NFT");
+            tokenId = _tokenId;
         } else {
             revert("cannot receive anything but tiger nfts");
         }
         return this.onERC721Received.selector;
     }
-
 }

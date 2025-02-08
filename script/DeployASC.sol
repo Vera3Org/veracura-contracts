@@ -31,6 +31,8 @@ contract DeployASC is Script {
     uint256 public constant EAGLE_ID = 3;
     uint256 public constant STAKEHOLDER_ID = 4;
 
+    string public constant BASE_URI = "ipfs://real/";
+
     function setUp() public {}
 
     function run() public {
@@ -59,7 +61,8 @@ contract DeployASC is Script {
                     asc,
                     0,
                     ETH_FEE_PROXY_ADDRESS,
-                    ELEPHANT_ID
+                    ELEPHANT_ID,
+                    BASE_URI
                 )
             )
         );
@@ -77,7 +80,8 @@ contract DeployASC is Script {
                     asc,
                     0,
                     ETH_FEE_PROXY_ADDRESS,
-                    SHARK_ID
+                    SHARK_ID,
+                    BASE_URI
                 )
             )
         );
@@ -96,7 +100,8 @@ contract DeployASC is Script {
                     asc,
                     9, // 9 eagle reserved for lottery
                     ETH_FEE_PROXY_ADDRESS,
-                    EAGLE_ID
+                    EAGLE_ID,
+                    BASE_URI
                 )
             )
         );
@@ -115,7 +120,8 @@ contract DeployASC is Script {
                     asc,
                     11, // 1 tiger reserved for lottery, 10 tigers in auction
                     ETH_FEE_PROXY_ADDRESS,
-                    TIGER_ID
+                    TIGER_ID,
+                    BASE_URI
                 )
             )
         );
@@ -133,7 +139,8 @@ contract DeployASC is Script {
                     asc,
                     0,
                     ETH_FEE_PROXY_ADDRESS,
-                    STAKEHOLDER_ID
+                    STAKEHOLDER_ID,
+                    BASE_URI
                 )
             )
         );
