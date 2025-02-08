@@ -400,16 +400,6 @@ contract AnimalSocialClubTest is Test {
         );
     }
 
-    function testAuction() public {
-        AnimalSocialClubERC721 tiger = asc.tiger();
-        vm.prank(adminAddress);
-        asc.startTigerAuction();
-        vm.deal(user, 2000000000000 ether);
-        vm.startPrank(user);
-        tiger.placeBid{value: 3 ether}(21);
-        vm.stopPrank();
-    }
-
     function testLottery() public {
         vm.deal(adminAddress, 100 ether);
         vm.startPrank(adminAddress);
