@@ -4,8 +4,7 @@ pragma solidity ^0.8.26;
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {AccessControlDefaultAdminRulesUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
+import {AccessControlDefaultAdminRulesUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlDefaultAdminRulesUpgradeable.sol";
 // import {AccessControlEnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -28,7 +27,10 @@ import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
  * - NFT_ROLE: is an AnimalSocialClubERC721 contract address, and is the only
  *   role which can interact with the `lottery` contract.
  */
-contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyGuardUpgradeable {
+contract ASC721Manager is
+    AccessControlDefaultAdminRulesUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
@@ -92,6 +94,13 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     mapping(address => bool) private _hasKYC;
 
     /**
+     * @notice Mapping to keep track of who has completed KYC verification 
+     * with a strong KYC provider.
+     * @dev Only addresses `a` for which `_hasStrongKYC[a]` is true can mint memberships.
+     */
+    mapping(address => bool) private _hasStrongKYC;
+
+    /**
      * @dev reference to lottery contract.
      */
     ASCLottery public lottery;
@@ -115,8 +124,14 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         _disableInitializers();
     }
 
-    function initialize(address _treasuryAddress, address _lotteryAddress) public initializer {
-        require(_treasuryAddress != address(0) && _lotteryAddress != address(0), "One or more invalid addresses");
+    function initialize(
+        address _treasuryAddress,
+        address _lotteryAddress
+    ) public initializer {
+        require(
+            _treasuryAddress != address(0) && _lotteryAddress != address(0),
+            "One or more invalid addresses"
+        );
 
         require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
         require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
@@ -151,8 +166,11 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         // }
         require(contracts.length == 0, "Can't initialize twice");
         require(
-            _elephant != address(0) && _tiger != address(0) && _shark != address(0) && _eagle != address(0)
-                && _stakeholder != address(0),
+            _elephant != address(0) &&
+                _tiger != address(0) &&
+                _shark != address(0) &&
+                _eagle != address(0) &&
+                _stakeholder != address(0),
             "null address"
         );
 
@@ -178,6 +196,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event AddedToLotteryParticipants(address participant);
+
     /**
      * @dev can only be called by a contract in `contracts`. Adds the address
      * `it` to the list of participants.
@@ -189,6 +208,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event SetEarlyBacker(address backer, bool newState, bool oldState);
+
     /**
      * @dev adds or removes an address to the isEarlyBacker and earlyBackers variables.
      * Admin only.
@@ -196,8 +216,14 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * @param _is true means that the user is added, false means the user is removed
      */
 
-    function setEarlyBacker(address it, bool _is) external onlyRole(ADMIN_ROLE) {
-        require(isEarlyBacker[it] = !_is, "address is already in the desired state");
+    function setEarlyBacker(
+        address it,
+        bool _is
+    ) external onlyRole(ADMIN_ROLE) {
+        require(
+            isEarlyBacker[it] = !_is,
+            "address is already in the desired state"
+        );
         isEarlyBacker[it] = _is;
         if (_is) {
             earlyBackers.push(it);
@@ -218,6 +244,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event MintedPackFrenFrog(address dest);
+
     /**
      * @dev mints 10 elephants and 2 sharks to an early backer.
      * Payment is made outside of contract.
@@ -226,7 +253,10 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
 
     function adminPackFrenFrog(address dest) external onlyRole(ADMIN_ROLE) {
-        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 10 elephants, 2 sharks
         for (uint256 i = 0; i < 10; i++) {
             elephant.adminMint(dest);
@@ -238,6 +268,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event MintedPackCryptoTucan(address dest);
+
     /**
      * @dev mints 25 elephants, 2 sharks, 1 eagle to early backer.
      * Payment is made outside of contract.
@@ -246,7 +277,10 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
 
     function adminPackCryptoTucan(address dest) external onlyRole(ADMIN_ROLE) {
-        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 25 elephants, 2 sharks, 1 eagle
         for (uint256 i = 0; i < 25; i++) {
             elephant.adminMint(dest);
@@ -260,6 +294,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event MintedPackJaguareth(address dest);
+
     /**
      * @dev mints 75 elephants, 9 sharks, 3 eagle to early backer.
      * Payment is made outside of contract.
@@ -268,7 +303,10 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
 
     function adminPackJaguareth(address dest) external onlyRole(ADMIN_ROLE) {
-        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 75 elephants, 9 sharks, 3 eagle
         for (uint256 i = 0; i < 75; i++) {
             elephant.adminMint(dest);
@@ -283,6 +321,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event MintedPackWhale(address dest);
+
     /**
      * @dev mints 150 elephants, 16 sharks, 7 eagle to early backer.
      * Payment is made outside of contract.
@@ -291,7 +330,10 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
 
     function adminPackWhale(address dest) external onlyRole(ADMIN_ROLE) {
-        require(isEarlyBacker[dest], "destination address is not registered as a early backer.");
+        require(
+            isEarlyBacker[dest],
+            "destination address is not registered as a early backer."
+        );
         // 150 elephants, 16 sharks, 7 eagle
         for (uint256 i = 0; i < 150; i++) {
             elephant.adminMint(dest);
@@ -306,6 +348,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event OperatorChanged(address dest);
+
     /**
      * @dev grants the OPERATOR role to an address.
      */
@@ -332,16 +375,40 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         return _hasKYC[a];
     }
 
-    event SetKyc(address a, bool val);
     /**
-     * @dev marks an address as having completed the KYC procedure.
+     * @dev check whether an address is registered has having
+     * completed the KYC procedure with a strong KYC provider.
+     * @param a the address to check
+     */
+    function hasStrongKYC(address a) public view returns (bool) {
+        return _hasStrongKYC[a];
+    }
+
+    event SetSoftKyc(address a, bool val);
+
+    /**
+     * @dev marks an address as having completed the basic KYC procedure.
      * @param a the address to alter
      * @param val true indicates the user has KYC, false the opposite.
      */
 
-    function setKYC(address a, bool val) public onlyRole(OPERATOR_ROLE) {
+    function setSoftKYC(address a, bool val) public onlyRole(OPERATOR_ROLE) {
         _hasKYC[a] = val;
-        emit SetKyc(a, val);
+        emit SetSoftKyc(a, val);
+    }
+
+    event SetStrongKyc(address a, bool val);
+
+    /**
+     * @dev marks an address as having completed the KYC procedure with
+     * a strong KYC provider.
+     * @param a the address to alter
+     * @param val true indicates the user has KYC, false the opposite.
+     */
+
+    function setStrongKYC(address a, bool val) public onlyRole(OPERATOR_ROLE) {
+        _hasStrongKYC[a] = val;
+        emit SetStrongKyc(a, val);
     }
 
     /**
@@ -382,6 +449,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     }
 
     event AdminMinted(address to, uint256 tier, address donor);
+
     /**
      * @dev function for the admin to call a sub-contract's `adminMint`
      * function. See `AnimalSocialClubERC721.adminMint`.
@@ -390,7 +458,10 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * @param tier the membership tier. Must be between `ELEPHANT_ID` and `EAGLE_ID`
      */
 
-    function adminMint(address to, uint256 tier) external nonReentrant onlyRole(ADMIN_ROLE) {
+    function adminMint(
+        address to,
+        uint256 tier
+    ) external nonReentrant onlyRole(ADMIN_ROLE) {
         require(tier < contracts.length);
         AnimalSocialClubERC721(contracts[tier]).adminMint(to);
         emit AdminMinted(to, tier, msg.sender);
@@ -398,17 +469,31 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
 
     // each of these methods will call the corresponding one on each erc721 contract
 
-    event RoleAssigned(address upper, Vera3DistributionModel.Role role, address delegate);
+    event RoleAssigned(
+        address upper,
+        Vera3DistributionModel.Role role,
+        address delegate
+    );
+
     /**
      * @dev calls  `AnimalSocialClubERC721.assignRole` on each sub-contract.
      * See that function.
      */
 
-    function assignRole(address payable upper, Vera3DistributionModel.Role role, address payable delegate) external {
+    function assignRole(
+        address payable upper,
+        Vera3DistributionModel.Role role,
+        address payable delegate
+    ) external {
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).assignRole(upper, role, delegate, msg.sender);
+            Vera3DistributionModel(tier).assignRole(
+                upper,
+                role,
+                delegate,
+                msg.sender
+            );
         }
         emit RoleAssigned(upper, role, delegate);
     }
@@ -421,7 +506,9 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(percentage);
+            Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(
+                percentage
+            );
         }
     }
 
@@ -433,7 +520,9 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(percentage);
+            Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(
+                percentage
+            );
         }
     }
 
@@ -458,12 +547,11 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      *        will be deducted from final payment
      * @param user address of the user to register
      */
-    function addToWaitlist(uint256 tier, uint256 waitlist_deposit, address user)
-        external
-        payable
-        onlyRole(ADMIN_ROLE)
-        nonReentrant
-    {
+    function addToWaitlist(
+        uint256 tier,
+        uint256 waitlist_deposit,
+        address user
+    ) external payable onlyRole(ADMIN_ROLE) nonReentrant {
         require(
             tier < contracts.length,
             "Invalid tier: can be Elephant (0), Shark (1), Eagle (2), Tiger (3), Stakeholder (4)"
@@ -475,7 +563,12 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     /**
      * @dev TODO verify if this is the only thing to do.
      */
-    function startLottery() external payable onlyRole(ADMIN_ROLE) returns (uint256) {
+    function startLottery()
+        external
+        payable
+        onlyRole(ADMIN_ROLE)
+        returns (uint256)
+    {
         return lottery.requestRandomWords{value: msg.value}(true);
     }
 
@@ -485,7 +578,9 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         emit Received(msg.sender, msg.value);
     }
 
-    function setLotteryContract(address payable _newLottery) external onlyRole(ADMIN_ROLE) {
+    function setLotteryContract(
+        address payable _newLottery
+    ) external onlyRole(ADMIN_ROLE) {
         require(_newLottery != address(0), "null address");
         lottery = ASCLottery(_newLottery);
     }

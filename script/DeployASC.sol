@@ -62,7 +62,8 @@ contract DeployASC is Script {
                     0,
                     ETH_FEE_PROXY_ADDRESS,
                     ELEPHANT_ID,
-                    BASE_URI
+                    BASE_URI,
+                    false
                 )
             )
         );
@@ -81,7 +82,8 @@ contract DeployASC is Script {
                     0,
                     ETH_FEE_PROXY_ADDRESS,
                     SHARK_ID,
-                    BASE_URI
+                    BASE_URI,
+                    false
                 )
             )
         );
@@ -101,7 +103,8 @@ contract DeployASC is Script {
                     9, // 9 eagle reserved for lottery
                     ETH_FEE_PROXY_ADDRESS,
                     EAGLE_ID,
-                    BASE_URI
+                    BASE_URI,
+                    false
                 )
             )
         );
@@ -121,7 +124,8 @@ contract DeployASC is Script {
                     11, // 1 tiger reserved for lottery, 10 tigers in auction
                     ETH_FEE_PROXY_ADDRESS,
                     TIGER_ID,
-                    BASE_URI
+                    BASE_URI,
+                    true
                 )
             )
         );
@@ -140,7 +144,8 @@ contract DeployASC is Script {
                     0,
                     ETH_FEE_PROXY_ADDRESS,
                     STAKEHOLDER_ID,
-                    BASE_URI
+                    BASE_URI,
+                    false
                 )
             )
         );

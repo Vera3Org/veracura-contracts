@@ -31,7 +31,7 @@ export TESTNET_TREASURY_ADDRESS="$WALLET_ADDRESS"
 forge clean && forge script \
     --private-key $PRIVATE_KEY \
     --rpc-url $RPC_URL \
-    --slow \
+    --slow --via-ir \
     --optimize --optimizer-runs 1000 \
     script/DeployASC.sol:DeployASC  \
     --verify \
