@@ -35,8 +35,7 @@ forge clean && forge script \
     --slow --via-ir \
     --optimize --optimizer-runs 1000 \
     script/DeployASC.sol:DeployASC  \
+    --verify \
+    --verifier-url="https://api-sepolia.etherscan.io/api" \
+    --etherscan-api-key "$ETHERSCAN_API_KEY" \
     $@
-
-    # --verify \
-    # --verifier-url="https://api-sepolia.etherscan.io/api" \
-    # --etherscan-api-key "$ETHERSCAN_API_KEY" \
