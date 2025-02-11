@@ -75,7 +75,8 @@ contract AnimalSocialClubTest is Test {
                         0,
                         address(ethFeeProxy),
                         asc.ELEPHANT_ID(),
-                        DUMMY_BASE_URI
+                        DUMMY_BASE_URI,
+                        false
                     )
                 )
             );
@@ -95,7 +96,8 @@ contract AnimalSocialClubTest is Test {
                         0,
                         address(ethFeeProxy),
                         asc.SHARK_ID(),
-                        DUMMY_BASE_URI
+                        DUMMY_BASE_URI,
+                        false
                     )
                 )
             );
@@ -115,7 +117,8 @@ contract AnimalSocialClubTest is Test {
                         9, // 9 eagle reserved for lottery
                         address(ethFeeProxy),
                         asc.EAGLE_ID(),
-                        DUMMY_BASE_URI
+                        DUMMY_BASE_URI,
+                        false
                     )
                 )
             );
@@ -135,7 +138,8 @@ contract AnimalSocialClubTest is Test {
                         11, // 1 tiger reserved for lottery, 10 tigers in auction
                         address(ethFeeProxy),
                         asc.TIGER_ID(),
-                        DUMMY_BASE_URI
+                        DUMMY_BASE_URI,
+                        true
                     )
                 )
             );
@@ -154,7 +158,8 @@ contract AnimalSocialClubTest is Test {
                         0,
                         address(ethFeeProxy),
                         asc.STAKEHOLDER_ID(),
-                        DUMMY_BASE_URI
+                        DUMMY_BASE_URI,
+                        false
                     )
                 )
             );
@@ -174,8 +179,10 @@ contract AnimalSocialClubTest is Test {
         for (uint256 i = 0; i < waitlistedAddresses.length; i++) {
             asc.addToWaitlist(asc.ELEPHANT_ID(), 0, waitlistedAddresses[i]);
         }
-        asc.setKYC(buyer, true);
-        asc.setKYC(user, true);
+        asc.setSoftKYC(buyer, true);
+        asc.setSoftKYC(user, true);
+        asc.setStrongKYC(buyer, true);
+        asc.setStrongKYC(user, true);
 
         vm.stopPrank();
 

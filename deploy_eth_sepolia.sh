@@ -32,7 +32,7 @@ export DUMMY_0_ADDRESS=0xe198f322E463510deB487170dD299Df9787f5470
 forge clean && forge script \
     --private-key "$PRIVATE_KEY" \
     --rpc-url "$RPC_URL" \
-    --slow \
+    --slow --via-ir \
     --optimize --optimizer-runs 1000 \
     script/DeployASC.sol:DeployASC  \
     $@

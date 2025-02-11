@@ -33,4 +33,6 @@ forge clean && forge script \
     --rpc-url $RPC_URL \
     --optimize --optimizer-runs 1000 \
     script/DeployASC.sol:DeployASC  \
-    --broadcast
+    --broadcast \
+    --via-ir
+    

@@ -82,6 +82,11 @@ contract AnimalSocialClubERC721 is
      */
     bool public saleActive;
 
+    /**
+     * @dev whether the sale is open to strong KYC'd addresses only.
+     */
+    bool public strongKycRequired;
+
     // Events
     event SaleStateChanged(bool active);
 
@@ -93,7 +98,8 @@ contract AnimalSocialClubERC721 is
         address _treasuryAddress,
         ASC721Manager _manager,
         uint256 num_reserved,
-        address ethFeeProxy
+        address ethFeeProxy,
+        bool strongKycRequired
     );
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -112,7 +118,8 @@ contract AnimalSocialClubERC721 is
         uint256 num_reserved,
         address ethFeeProxy,
         uint256 tier_id,
-        string memory _initialBaseURI
+        string memory _initialBaseURI,
+        bool _strongKycRequired
     ) public initializer {
         __ERC721_init(name, symbol);
         __ReentrancyGuard_init();
@@ -131,6 +138,7 @@ contract AnimalSocialClubERC721 is
         // auctionEndTime = type(uint256).max;
         saleActive = true;
         BASE_URI = _initialBaseURI;
+        strongKycRequired = _strongKycRequired;
     }
 
     /**
@@ -180,7 +188,7 @@ contract AnimalSocialClubERC721 is
 
     function adminMint(address to) external nonReentrant isSaleActive onlyOwnerAndManager {
         // it's on the admin to add kyc or kyb
-        require(manager.hasKYC(to), "Destination address without KYC!");
+        require(strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to), "Destination address without KYC!");
         require(totalSupply() + 1 < MAX_TOKEN_SUPPLY, "Exceeds total supply of tokens");
         require(totalSupply() + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED), "No more tokens: the remainder is reserved");
 
@@ -213,7 +221,7 @@ contract AnimalSocialClubERC721 is
         bytes calldata evangelistReference
     ) external payable nonReentrant isSaleActive {
         // require(!isASCMember(to), "Only one membership per address");
-        require(manager.hasKYC(to), "Destination address without KYC!");
+        require(strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to), "Destination address without KYC!");
         require(TIER_ID != manager.STAKEHOLDER_ID(), "Stakeholder memberships not minted with donation");
         super.requireReferrer(referrer);
         require(totalSupply() + 1 < MAX_TOKEN_SUPPLY - waitlisted.length, "Exceeds total supply of tokens");

@@ -44,16 +44,27 @@ contract StartLottery is Script {
             payable(0x6a14b7745DfAC89A1fE673D034c2E574D8BF06E4) // asc on eth sepolia
         );
 
-        asc.setKYC(0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29, true);
-        asc.setKYC(0x657376F553814Adb084Cd44C31D418833F0594f8, true);
-        asc.setKYC(0xA09C4e64826a1483Ee72EE60513EC9cEE49F8F3b, true);
-        asc.setKYC(0xee3e63892768b9cb54520EB189959140019E0231, true);
-        asc.setKYC(0x7F7a49334b34B6296CAE4b608d2012eB20fe5cd2, true);
-        asc.setKYC(0x09D4a3d729B13d1Fadc586D8A5E26FED9F41c43c, true);
-        asc.setKYC(0x0FdF2350397a2a0fb2Eb5FfD4ae0d128779B02f9, true);
-        asc.setKYC(0x52FEe296d49672c904170858066Ecc5E9908B7ab, true);
-        asc.setKYC(0x0052b3d9519B4A45d796A9513Dcf34E6577D0a03, true);
-        asc.setKYC(0xc5fF763d5f545a2eB84A253A986678f02E055e23, true);
+        asc.setSoftKYC(0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29, true);
+        asc.setSoftKYC(0x657376F553814Adb084Cd44C31D418833F0594f8, true);
+        asc.setSoftKYC(0xA09C4e64826a1483Ee72EE60513EC9cEE49F8F3b, true);
+        asc.setSoftKYC(0xee3e63892768b9cb54520EB189959140019E0231, true);
+        asc.setSoftKYC(0x7F7a49334b34B6296CAE4b608d2012eB20fe5cd2, true);
+        asc.setSoftKYC(0x09D4a3d729B13d1Fadc586D8A5E26FED9F41c43c, true);
+        asc.setSoftKYC(0x0FdF2350397a2a0fb2Eb5FfD4ae0d128779B02f9, true);
+        asc.setSoftKYC(0x52FEe296d49672c904170858066Ecc5E9908B7ab, true);
+        asc.setSoftKYC(0x0052b3d9519B4A45d796A9513Dcf34E6577D0a03, true);
+        asc.setSoftKYC(0xc5fF763d5f545a2eB84A253A986678f02E055e23, true);
+
+        asc.setStrongKYC(0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29, true);
+        asc.setStrongKYC(0x657376F553814Adb084Cd44C31D418833F0594f8, true);
+        asc.setStrongKYC(0xA09C4e64826a1483Ee72EE60513EC9cEE49F8F3b, true);
+        asc.setStrongKYC(0xee3e63892768b9cb54520EB189959140019E0231, true);
+        asc.setStrongKYC(0x7F7a49334b34B6296CAE4b608d2012eB20fe5cd2, true);
+        asc.setStrongKYC(0x09D4a3d729B13d1Fadc586D8A5E26FED9F41c43c, true);
+        asc.setStrongKYC(0x0FdF2350397a2a0fb2Eb5FfD4ae0d128779B02f9, true);
+        asc.setStrongKYC(0x52FEe296d49672c904170858066Ecc5E9908B7ab, true);
+        asc.setStrongKYC(0x0052b3d9519B4A45d796A9513Dcf34E6577D0a03, true);
+        asc.setStrongKYC(0xc5fF763d5f545a2eB84A253A986678f02E055e23, true);
 
         asc.adminMint(0x0BAA2292c6A028FB532ca6cE9321ba3e22C3EE29, asc.ELEPHANT_ID());
         asc.adminMint(0x657376F553814Adb084Cd44C31D418833F0594f8, asc.ELEPHANT_ID());

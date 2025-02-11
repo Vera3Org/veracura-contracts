@@ -40,7 +40,8 @@ contract InitDummyUsers is Script {
         address dummy_2 = vm.envAddress("DUMMY_2_ADDRESS");
         address[2] memory dummys = [dummy_1, dummy_2];
         for (uint256 i = 0; i < dummys.length; i++) {
-            asc.setKYC(dummys[i], true);
+            asc.setSoftKYC(dummys[i], true);
+            asc.setStrongKYC(dummys[i], true);
             asc.setEarlyBacker(dummys[i], true);
         }
 
