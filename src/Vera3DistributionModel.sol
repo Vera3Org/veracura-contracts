@@ -244,6 +244,40 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
         }
     }
 
+    function getPromoterCommissions(
+        address referrer, uint total_value
+    ) public view returns (address, uint256, address, uint256, address, uint256) {
+        if (referrer == address(0) || !isReferrer(referrer)) {
+            return (address(0), 0, address(0), 0, address(0), 0);
+        }
+
+        if (roles[referrer] == Role.Ambassador) {
+            // Referrer is an Ambassador, all commission goes to them
+            address ambassador = referrer;
+            return (ambassador, total_value, address(0), 0, address(0), 0);
+
+        } else if (roles[referrer] == Role.Advocate) {
+            // Referrer is an Advocate delegated by an Ambassador
+            address advocate = referrer;
+            (address ambassador, uint256 ambassadorShare, uint256 advocateShare) =
+                getAdvocateShare(advocate, calculateCommission(total_value));
+            return (ambassador, ambassadorShare, advocate, advocateShare, address(0), 0);
+        } else if (roles[referrer] == Role.Evangelist) {
+            address evangelist = referrer;
+            (
+                address payable ambassador,
+                address payable advocate,
+                uint256 ambassadorShare,
+                uint256 advocateShare,
+                uint256 evangelistShare
+            ) = getEvangelistShare(evangelist, calculateCommission(total_value));
+            return (ambassador, ambassadorShare, advocate, advocateShare, evangelist, evangelistShare);
+        } else {
+            revert("referrer role is None!!");
+        }
+    }
+
+
     /**
      * @dev Function to set commission percentage that Advocates share with Ambassadors.
      * @param commissionPercentage the new commission percentage. 10 means 10%, 100 mean 100%
