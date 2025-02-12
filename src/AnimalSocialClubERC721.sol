@@ -223,7 +223,7 @@ contract AnimalSocialClubERC721 is
         // require(!isASCMember(to), "Only one membership per address");
         require(strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to), "Destination address without KYC!");
         require(TIER_ID != manager.STAKEHOLDER_ID(), "Stakeholder memberships not minted with donation");
-        super.requireReferrer(referrer);
+        require(referrer == address(0) || isReferrer((referrer)));
         require(totalSupply() + 1 < MAX_TOKEN_SUPPLY - waitlisted.length, "Exceeds total supply of tokens");
         require(
             totalSupply() + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED - waitlisted.length),

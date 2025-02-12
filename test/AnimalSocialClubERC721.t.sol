@@ -311,6 +311,26 @@ contract AnimalSocialClubTest is Test {
     //     );
     // }
 
+    function testNoReferrer(uint8 _tier) public {
+        vm.assume(_tier < asc.STAKEHOLDER_ID());
+        uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
+        AnimalSocialClubERC721 membership = asc.contracts(tier);
+        // Buyer mints an Elephant with Ambassador as referrer
+        vm.deal(buyer, 1000 ether);
+        vm.startPrank(buyer);
+        uint256 price = membership.PRICE();
+        if (tier == asc.STAKEHOLDER_ID()) {
+            vm.expectRevert();
+        }
+        membership.mintWithDonationRequestNetwork{value: price}(
+            buyer, address(0), new bytes(1), new bytes(1), new bytes(2), new bytes(3)
+        );
+        if (tier == asc.STAKEHOLDER_ID()) {
+            return;
+        }
+        vm.stopPrank();
+    }
+
     function testAmbassadorReferrer(uint8 _tier) public {
         vm.assume(_tier < asc.STAKEHOLDER_ID());
         uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
