@@ -4,7 +4,6 @@
 *.info
 report/
 .*
-*.sh
 .vscode
 .mailmap
 # Compiler files
