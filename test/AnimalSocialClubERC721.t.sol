@@ -220,18 +220,22 @@ contract AnimalSocialClubTest is Test {
         asc.setSaleActive(true);
         for (uint256 i = 0; i < howMany; i++) {
             // mint using both methods
+            console.log("before 1: %s", membership.totalSupply());
             asc.adminMint(user, tier);
+            console.log("after 1: %s", membership.totalSupply());
             {
-                uint256 tokenId = membership.totalSupply() - 1;
+                uint256 tokenId = membership.totalSupply() ;
                 string memory tokenURI = membership.tokenURI(tokenId);
                 console.log("uri for tier %s: %s", tier, tokenId);
             }
+            console.log("before 2: %s", membership.totalSupply());
             AnimalSocialClubERC721(asc.contracts(tier)).adminMint(user);
             {
-                uint256 tokenId = membership.totalSupply() - 1;
+                uint256 tokenId = membership.totalSupply();
                 string memory tokenURI = membership.tokenURI(tokenId);
                 console.log("uri for tier %s: %s", tier, tokenId);
             }
+            console.log("after 2: %s", membership.totalSupply());
         }
         if (tier == asc.STAKEHOLDER_ID()) {
             return;

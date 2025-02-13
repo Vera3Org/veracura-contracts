@@ -3,7 +3,6 @@ pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -54,7 +53,7 @@ import {ASC721Manager} from "src/ASC721Manager.sol";
  */
 contract AnimalSocialClubERC721 is
     Initializable,
-    ERC721EnumerableUpgradeable,
+    ERC721Upgradeable,
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable,
     Vera3DistributionModel
@@ -86,6 +85,8 @@ contract AnimalSocialClubERC721 is
      * @dev whether the sale is open to strong KYC'd addresses only.
      */
     bool public strongKycRequired;
+
+    uint256 public totalSupply;
 
     // Events
     event SaleStateChanged(bool active);
@@ -178,7 +179,7 @@ contract AnimalSocialClubERC721 is
         return manager.isMember(a);
     }
 
-    event AdminMinted(address to);
+    event AdminMinted(address to, uint256 tokenId);
     /**
      * @dev function for the admin to mint a membership to `to`.
      * Payment is made off-chain.
@@ -189,14 +190,15 @@ contract AnimalSocialClubERC721 is
     function adminMint(address to) external nonReentrant isSaleActive onlyOwnerAndManager {
         // it's on the admin to add kyc or kyb
         require(strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to), "Destination address without KYC!");
-        require(totalSupply() + 1 < MAX_TOKEN_SUPPLY, "Exceeds total supply of tokens");
-        require(totalSupply() + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED), "No more tokens: the remainder is reserved");
+        require(totalSupply + 1 < MAX_TOKEN_SUPPLY, "Exceeds total supply of tokens");
+        require(totalSupply + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED), "No more tokens: the remainder is reserved");
 
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        _safeMint(to, totalSupply());
-        emit AdminMinted(to);
+        uint256 tokenId = ++totalSupply;
+        _safeMint(to, tokenId);
+        emit AdminMinted(to, tokenId);
     }
 
     event MintedWithDonation(uint256 token_id, address to, address referrer, address donor);
@@ -224,9 +226,9 @@ contract AnimalSocialClubERC721 is
         require(strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to), "Destination address without KYC!");
         require(TIER_ID != manager.STAKEHOLDER_ID(), "Stakeholder memberships not minted with donation");
         require(referrer == address(0) || isReferrer((referrer)));
-        require(totalSupply() + 1 < MAX_TOKEN_SUPPLY - waitlisted.length, "Exceeds total supply of tokens");
+        require(totalSupply < MAX_TOKEN_SUPPLY - waitlisted.length, "Exceeds total supply of tokens");
         require(
-            totalSupply() + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED - waitlisted.length),
+            totalSupply < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED - waitlisted.length),
             "No more tokens: the remainder is reserved for lottery"
         );
         require(msg.value == PRICE, "Incorrect ETH amount sent");
@@ -234,14 +236,14 @@ contract AnimalSocialClubERC721 is
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        uint256 token_id = totalSupply();
-        _safeMint(to, token_id);
+        uint tokenId = ++totalSupply;
+        _safeMint(to, tokenId);
 
         ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
             payable(manager.treasuryAddress()), donorReference, 0, payable(address(0))
         );
         sendCommission(referrer, ambassadorReference, advocateReference, evangelistReference);
-        emit MintedWithDonation(token_id, to, referrer, msg.sender);
+        emit MintedWithDonation(tokenId, to, referrer, msg.sender);
     }
 
     /**
@@ -279,7 +281,7 @@ contract AnimalSocialClubERC721 is
     mapping(address => bool) public waitlistClaimed;
 
     event WaitlistJoined(address indexed user);
-    event WaitlistClaimed(address indexed user);
+    event WaitlistClaimed(address indexed user, uint256 indexed tokenId);
 
     /**
      * @dev Register someone on the waitlist for the tokenId.
@@ -290,11 +292,12 @@ contract AnimalSocialClubERC721 is
      */
     function addToWaitlist(uint256 waitlist_deposit, address user) external payable nonReentrant onlyOwnerAndManager {
         require(!isLaunched, "Sale has already launched");
-        uint256 tokenId = totalSupply() + waitlisted.length;
-        require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
-        require(tokenId < MAX_TOKEN_SUPPLY, "Total supply exhausted for this token");
         require(!waitlist[user], "Already on waitlist for this token");
         require(waitlist_deposit <= PRICE, "deposit amount is more than price");
+
+        uint256 tokenId = ++totalSupply;
+        require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
+        require(tokenId < MAX_TOKEN_SUPPLY, "Total supply exhausted for this token");
 
         waitlistDeposited[user] += waitlist_deposit;
 
@@ -336,7 +339,7 @@ contract AnimalSocialClubERC721 is
         }
 
         _safeMint(msg.sender, tokenId);
-        emit WaitlistClaimed(msg.sender);
+        emit WaitlistClaimed(msg.sender, tokenId);
     }
 
     function launch() external nonReentrant onlyOwnerAndManager {
@@ -416,4 +419,5 @@ contract AnimalSocialClubERC721 is
         }
         return "";
     }
+
 }
