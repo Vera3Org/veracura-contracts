@@ -221,7 +221,7 @@ contract ASC721Manager is
         bool _is
     ) external onlyRole(ADMIN_ROLE) {
         require(
-            isEarlyBacker[it] = !_is,
+            isEarlyBacker[it] == !_is,
             "address is already in the desired state"
         );
         isEarlyBacker[it] = _is;
