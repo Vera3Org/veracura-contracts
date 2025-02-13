@@ -3,13 +3,14 @@
 
 source .env.testnet.eth-sepolia
 
-ASC_MANAGER="0xe5Efaa2470EDDBc32Dbc83027F08e06d408E8606"
-ELEPHANT=0x6da40f96f59428b4cAAE79B8c2E29fcfE485fC17
-TIGER=0x662D1c40D88b1E8290D5189026017738003dB3A4
-SHARK=0xC722a160968EEeEE7cAEf1A5dd5aAd39f7bCa9F5
-EAGLE=0x92A3E4c1B9f2315E2aB8DBb0B5e10277fa24041B
-STAKEHOLDER=0xf12DF6b824d0FaC784e4935D7C6aFd8A825c5e81
-LOTTERY=0x88B4537D0e0438659C796Cb83bC9CC7bAA4C31E6
+ASC_MANAGER="0x33fAF32f6Ba3ee3C0B286A8952d968fa8F620440"
+elephant=0x6181d43D9983795247Ccb8797FcC441408246E04
+tiger=0x155a3DABFDDFd22d75da2f6D67139405d1679932
+shark=0xe2EaDddC6f628d293A72Bb4aD22C71a2051C2985
+eagle=0xa658c2e3607a592660631bCD4de33D5eb850C528
+stakeholder=0xAD829b08c1b18c1eE3479447c25a28560E03c5f1
+lottery=0x8cb2f272b267779413608095c005a9b2b1b68390
+
 
 
 function cast_base() {
@@ -27,38 +28,38 @@ function cast_manager() {
 function cast_elephant() {
     local verb="$1"
     shift
-    cast_base $verb "$ELEPHANT" $@
+    cast_base $verb "$elephant" $@
 }
 
 function cast_shark() {
     local verb="$1"
     shift
-    cast_base $verb "$SHARK" $@
+    cast_base $verb "$shark" $@
 }
 
 function cast_eagle() {
     local verb="$1"
     shift
-    cast_base $verb "$EAGLE" $@
+    cast_base $verb "$eagle" $@
 }
 
 
 function cast_tiger() {
     local verb="$1"
     shift
-    cast_base $verb "$TIGER" $@
+    cast_base $verb "$tiger" $@
 }
 
 function cast_stakeholder() {
     local verb="$1"
     shift
-    cast_base $verb "$STAKEHOLDER" $@
+    cast_base $verb "$stakeholder" $@
 }
 
 function cast_lottery() {
     local verb="$1"
     shift
-    cast_base $verb "$LOTTERY" $@
+    cast_base $verb "$lottery" $@
 }
 
 
