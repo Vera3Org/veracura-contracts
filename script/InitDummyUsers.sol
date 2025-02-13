@@ -38,15 +38,15 @@ contract InitDummyUsers is Script {
 
         address dummy_1 = vm.envAddress("DUMMY_1_ADDRESS");
         address dummy_2 = vm.envAddress("DUMMY_2_ADDRESS");
-        address[2] memory dummys = [dummy_1, dummy_2];
-        for (uint256 i = 0; i < dummys.length; i++) {
-            asc.setSoftKYC(dummys[i], true);
-            asc.setStrongKYC(dummys[i], true);
-            asc.setEarlyBacker(dummys[i], true);
-        }
+        asc.setSoftKYC(dummy_1, true);
+        asc.setStrongKYC(dummy_1, true);
+        asc.setEarlyBacker(dummy_1, true);
+        asc.setSoftKYC(dummy_2, true);
+        asc.setStrongKYC(dummy_2, true);
+        asc.setEarlyBacker(dummy_2, true);
 
-        asc.adminPackCryptoTucan(dummys[0]);
-        asc.adminPackJaguareth(dummys[1]);
+        asc.adminPackCryptoTucan(dummy_1);
+        asc.adminPackJaguareth(dummy_2);
 
         vm.stopBroadcast();
     }
