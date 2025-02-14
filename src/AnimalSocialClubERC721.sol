@@ -196,7 +196,7 @@ contract AnimalSocialClubERC721 is
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        uint256 tokenId = ++totalSupply;
+        uint256 tokenId = totalSupply++;
         _safeMint(to, tokenId);
         emit AdminMinted(to, tokenId);
     }
