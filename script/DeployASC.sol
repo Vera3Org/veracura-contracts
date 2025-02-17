@@ -31,7 +31,7 @@ contract DeployASC is Script {
     uint256 public constant EAGLE_ID = 3;
     uint256 public constant STAKEHOLDER_ID = 4;
 
-    string public constant BASE_URI = "ipfs://real/";
+    string public constant BASE_URI = "https://turinglabs.mypinata.cloud/ipfs/bafybeigx7tedejallu35lvitfp7ejkeb3aorttfmlk2dp7exo25ymr7uyy/";
 
     function setUp() public {}
 
