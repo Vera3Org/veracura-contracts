@@ -31,7 +31,8 @@ contract DeployASC is Script {
     uint256 public constant EAGLE_ID = 3;
     uint256 public constant STAKEHOLDER_ID = 4;
 
-    string public constant BASE_URI = "https://turinglabs.mypinata.cloud/ipfs/bafybeigx7tedejallu35lvitfp7ejkeb3aorttfmlk2dp7exo25ymr7uyy/";
+    string public constant BASE_URI =
+        "https://turinglabs.mypinata.cloud/ipfs/bafybeigx7tedejallu35lvitfp7ejkeb3aorttfmlk2dp7exo25ymr7uyy/";
 
     function setUp() public {}
 
@@ -39,11 +40,13 @@ contract DeployASC is Script {
         vm.startBroadcast();
 
         ASCLottery lottery = new ASCLottery(LINK_ADDRESS, VRF_WRAPPER_ADDRESS, TREASURY_ADDRESS);
+        console.log("lottery address %s", address(lottery));
         asc_address = payable(
             Upgrades.deployUUPSProxy(
                 "ASC721Manager.sol", abi.encodeCall(ASC721Manager.initialize, (TREASURY_ADDRESS, address(lottery)))
             )
         );
+        console.log("asc proxy address %s", asc_address);
         asc = ASC721Manager(asc_address);
         lottery.transferOwnership(asc_address);
 
@@ -67,6 +70,8 @@ contract DeployASC is Script {
                 )
             )
         );
+        console.log("elephant proxy address %s", elephantAddress);
+
         address sharkAddress = Upgrades.deployUUPSProxy(
             "AnimalSocialClubERC721.sol",
             abi.encodeCall(
@@ -87,6 +92,7 @@ contract DeployASC is Script {
                 )
             )
         );
+        console.log("shark proxy address %s", sharkAddress);
 
         address eagle = Upgrades.deployUUPSProxy(
             "AnimalSocialClubERC721.sol",
@@ -108,6 +114,7 @@ contract DeployASC is Script {
                 )
             )
         );
+        console.log("eagle proxy address %s", eagle);
 
         address tiger = Upgrades.deployUUPSProxy(
             "AnimalSocialClubERC721.sol",
@@ -129,6 +136,7 @@ contract DeployASC is Script {
                 )
             )
         );
+        console.log("tiger proxy address %s", tiger);
         address stakeholder = Upgrades.deployUUPSProxy(
             "AnimalSocialClubERC721.sol",
             abi.encodeCall(
@@ -149,6 +157,7 @@ contract DeployASC is Script {
                 )
             )
         );
+        console.log("stakeholder proxy address %s", stakeholder);
 
         asc.assignContracts(
             payable(elephantAddress), payable(tiger), payable(sharkAddress), payable(eagle), payable(stakeholder)

@@ -29,7 +29,9 @@ import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
  * - NFT_ROLE: is an AnimalSocialClubERC721 contract address, and is the only
  *   role which can interact with the `lottery` contract.
  */
-contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+
+/// @custom:oz-upgrades-from ASC721Manager
+contract ASC721Manager_V2 is AccessControlDefaultAdminRulesUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
 
@@ -132,12 +134,13 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
 
         __AccessControlDefaultAdminRules_init(3 hours, msg.sender);
-        __UUPSUpgradeable_init();
 
         // Set the beneficiary addresses
         treasuryAddress = _treasuryAddress;
         lottery = ASCLottery(_lotteryAddress);
     }
+
+    function initialize_v2() public reinitializer(2) {}
 
     /**
      * @dev Only used during deployment. Registers each NFT tier into this contract.
