@@ -52,7 +52,8 @@ import {ASC721Manager} from "src/ASC721Manager.sol";
  * @dev Contract uses OpenZeppelin's Upgrades features, so it inherits from Upgradeable
  * contracts, and is a UUPS proxy.
  */
-contract AnimalSocialClubERC721 is
+/// @custom:oz-upgrades-from AnimalSocialClubERC721
+contract AnimalSocialClubERC721_V2 is
     Initializable,
     ERC721Upgradeable,
     ReentrancyGuardUpgradeable,
