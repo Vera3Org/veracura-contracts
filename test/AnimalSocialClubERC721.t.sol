@@ -214,9 +214,7 @@ contract AnimalSocialClubTest is Test {
         AnimalSocialClubERC721 elephant = asc.elephant();
         vm.deal(non_waitlisted_user, 2000000000000 ether);
         vm.startPrank(non_waitlisted_user);
-        uint256 full_price = elephant.PRICE();
-        uint256 discounted_price = full_price - ((full_price * elephant.WAITLIST_DISCOUNT_PCT()) / 100);
-        uint256 amt_to_pay = discounted_price - elephant.waitlistDeposited(non_waitlisted_user);
+        uint256 amt_to_pay = elephant.PRICE() - elephant.waitlistDeposited(non_waitlisted_user);
         vm.expectRevert();
         elephant.claimWaitlist{value: amt_to_pay}();
         vm.stopPrank();
@@ -237,9 +235,7 @@ contract AnimalSocialClubTest is Test {
             address waitlisted_user = waitlistedAddresses[i];
             vm.deal(waitlisted_user, 2000000000000 ether);
             vm.startPrank(waitlisted_user);
-            uint256 full_price = elephant.PRICE();
-            uint256 discounted_price = full_price - ((full_price * elephant.WAITLIST_DISCOUNT_PCT()) / 100);
-            uint256 amt_to_pay = discounted_price - elephant.waitlistDeposited(waitlisted_user);
+            uint256 amt_to_pay = elephant.PRICE() - elephant.waitlistDeposited(waitlisted_user);
             console.log("amount to pay: ", amt_to_pay);
             elephant.claimWaitlist{value: amt_to_pay}();
             vm.stopPrank();

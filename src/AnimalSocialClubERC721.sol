@@ -270,7 +270,6 @@ contract AnimalSocialClubERC721 is
     //////////////////////////////////////////////////////////////
     /////// WAITLIST
     //////////////////////////////////////////////////////////////
-    uint256 public constant WAITLIST_DISCOUNT_PCT = 5;
     bool public isLaunched;
 
     // pair (array, address) to keep track of who's on waitlist
@@ -325,8 +324,7 @@ contract AnimalSocialClubERC721 is
 
         uint256 waitlist_deposit = waitlistDeposited[msg.sender];
 
-        uint256 discountedPrice = PRICE - ((PRICE * WAITLIST_DISCOUNT_PCT) / 100);
-        uint256 finalPrice = discountedPrice - waitlist_deposit;
+        uint256 finalPrice = PRICE - waitlist_deposit;
 
         require(msg.value >= finalPrice, "Incorrect payment amount");
 
