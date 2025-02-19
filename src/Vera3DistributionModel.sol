@@ -4,7 +4,6 @@ pragma solidity ^0.8.26;
 import "@requestnetwork/advanced-logic/src/contracts/interfaces/EthereumFeeProxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "forge-std/console.sol";
 
 /**
  * @dev Abstract contract which implements the Vera3 distribution model.
@@ -196,7 +195,6 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
             // Referrer is an Ambassador, all commission goes to them
             address ambassador = referrer;
             // payable(ambassador).transfer(totalCommission);
-            console.log("Using Ethereum fee proxy");
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: calculateCommission(msg.value)}(
                 payable(ambassador), ambassadorReference, 0, payable(address(0))
             );
@@ -210,7 +208,6 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
                 getAdvocateShare(advocate, calculateCommission(msg.value));
             // ambassador = ambassador_;
             // payable(ambassador).transfer(ambassadorShare);
-            console.log("Using Ethereum fee proxy");
             // transfer to ambassador
             ETHEREUM_FEE_PROXY.transferWithReferenceAndFee{value: ambassadorShare}(
                 payable(ambassador), ambassadorReference, 0, payable(address(0))
