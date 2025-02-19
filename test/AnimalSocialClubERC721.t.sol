@@ -259,7 +259,7 @@ contract AnimalSocialClubTest is Test {
     }
 
     function testAdminMint(uint8 _tier, uint8 _howMany) public {
-        vm.assume(_howMany > 0 && _howMany < 3 && _tier < asc.STAKEHOLDER_ID());
+        vm.assume(_howMany > 0 && _howMany < 3 && _tier <= asc.STAKEHOLDER_ID());
         uint256 tier = bound(_tier, asc.ELEPHANT_ID(), asc.STAKEHOLDER_ID());
         uint256 howMany = _howMany;
 
@@ -314,10 +314,16 @@ contract AnimalSocialClubTest is Test {
         vm.startPrank(user);
         for (uint256 i = 0; i < howMany; i++) {
             uint256 price = membership.PRICE();
+            // test that it does not work without the right amount
             if (tier == asc.STAKEHOLDER_ID()) {
                 vm.expectRevert();
             }
             membership.mintWithDonationRequestNetwork{value: price}(
+                user, ambassador, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
+            );
+            // test that it does not work without the right amount
+            vm.expectRevert();
+            membership.mintWithDonationRequestNetwork{value: 1}(
                 user, ambassador, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
             );
         }
@@ -382,6 +388,11 @@ contract AnimalSocialClubTest is Test {
         membership.mintWithDonationRequestNetwork{value: price}(
             buyer, address(0), new bytes(1), new bytes(1), new bytes(2), new bytes(3)
         );
+        // test it does not work without right amount
+        vm.expectRevert();
+        membership.mintWithDonationRequestNetwork{value: 1}(
+            buyer, address(0), new bytes(1), new bytes(1), new bytes(2), new bytes(3)
+        );
         if (tier == asc.STAKEHOLDER_ID()) {
             return;
         }
@@ -400,6 +411,11 @@ contract AnimalSocialClubTest is Test {
             vm.expectRevert();
         }
         membership.mintWithDonationRequestNetwork{value: price}(
+            buyer, ambassador, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
+        );
+        // test it does not work without right amount
+        vm.expectRevert();
+        membership.mintWithDonationRequestNetwork{value: 1}(
             buyer, ambassador, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
         );
         if (tier == asc.STAKEHOLDER_ID()) {
@@ -430,6 +446,11 @@ contract AnimalSocialClubTest is Test {
             vm.expectRevert();
         }
         membership.mintWithDonationRequestNetwork{value: price}(
+            buyer, advocate, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
+        );
+        // test it does not work without right amount
+        vm.expectRevert();
+        membership.mintWithDonationRequestNetwork{value: 1}(
             buyer, advocate, new bytes(1), new bytes(1), new bytes(2), new bytes(3)
         );
         if (tier == asc.STAKEHOLDER_ID()) {
