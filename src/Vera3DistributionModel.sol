@@ -94,6 +94,9 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
      */
     IEthereumFeeProxy public ETHEREUM_FEE_PROXY;
 
+    // gap of unused 48 words. can be used to add new storage variables in upgrades
+    uint256[48] __gap;
+
     // Events for role assignment and commission updates
     event RoleAssigned(address indexed user, Role indexed role, address indexed delegate, address _msgSender);
     event AmbassadorCommissionSet(uint256 commission_pct);
@@ -244,9 +247,11 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
         }
     }
 
-    function getPromoterCommissions(
-        address referrer, uint total_value
-    ) public view returns (address, uint256, address, uint256, address, uint256) {
+    function getPromoterCommissions(address referrer, uint256 total_value)
+        public
+        view
+        returns (address, uint256, address, uint256, address, uint256)
+    {
         if (referrer == address(0) || !isReferrer(referrer)) {
             return (address(0), 0, address(0), 0, address(0), 0);
         }
@@ -255,7 +260,6 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
             // Referrer is an Ambassador, all commission goes to them
             address ambassador = referrer;
             return (ambassador, total_value, address(0), 0, address(0), 0);
-
         } else if (roles[referrer] == Role.Advocate) {
             // Referrer is an Advocate delegated by an Ambassador
             address advocate = referrer;
@@ -276,7 +280,6 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
             revert("referrer role is None!!");
         }
     }
-
 
     /**
      * @dev Function to set commission percentage that Advocates share with Ambassadors.
