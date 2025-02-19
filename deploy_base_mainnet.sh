@@ -22,7 +22,7 @@ RPC_URL="${RPC_URL:-https://base.llamarpc.com}"
 export ETH_FEE_PROXY_ADDRESS="0xd9C3889eB8DA6ce449bfFE3cd194d08A436e96f2"
 # from https://docs.chain.link/vrf/v2-5/supported-networks#base-mainnet
 export LINK_ADDRESS=0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196
-export VRF_WRAPPER_ADDRESS=0x29576aB8152A09b9DC634804e4aDE73dA1f3a3CC
+export VRF_WRAPPER_ADDRESS=0xb0407dbe851f8318bd31404A49e658143C982F23
 
 # safe address
 export MAINNET_TREASURY_ADDRESS=${MAINNET_TREASURY_ADDRESS}
@@ -35,6 +35,7 @@ forge clean && forge script \
     --slow --via-ir \
     --optimize --optimizer-runs 1000 \
     script/DeployASC.sol:DeployASC  \
+    --compute-units-per-second 20 \
     --ffi \
     --verify \
     --verifier-url="https://api.basescan.org/api" \
