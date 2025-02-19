@@ -205,6 +205,17 @@ contract AnimalSocialClubTest is Test {
     //     assertEq(asc.uri(asc.ID_RESERVED()), "ipfs://baseURI/5.json");
     //     assertEq(asc.totalSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
     // }
+    function testTreasuryChange() public {
+        vm.deal(user, 2000000000000 ether);
+        vm.startPrank(adminAddress);
+        address new_treasury = address(0x123123);
+
+        asc.setTreasuryAddress(new_treasury);
+        assertEq(new_treasury, asc.treasuryAddress());
+        for (uint256 i = 0; i < 5; i++) {
+            assertEq(new_treasury, asc.contracts(i).treasuryAddress());
+        }
+    }
 
     function testAdminMint(uint8 _tier, uint8 _howMany) public {
         vm.assume(_howMany > 0 && _howMany < 3 && _tier < asc.STAKEHOLDER_ID());

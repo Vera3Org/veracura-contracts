@@ -118,6 +118,8 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      */
     address[] public earlyBackers;
 
+    event TreasuryAddressChanged(address old_address, address new_address);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -521,5 +523,17 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
     function setLotteryContract(address payable _newLottery) external onlyRole(ADMIN_ROLE) {
         require(_newLottery != address(0), "null address");
         lottery = ASCLottery(_newLottery);
+    }
+
+    function setTreasuryAddress(address new_address) external onlyRole(ADMIN_ROLE) {
+        require(new_address != address(0), "treasury cant be 0x0");
+        address old_address = treasuryAddress;
+        treasuryAddress = new_address;
+        emit TreasuryAddressChanged(old_address, new_address);
+        for (uint256 i = 0; i < contracts.length; i++) {
+            AnimalSocialClubERC721 tier = contracts[i];
+            // slither-disable-next-line calls-loop
+            tier.setTreasuryAddress(new_address);
+        }
     }
 }

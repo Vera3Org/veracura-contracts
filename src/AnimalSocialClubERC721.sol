@@ -105,6 +105,8 @@ contract AnimalSocialClubERC721 is
         bool strongKycRequired
     );
 
+    event TreasuryAddressChanged(address old_address, address new_address);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -423,5 +425,12 @@ contract AnimalSocialClubERC721 is
             return "stakeholder/";
         }
         return "";
+    }
+
+    function setTreasuryAddress(address new_address) external onlyOwnerAndManager {
+        require(new_address != address(0), "treasury cant be 0x0");
+        address old_address = treasuryAddress;
+        treasuryAddress = new_address;
+        emit TreasuryAddressChanged(old_address, new_address);
     }
 }
