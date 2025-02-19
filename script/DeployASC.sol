@@ -19,11 +19,10 @@ contract DeployASC is Script {
     ASC721Manager public asc;
     address payable public asc_address;
     address public ADMIN_ADDRESS = vm.envAddress("ADMIN_ADDRESS");
-    address public TREASURY_ADDRESS = vm.envAddress("TESTNET_TREASURY_ADDRESS");
+    address public TREASURY_ADDRESS = vm.envAddress("MAINNET_TREASURY_ADDRESS");
     address public ETH_FEE_PROXY_ADDRESS = vm.envAddress("ETH_FEE_PROXY_ADDRESS");
     address public LINK_ADDRESS = vm.envAddress("LINK_ADDRESS");
     address public VRF_WRAPPER_ADDRESS = vm.envAddress("VRF_WRAPPER_ADDRESS");
-    address public DUMMY_WAITLISTED_ADDRESS = vm.envAddress("DUMMY_0_ADDRESS");
 
     uint256 public constant ELEPHANT_ID = 0;
     uint256 public constant TIGER_ID = 1;
@@ -31,8 +30,7 @@ contract DeployASC is Script {
     uint256 public constant EAGLE_ID = 3;
     uint256 public constant STAKEHOLDER_ID = 4;
 
-    string public constant BASE_URI =
-        "https://turinglabs.mypinata.cloud/ipfs/bafybeigx7tedejallu35lvitfp7ejkeb3aorttfmlk2dp7exo25ymr7uyy/";
+    string public constant BASE_URI = "ipfs://bafybeigx7tedejallu35lvitfp7ejkeb3aorttfmlk2dp7exo25ymr7uyy/";
 
     function setUp() public {}
 
@@ -175,7 +173,7 @@ contract DeployASC is Script {
             require(contracts[i].owner() == address(ADMIN_ADDRESS));
         }
 
-        asc.addToWaitlist(TIGER_ID, asc.tiger().PRICE() / 50, DUMMY_WAITLISTED_ADDRESS);
+        asc.setSaleActive(true);
 
         vm.stopBroadcast();
 
