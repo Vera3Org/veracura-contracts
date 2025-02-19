@@ -177,8 +177,12 @@ contract DeployASC is Script {
 
         asc.setSaleActive(true);
 
+        // add addresses to waitlist
         asc.addToWaitlist(TIGER_ID, 1 ether, 0x724158b824225051935f37984CE0f907f8d451a9);
         asc.addToWaitlist(ELEPHANT_ID, 0.05 ether, 0xE6c30AD5AeE7AD22e9F39D51d67667587cdD05A1);
+
+        // terminate the waitlist period
+        asc.setLaunchStatus(true);
 
         asc.grantRole(asc.OPERATOR_ROLE(), OPERATOR_ADDRESS);
 
