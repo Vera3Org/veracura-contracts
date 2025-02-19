@@ -29,7 +29,6 @@ contract AnimalSocialClubTest is Test {
 
     address[] public waitlistedAddresses =
         [address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f), address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720)];
-    uint256[] public waitlistedIDs = [1, 2];
 
     // address public constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789; // eth sepolia
     // address public constant VRF_WRAPPER_ADDRESS = 0x195f15F2d49d693cE265b4fB0fdDbE15b1850Cc1; // eth sepolia
@@ -180,7 +179,8 @@ contract AnimalSocialClubTest is Test {
             }
         }
         for (uint256 i = 0; i < waitlistedAddresses.length; i++) {
-            asc.addToWaitlist(asc.ELEPHANT_ID(), 0, waitlistedAddresses[i]);
+            console.log("adding address in the elephant waitlist: ", waitlistedAddresses[i]);
+            asc.addToWaitlist(asc.ELEPHANT_ID(), 0.01 ether, waitlistedAddresses[i]);
         }
         asc.setSoftKYC(buyer, true);
         asc.setSoftKYC(user, true);
@@ -204,12 +204,36 @@ contract AnimalSocialClubTest is Test {
         vm.stopPrank();
     }
 
-    // function testReservedTokens() public view {
-    //     assertEq(asc.uri(asc.ID_RESERVED()), "ipfs://baseURI/5.json");
-    //     assertEq(asc.totalSupply(asc.ID_RESERVED()), asc.TOTAL_RESERVED()); // 250 reserved tokens
-    // }
+    function testClaimWaitlist() public {
+        vm.prank(adminAddress);
+        asc.setLaunchStatus(true);
+
+        // check that it's ok to non-waitlist mint before ppl claim
+        testAdminMint(0, 1);
+        testMintWithDonation(0, 1);
+        testAdminMint(0, 1);
+        testMintWithDonation(0, 1);
+
+        AnimalSocialClubERC721 elephant = asc.elephant();
+        for (uint256 i = 0; i < waitlistedAddresses.length; i++) {
+            address waitlisted_user = waitlistedAddresses[i];
+            vm.deal(waitlisted_user, 2000000000000 ether);
+            vm.startPrank(waitlisted_user);
+            uint256 full_price = elephant.PRICE();
+            uint256 discounted_price = full_price - ((full_price * elephant.WAITLIST_DISCOUNT_PCT()) / 100);
+            uint256 amt_to_pay = discounted_price - elephant.waitlistDeposited(waitlisted_user);
+            console.log("amount to pay: ", amt_to_pay);
+            elephant.claimWaitlist{value: amt_to_pay}();
+            vm.stopPrank();
+            // check that non-waitlist mints work fine after ppl claim
+            testAdminMint(0, 1);
+            testMintWithDonation(0, 1);
+            testAdminMint(0, 1);
+            testMintWithDonation(0, 1);
+        }
+    }
+
     function testTreasuryChange() public {
-        vm.deal(user, 2000000000000 ether);
         vm.startPrank(adminAddress);
         address new_treasury = address(0x123123);
 
@@ -226,6 +250,7 @@ contract AnimalSocialClubTest is Test {
         uint256 howMany = _howMany;
 
         AnimalSocialClubERC721 membership = asc.contracts(tier);
+        uint256 inital_membership_balance = membership.balanceOf(user);
         uint256 initialSupply = membership.totalSupply();
 
         vm.deal(user, 2000000000000 ether);
@@ -251,7 +276,11 @@ contract AnimalSocialClubTest is Test {
 
         howMany = howMany >= membership.MAX_TOKEN_SUPPLY() ? membership.MAX_TOKEN_SUPPLY() : howMany;
 
-        assertEq(membership.balanceOf(user), howMany * 2, "Balance of user doesnt match expectation");
+        assertEq(
+            membership.balanceOf(user),
+            inital_membership_balance + howMany * 2,
+            "Balance of user doesnt match expectation"
+        );
         assertEq(membership.totalSupply(), initialSupply + (howMany * 2), "Token supply doesnt match expectation");
     }
 
@@ -261,6 +290,7 @@ contract AnimalSocialClubTest is Test {
         uint256 howMany = _howMany;
 
         AnimalSocialClubERC721 membership = asc.contracts(tier);
+        uint256 inital_membership_balance = membership.balanceOf(user);
         uint256 ambassadorInitialBalance = ambassador.balance;
         uint256 initialSupply = membership.totalSupply();
 
@@ -284,7 +314,9 @@ contract AnimalSocialClubTest is Test {
 
         howMany = howMany >= membership.MAX_TOKEN_SUPPLY() ? membership.MAX_TOKEN_SUPPLY() : howMany;
 
-        assertEq(membership.balanceOf(user), howMany, "Balance of user doesnt match expectation");
+        assertEq(
+            membership.balanceOf(user), inital_membership_balance + howMany, "Balance of user doesnt match expectation"
+        );
         assertEq(membership.totalSupply(), initialSupply + howMany, "Token supply doesnt match expectation");
         assertEq(
             ambassador.balance,

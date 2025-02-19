@@ -220,7 +220,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
             // remove `it` from the list
             for (uint256 i = 0; i < earlyBackers.length; i++) {
                 if (earlyBackers[i] == it) {
-                    earlyBackers[i] = earlyBackers[earlyBackers.length];
+                    earlyBackers[i] = earlyBackers[earlyBackers.length - 1];
                     earlyBackers.pop();
                     emit SetEarlyBacker(it, _is, true);
                     return;
@@ -402,14 +402,12 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * @dev funds are withdrawn to `treasuryAddress`.
      */
     function withdrawFunds() external nonReentrant onlyRole(ADMIN_ROLE) {
-        // console2.log("Hello");
         for (uint256 i = 0; i < contracts.length; i++) {
             // slither-disable-next-line calls-loop
             contracts[i].withdrawFunds();
         }
 
         uint256 balance = address(this).balance;
-        // console2.log("got balance");
 
         if (balance > 0) {
             payable(treasuryAddress).transfer(balance);
@@ -439,37 +437,16 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
      * @dev calls  `AnimalSocialClubERC721.assignRole` on each sub-contract.
      * See that function.
      */
-    function assignRole(address payable upper, Vera3DistributionModel.Role role, address payable delegate) external {
+    function assignRole(address payable upper, Vera3DistributionModel.Role role, address payable delegate)
+        external
+        onlyRole(OPERATOR_ROLE)
+    {
         for (uint256 i = 0; i < contracts.length; i++) {
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             Vera3DistributionModel(tier).assignRole(upper, role, delegate, msg.sender);
         }
         emit RoleAssigned(upper, role, delegate);
-    }
-
-    /**
-     * @dev calls  `AnimalSocialClubERC721.setAmbassadorToAdvocateCommission`
-     * on each sub-contract.
-     */
-    function setAmbassadorToAdvocateCommission(uint256 percentage) external {
-        for (uint256 i = 0; i < contracts.length; i++) {
-            AnimalSocialClubERC721 tier = contracts[i];
-            // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).setAmbassadorToAdvocateCommission(percentage);
-        }
-    }
-
-    /**
-     * @dev calls  `AnimalSocialClubERC721.setAdvocateToEvangelistCommission`
-     * on each sub-contract.
-     */
-    function setAdvocateToEvangelistCommission(uint256 percentage) external {
-        for (uint256 i = 0; i < contracts.length; i++) {
-            AnimalSocialClubERC721 tier = contracts[i];
-            // slither-disable-next-line calls-loop
-            Vera3DistributionModel(tier).setAdvocateToEvangelistCommission(percentage);
-        }
     }
 
     /**
@@ -480,6 +457,17 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
             AnimalSocialClubERC721 tier = contracts[i];
             // slither-disable-next-line calls-loop
             tier.setSaleActive(isSaleActive);
+        }
+    }
+
+    /**
+     * @dev calls  `AnimalSocialClubERC721.setSaleActive`  on each sub-contract.
+     */
+    function setLaunchStatus(bool status) external onlyRole(ADMIN_ROLE) {
+        for (uint256 i = 0; i < contracts.length; i++) {
+            AnimalSocialClubERC721 tier = contracts[i];
+            // slither-disable-next-line calls-loop
+            tier.setLaunchStatus(status);
         }
     }
 

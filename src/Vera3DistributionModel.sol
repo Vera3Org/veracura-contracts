@@ -282,35 +282,6 @@ abstract contract Vera3DistributionModel is Initializable, OwnableUpgradeable {
     }
 
     /**
-     * @dev Function to set commission percentage that Advocates share with Ambassadors.
-     * @param commissionPercentage the new commission percentage. 10 means 10%, 100 mean 100%
-     */
-    function setAmbassadorToAdvocateCommission(
-        // address ambassador,
-        uint256 commissionPercentage
-    ) external onlyOwner {
-        require(roles[msg.sender] == Role.Ambassador || msg.sender == owner(), "Not authorized!");
-        require(commissionPercentage <= 100, "Commission percentage must be <= 100");
-        // ambassadorToAdvocateCommission[ambassador] = commissionPercentage;
-        // emit AmbassadorCommissionSet(ambassador, commissionPercentage);
-        ambassadorToAdvocateCommission = commissionPercentage;
-        emit AmbassadorCommissionSet(commissionPercentage);
-    }
-
-    /**
-     * @dev Function to set commission percentage that Evangelists share with Advocates.
-     * @param commissionPercentage the new commission percentage. 10 means 10%, 100 mean 100%
-     */
-    function setAdvocateToEvangelistCommission(uint256 commissionPercentage) external onlyOwner {
-        require(roles[msg.sender] == Role.Advocate || msg.sender == owner(), "Not authorized!");
-        require(commissionPercentage <= 100, "Commission percentage must be <= 100");
-        // advocateToEvangelistCommission[advocate] = commissionPercentage;
-        // emit AdvocateCommissionSet(advocate, commissionPercentage);
-        advocateToEvangelistCommission = commissionPercentage;
-        emit AdvocateCommissionSet(commissionPercentage);
-    }
-
-    /**
      * @dev Calculates how much is the advocate's share for a given commission value.
      * @param advocate the Advocate's address. Will be used to fetch the upper Ambassador.
      * @param totalCommission the commission to share.

@@ -13,9 +13,6 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {Vera3DistributionModel} from "src/Vera3DistributionModel.sol";
 import {ASC721Manager} from "src/ASC721Manager.sol";
 
-// import "forge-std/console.sol";
-// import "forge-std/console2.sol";
-
 /**
  * @dev Contract which represents ASC membership of a certain tier.
  *
@@ -287,7 +284,7 @@ contract AnimalSocialClubERC721 is
     // keep track of who's claimed their waitlisted item
     mapping(address => bool) public waitlistClaimed;
 
-    event WaitlistJoined(address indexed user);
+    event WaitlistJoined(address indexed user, uint256 indexed tokenId);
     event WaitlistClaimed(address indexed user, uint256 indexed tokenId);
 
     /**
@@ -312,7 +309,7 @@ contract AnimalSocialClubERC721 is
         waitlistId[user] = tokenId;
         waitlisted.push(user);
 
-        emit WaitlistJoined(user);
+        emit WaitlistJoined(user, tokenId);
     }
 
     /**
@@ -328,19 +325,19 @@ contract AnimalSocialClubERC721 is
 
         uint256 waitlist_deposit = waitlistDeposited[msg.sender];
 
-        uint256 remainingPrice = PRICE - waitlist_deposit;
-        uint256 discount = (remainingPrice * WAITLIST_DISCOUNT_PCT) / 100;
-        uint256 finalPrice = remainingPrice - discount;
+        uint256 discountedPrice = PRICE - ((PRICE * WAITLIST_DISCOUNT_PCT) / 100);
+        uint256 finalPrice = discountedPrice - waitlist_deposit;
 
-        require(msg.value == finalPrice, "Incorrect payment amount");
+        require(msg.value >= finalPrice, "Incorrect payment amount");
 
         waitlistClaimed[msg.sender] = true;
+
         uint256 tokenId = waitlistId[msg.sender];
 
         // remove person from waitlist
         for (uint256 i = 0; i < waitlisted.length; i++) {
             if (msg.sender == waitlisted[i]) {
-                waitlisted[i] = waitlisted[waitlisted.length];
+                waitlisted[i] = waitlisted[waitlisted.length - 1];
                 waitlisted.pop();
             }
         }
@@ -349,8 +346,8 @@ contract AnimalSocialClubERC721 is
         emit WaitlistClaimed(msg.sender, tokenId);
     }
 
-    function launch() external nonReentrant onlyOwnerAndManager {
-        isLaunched = true;
+    function setLaunchStatus(bool status) external nonReentrant onlyOwnerAndManager {
+        isLaunched = status;
     }
 
     /**
