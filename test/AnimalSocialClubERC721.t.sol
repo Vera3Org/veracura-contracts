@@ -204,6 +204,24 @@ contract AnimalSocialClubTest is Test {
         vm.stopPrank();
     }
 
+    /// tests that a random user cannot claim the waitlist for another one
+    function testCannotStealWaitlist() public {
+        vm.prank(adminAddress);
+        asc.setLaunchStatus(true);
+
+        // create a random user and set all the correct params for claiming
+        address non_waitlisted_user = address(0x123);
+        AnimalSocialClubERC721 elephant = asc.elephant();
+        vm.deal(non_waitlisted_user, 2000000000000 ether);
+        vm.startPrank(non_waitlisted_user);
+        uint256 full_price = elephant.PRICE();
+        uint256 discounted_price = full_price - ((full_price * elephant.WAITLIST_DISCOUNT_PCT()) / 100);
+        uint256 amt_to_pay = discounted_price - elephant.waitlistDeposited(non_waitlisted_user);
+        vm.expectRevert();
+        elephant.claimWaitlist{value: amt_to_pay}();
+        vm.stopPrank();
+    }
+
     function testClaimWaitlist() public {
         vm.prank(adminAddress);
         asc.setLaunchStatus(true);
