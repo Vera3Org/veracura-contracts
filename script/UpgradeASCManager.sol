@@ -13,7 +13,7 @@ import "src/Vera3DistributionModel.sol";
 
 import {Script, console} from "forge-std/Script.sol";
 import {ASC721Manager} from "../src/ASC721Manager.sol";
-import {ASC721Manager_V2} from "../src/ASC721Manager_V2.sol";
+// import {ASC721Manager_V2} from "../src/ASC721Manager_V2.sol";
 
 contract Upgrader is Script {
     function setUp() public {}
@@ -25,7 +25,7 @@ contract Upgrader is Script {
 
         ASC721Manager asc = ASC721Manager(payable(MANAGER_PROXY));
         bytes memory empty;
-        Upgrades.upgradeProxy(MANAGER_PROXY, "ASC721Manager_V2.sol", abi.encodeCall(ASC721Manager_V2.initialize_v2, ()));
+        // Upgrades.upgradeProxy(MANAGER_PROXY, "ASC721Manager_V2.sol", abi.encodeCall(ASC721Manager_V2.initialize_v2, ()));
 
         console.log("upgrade done");
 
