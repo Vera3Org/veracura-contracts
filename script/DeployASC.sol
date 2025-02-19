@@ -19,6 +19,8 @@ contract DeployASC is Script {
     ASC721Manager public asc;
     address payable public asc_address;
     address public ADMIN_ADDRESS = vm.envAddress("ADMIN_ADDRESS");
+    address public OPERATOR_ADDRESS = vm.envAddress("OPERATOR_ADDRESS");
+
     address public TREASURY_ADDRESS = vm.envAddress("MAINNET_TREASURY_ADDRESS");
     address public ETH_FEE_PROXY_ADDRESS = vm.envAddress("ETH_FEE_PROXY_ADDRESS");
     address public LINK_ADDRESS = vm.envAddress("LINK_ADDRESS");
@@ -177,6 +179,8 @@ contract DeployASC is Script {
 
         asc.addToWaitlist(TIGER_ID, 1 ether, 0x724158b824225051935f37984CE0f907f8d451a9);
         asc.addToWaitlist(ELEPHANT_ID, 0.05 ether, 0xE6c30AD5AeE7AD22e9F39D51d67667587cdD05A1);
+
+        asc.grantRole(asc.OPERATOR_ROLE(), OPERATOR_ADDRESS);
 
         vm.stopBroadcast();
 
