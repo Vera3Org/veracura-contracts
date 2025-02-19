@@ -133,7 +133,7 @@ contract ASC721Manager is AccessControlDefaultAdminRulesUpgradeable, ReentrancyG
         require(_grantRole(OPERATOR_ROLE, msg.sender), "could not grant role");
         require(_grantRole(ADMIN_ROLE, msg.sender), "could not grant role");
 
-        __AccessControlDefaultAdminRules_init(3 hours, msg.sender);
+        __AccessControlDefaultAdminRules_init(24 hours, msg.sender);
         __UUPSUpgradeable_init();
 
         // Set the beneficiary addresses
