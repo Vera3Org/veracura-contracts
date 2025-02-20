@@ -1,9 +1,10 @@
 # You should source this file with "source fn_utils.sh"
 # so that you'll have various utility functions and variables in your shell
 
-source .env.testnet.eth-sepolia
+# source .env.testnet.eth-sepolia
+source .env.mainnet.base
 
-ASC_MANAGER="0x33fAF32f6Ba3ee3C0B286A8952d968fa8F620440"
+ASC_MANAGER="0xc8c0F52307862D6a0f840eC34dA59c1908Bf000E"
 elephant=0x6181d43D9983795247Ccb8797FcC441408246E04
 tiger=0x155a3DABFDDFd22d75da2f6D67139405d1679932
 shark=0xe2EaDddC6f628d293A72Bb4aD22C71a2051C2985

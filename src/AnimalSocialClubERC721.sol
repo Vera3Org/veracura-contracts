@@ -200,7 +200,7 @@ contract AnimalSocialClubERC721 is
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        uint256 tokenId = ++totalSupply;
+        uint256 tokenId = totalSupply++;
         _safeMint(to, tokenId);
         emit AdminMinted(to, tokenId);
     }
@@ -240,7 +240,7 @@ contract AnimalSocialClubERC721 is
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        uint256 tokenId = ++totalSupply;
+        uint256 tokenId = totalSupply++;
         _safeMint(to, tokenId);
 
         ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
@@ -298,7 +298,7 @@ contract AnimalSocialClubERC721 is
         require(!waitlist[user], "Already on waitlist for this token");
         require(waitlist_deposit <= PRICE, "deposit amount is more than price");
 
-        uint256 tokenId = ++totalSupply;
+        uint256 tokenId = totalSupply++;
         require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
         require(tokenId < MAX_TOKEN_SUPPLY, "Total supply exhausted for this token");
 
