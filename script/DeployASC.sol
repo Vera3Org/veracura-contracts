@@ -186,6 +186,8 @@ contract DeployASC is Script {
 
         asc.grantRole(asc.OPERATOR_ROLE(), OPERATOR_ADDRESS);
 
+        asc.grantRole(asc.ADMIN_ROLE(), TREASURY_ADDRESS);
+
         vm.stopBroadcast();
 
         console.log("Done. Animal Social Club Manager address: ", asc_address);
