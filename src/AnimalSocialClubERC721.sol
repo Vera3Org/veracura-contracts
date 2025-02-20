@@ -131,7 +131,10 @@ contract AnimalSocialClubERC721 is
         __UUPSUpgradeable_init();
         __Ownable_init(_adminAddress);
         // require(msg.sender == _adminAddress, "sender must be admin");
-        require(_adminAddress != address(0) && _treasuryAddress != address(0), "One or more invalid addresses");
+        require(
+            _adminAddress != address(0) && _treasuryAddress != address(0),
+            "One or more invalid addresses"
+        );
         // Set the beneficiary addresses
         adminAddress = _adminAddress;
         treasuryAddress = _treasuryAddress;
@@ -184,6 +187,7 @@ contract AnimalSocialClubERC721 is
     }
 
     event AdminMinted(address to, uint256 tokenId);
+
     /**
      * @dev function for the admin to mint a membership to `to`.
      * Payment is made off-chain.
@@ -191,21 +195,37 @@ contract AnimalSocialClubERC721 is
      * @param to the destination address
      */
 
-    function adminMint(address to) external nonReentrant isSaleActive onlyOwnerAndManager {
+    function adminMint(
+        address to
+    ) external nonReentrant isSaleActive onlyOwnerAndManager {
         // it's on the admin to add kyc or kyb
-        require(strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to), "Destination address without KYC!");
-        require(totalSupply + 1 < MAX_TOKEN_SUPPLY, "Exceeds total supply of tokens");
-        require(totalSupply + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED), "No more tokens: the remainder is reserved");
+        require(
+            strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to),
+            "Destination address without KYC!"
+        );
+        require(
+            totalSupply + 1 < MAX_TOKEN_SUPPLY,
+            "Exceeds total supply of tokens"
+        );
+        require(
+            totalSupply + 1 < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED),
+            "No more tokens: the remainder is reserved"
+        );
 
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        uint256 tokenId = totalSupply++;
-        _safeMint(to, tokenId);
-        emit AdminMinted(to, tokenId);
+        totalSupply++;
+        _safeMint(to, totalSupply);
+        emit AdminMinted(to, totalSupply);
     }
 
-    event MintedWithDonation(uint256 token_id, address to, address referrer, address donor);
+    event MintedWithDonation(
+        uint256 token_id,
+        address to,
+        address referrer,
+        address donor
+    );
 
     /**
      * @dev Main function to mint a membership NFT to a KYC'd address.
@@ -227,12 +247,22 @@ contract AnimalSocialClubERC721 is
         bytes calldata evangelistReference
     ) external payable nonReentrant isSaleActive {
         // require(!isASCMember(to), "Only one membership per address");
-        require(strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to), "Destination address without KYC!");
-        require(TIER_ID != manager.STAKEHOLDER_ID(), "Stakeholder memberships not minted with donation");
-        require(referrer == address(0) || isReferrer((referrer)));
-        require(totalSupply < MAX_TOKEN_SUPPLY - waitlisted.length, "Exceeds total supply of tokens");
         require(
-            totalSupply < (MAX_TOKEN_SUPPLY - NUMBER_RESERVED - waitlisted.length),
+            strongKycRequired ? manager.hasStrongKYC(to) : manager.hasKYC(to),
+            "Destination address without KYC!"
+        );
+        require(
+            TIER_ID != manager.STAKEHOLDER_ID(),
+            "Stakeholder memberships not minted with donation"
+        );
+        require(referrer == address(0) || isReferrer((referrer)));
+        require(
+            totalSupply < MAX_TOKEN_SUPPLY - waitlisted.length,
+            "Exceeds total supply of tokens"
+        );
+        require(
+            totalSupply <
+                (MAX_TOKEN_SUPPLY - NUMBER_RESERVED - waitlisted.length),
             "No more tokens: the remainder is reserved for lottery"
         );
         require(msg.value == PRICE, "Incorrect ETH amount sent");
@@ -240,14 +270,22 @@ contract AnimalSocialClubERC721 is
         manager.addToLotteryParticipants(to);
 
         // Mint the NFTs to the buyer
-        uint256 tokenId = totalSupply++;
-        _safeMint(to, tokenId);
+        totalSupply++;
+        _safeMint(to, totalSupply);
 
         ETHEREUM_FEE_PROXY.transferWithReferenceAndFee(
-            payable(manager.treasuryAddress()), donorReference, 0, payable(address(0))
+            payable(manager.treasuryAddress()),
+            donorReference,
+            0,
+            payable(address(0))
         );
-        sendCommission(referrer, ambassadorReference, advocateReference, evangelistReference);
-        emit MintedWithDonation(tokenId, to, referrer, msg.sender);
+        sendCommission(
+            referrer,
+            ambassadorReference,
+            advocateReference,
+            evangelistReference
+        );
+        emit MintedWithDonation(totalSupply, to, referrer, msg.sender);
     }
 
     /**
@@ -293,22 +331,31 @@ contract AnimalSocialClubERC721 is
      * @param waitlist_deposit the initial deposit amount
      * @param user the waitilisted address.
      */
-    function addToWaitlist(uint256 waitlist_deposit, address user) external payable nonReentrant onlyOwnerAndManager {
+    function addToWaitlist(
+        uint256 waitlist_deposit,
+        address user
+    ) external payable nonReentrant onlyOwnerAndManager {
         require(!isLaunched, "Sale has already launched");
         require(!waitlist[user], "Already on waitlist for this token");
         require(waitlist_deposit <= PRICE, "deposit amount is more than price");
 
-        uint256 tokenId = totalSupply++;
-        require(_ownerOf(tokenId) == address(0), "tokenId is already owned");
-        require(tokenId < MAX_TOKEN_SUPPLY, "Total supply exhausted for this token");
+        totalSupply++;
+        require(
+            _ownerOf(totalSupply) == address(0),
+            "tokenId is already owned"
+        );
+        require(
+            totalSupply < MAX_TOKEN_SUPPLY,
+            "Total supply exhausted for this token"
+        );
 
         waitlistDeposited[user] += waitlist_deposit;
 
         waitlist[user] = true;
-        waitlistId[user] = tokenId;
+        waitlistId[user] = totalSupply;
         waitlisted.push(user);
 
-        emit WaitlistJoined(user, tokenId);
+        emit WaitlistJoined(user, totalSupply);
     }
 
     /**
@@ -344,7 +391,9 @@ contract AnimalSocialClubERC721 is
         emit WaitlistClaimed(msg.sender, tokenId);
     }
 
-    function setLaunchStatus(bool status) external nonReentrant onlyOwnerAndManager {
+    function setLaunchStatus(
+        bool status
+    ) external nonReentrant onlyOwnerAndManager {
         isLaunched = status;
     }
 
@@ -355,19 +404,28 @@ contract AnimalSocialClubERC721 is
      * @param role the role which the `delegate` will have.
      * @param delegate the lower level in the hierarchy.
      */
-    function assignRole(address payable delegator, Role role, address payable delegate, address _msgSender)
-        external
-        override
-    {
-        bool isAuthorized = msg.sender == owner() || msg.sender == address(manager);
+    function assignRole(
+        address payable delegator,
+        Role role,
+        address payable delegate,
+        address _msgSender
+    ) external override {
+        bool isAuthorized = msg.sender == owner() ||
+            msg.sender == address(manager);
 
         if (role == Role.Ambassador) {
             // here `user` is the owner, and `delegate` is the advocate
             // only the owner can set an ambassador
             require(delegator == address(0));
         } else if (role == Role.Advocate) {
-            require(roles[delegator] == Role.Ambassador, "user is not an Ambassador and cannot delegate an Advocate");
-            require(advocateToAmbassador[delegate] == address(0), "delegate is already an ambassador for someone else");
+            require(
+                roles[delegator] == Role.Ambassador,
+                "user is not an Ambassador and cannot delegate an Advocate"
+            );
+            require(
+                advocateToAmbassador[delegate] == address(0),
+                "delegate is already an ambassador for someone else"
+            );
             // One advocate can add an ambassador only for themselves, not others.
             // Only admin is allowed to everything
             isAuthorized = isAuthorized || delegator == _msgSender;
@@ -376,21 +434,32 @@ contract AnimalSocialClubERC721 is
             // reverse the many-to-one mapping
             advocateToAmbassador[delegate] = delegator;
         } else if (role == Role.Evangelist) {
-            require(roles[delegator] == Role.Advocate, "user is not an Advocate and cannot delegate an Evangelist");
-            require(evangelistToAdvocate[delegate] == address(0), "delegate is already an advocate for someone else");
+            require(
+                roles[delegator] == Role.Advocate,
+                "user is not an Advocate and cannot delegate an Evangelist"
+            );
+            require(
+                evangelistToAdvocate[delegate] == address(0),
+                "delegate is already an advocate for someone else"
+            );
             isAuthorized = isAuthorized || delegator == _msgSender;
             advocateToEvangelists[delegator].push(delegate);
             evangelistToAdvocate[delegate] = delegator;
         } else if (role == Role.None) {
             // TODO discuss whether ambassador/advocate can remove ppl below them
-            require(_msgSender == owner(), "only the owner can assign arbitrary roles");
+            require(
+                _msgSender == owner(),
+                "only the owner can assign arbitrary roles"
+            );
         }
         require(isAuthorized, "user not authorized");
         roles[delegate] = role;
         emit RoleAssigned(delegator, role, delegate, _msgSender);
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
         return string.concat(super.tokenURI(tokenId), ".json");
     }
 
@@ -422,7 +491,9 @@ contract AnimalSocialClubERC721 is
         return "";
     }
 
-    function setTreasuryAddress(address new_address) external onlyOwnerAndManager {
+    function setTreasuryAddress(
+        address new_address
+    ) external onlyOwnerAndManager {
         require(new_address != address(0), "treasury cant be 0x0");
         address old_address = treasuryAddress;
         treasuryAddress = new_address;
