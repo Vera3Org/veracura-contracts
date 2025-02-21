@@ -238,6 +238,8 @@ contract AnimalSocialClubTest is Test {
             uint256 amt_to_pay = elephant.PRICE() - elephant.waitlistDeposited(waitlisted_user);
             console.log("amount to pay: ", amt_to_pay);
             elephant.claimWaitlist{value: amt_to_pay}();
+            vm.expectRevert();
+            elephant.claimWaitlist{value: amt_to_pay}();
             vm.stopPrank();
             // check that non-waitlist mints work fine after ppl claim
             testAdminMint(0, 1);
