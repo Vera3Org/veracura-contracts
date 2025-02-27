@@ -298,7 +298,10 @@ contract AnimalSocialClubERC721 is
         require(balance > 0, "No funds to withdraw");
 
         if (balance > 0) {
-            payable(treasuryAddress).transfer(balance);
+            (bool sent, bytes memory _data) = treasuryAddress.call{
+                value: balance
+            }("");
+            require(sent, "Failed to send Ether");
         }
     }
 
