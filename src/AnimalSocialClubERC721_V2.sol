@@ -498,4 +498,18 @@ contract AnimalSocialClubERC721_V2 is
         treasuryAddress = new_address;
         emit TreasuryAddressChanged(old_address, new_address);
     }
+
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override returns (address) {
+        if (TIER_ID == manager.STAKEHOLDER_ID()) {
+            require(
+                _ownerOf(tokenId) == address(0),
+                "ASC.Stakeholder NFT is not transferable"
+            );
+        }
+        return super._update(to, tokenId, auth);
+    }
 }
