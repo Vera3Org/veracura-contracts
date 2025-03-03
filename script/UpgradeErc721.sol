@@ -15,7 +15,7 @@ import "src/Vera3DistributionModel.sol";
 import {Script, console} from "forge-std/Script.sol";
 import {ASC721Manager} from "../src/ASC721Manager.sol";
 
-contract Upgrader is Script {
+contract UpgradeErc721 is Script {
     ASC721Manager public asc;
     uint256 public constant ELEPHANT_ID = 0;
     uint256 public constant TIGER_ID = 1;
@@ -27,7 +27,7 @@ contract Upgrader is Script {
 
     function run() public {
         address admin = vm.envAddress("WALLET_ADDRESS");
-        address MANAGER_PROXY = vm.envAddress("MANAGER_PROXY");
+        address MANAGER_PROXY = vm.envAddress("ASC_MANAGER");
         asc = ASC721Manager(payable(address(MANAGER_PROXY)));
         vm.startBroadcast(admin);
 

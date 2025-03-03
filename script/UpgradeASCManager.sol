@@ -15,17 +15,16 @@ import {Script, console} from "forge-std/Script.sol";
 import {ASC721Manager} from "../src/ASC721Manager.sol";
 // import {ASC721Manager_V2} from "../src/ASC721Manager_V2.sol";
 
-contract Upgrader is Script {
+contract UpgradeASCManager is Script {
     function setUp() public {}
 
     function run() public {
         address admin = vm.envAddress("WALLET_ADDRESS");
-        address MANAGER_PROXY = vm.envAddress("MANAGER_PROXY");
+        address MANAGER_PROXY = vm.envAddress("ASC_MANAGER");
         vm.startBroadcast(admin);
 
-        ASC721Manager asc = ASC721Manager(payable(MANAGER_PROXY));
         bytes memory empty;
-        // Upgrades.upgradeProxy(MANAGER_PROXY, "ASC721Manager_V2.sol", abi.encodeCall(ASC721Manager_V2.initialize_v2, ()));
+        Upgrades.upgradeProxy(MANAGER_PROXY, "ASC721Manager_V2.sol", empty);
 
         console.log("upgrade done");
 

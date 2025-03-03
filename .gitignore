@@ -1,9 +1,9 @@
 *.txt
 /abis
 
+.env*
 *.info
 report/
-.*
 .vscode
 .mailmap
 # Compiler files
