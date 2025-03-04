@@ -12,21 +12,30 @@ source .env.mainnet.base
     exit 1
 }
 
-[ -z "$ERC721_ADDRESS" ] && {
-    echo no ERC721_ADDRESS variable in environment.
+[ -z "$AMBASSADOR_ADDRESS" ] && {
+    echo no AMBASSADOR_ADDRESS variable in environment.
+    exit 1
+}
+
+[ -z "$ADVOCATE_ADDRESS" ] && {
+    echo no ADVOCATE_ADDRESS variable in environment.
+    exit 1
+}
+
+[ "$AMBASSADOR_ADDRESS" = "$ADVOCATE_ADDRESS" ] && {
+    echo AMBASSADOR_ADDRESS and ADVOCATE_ADDRESS are equal.
     exit 1
 }
 
 # eth-sepolia RPC. One from https://chainlist.org/chain/8453
 RPC_URL="${RPC_URL:-https://base-mainnet.public.blastapi.io}"
-# RPC_URL="127.0.0.1:8545"
 
 forge script \
     --via-ir \
     --rpc-url "$RPC_URL" \
     --private-key "$PRIVATE_KEY" \
     --optimize --optimizer-runs 1000 \
-    script/UpgradeErc721.sol:UpgradeErc721 \
+    script/AddAdvocate.sol:AddAdvocate \
     --compute-units-per-second 15 \
     --slow \
     $@

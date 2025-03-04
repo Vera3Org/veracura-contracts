@@ -35,7 +35,11 @@ contract UpgradeErc721 is Script {
             address proxy = address(asc.contracts(i));
             bytes memory empty;
             console.log("upgrading contract", i);
-            Upgrades.upgradeProxy(proxy, "AnimalSocialClubERC721_V2.sol", empty);
+            Upgrades.upgradeProxy(
+                proxy,
+                "AnimalSocialClubERC721_V2.sol",
+                empty
+            );
             console.log("upgraded contract", i);
         }
         console.log("upgrade done");
