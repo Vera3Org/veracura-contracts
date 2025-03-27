@@ -12,8 +12,8 @@ source .env.mainnet.base
     exit 1
 }
 
-[ -z "$ERC721_ADDRESS" ] && {
-    echo no ERC721_ADDRESS variable in environment.
+[ -z "$ASC_MANAGER" ] && {
+    echo no ASC_MANAGER variable in environment.
     exit 1
 }
 
